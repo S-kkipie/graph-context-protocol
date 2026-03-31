@@ -1,0 +1,46 @@
+{
+    "name": "@ai-do/ecosystem-context-protocol",
+    "version": "0.0.0",
+    "license": "MIT",
+    "scripts": {
+        "lint": "biome check .",
+        "format": "biome format . --write"
+    },
+    "private": true,
+    "devDependencies": {
+        "@nx/js": "22.6.2",
+        "@nx/vite": "22.6.2",
+        "@nx/vitest": "22.6.2",
+        "@nx/web": "22.6.2",
+        "@swc-node/register": "1.11.1",
+        "@swc/core": "1.15.8",
+        "@swc/helpers": "0.5.18",
+        "@types/node": "20.19.9",
+        "@vitest/coverage-v8": "4.0.9",
+        "@vitest/ui": "4.0.9",
+        "jiti": "2.4.2",
+        "nx": "22.6.2",
+        "prettier": "^2.6.2",
+        "tslib": "^2.3.0",
+        "typescript": "~5.9.2",
+        "verdaccio": "^6.0.5",
+        "vite": "^8.0.0",
+        "vitest": "4.0.9"
+    },
+    "nx": {
+        "includedScripts": [],
+        "targets": {
+            "local-registry": {
+                "executor": "@nx/js:verdaccio",
+                "options": {
+                    "port": 4873,
+                    "config": ".verdaccio/config.yml",
+                    "storage": "tmp/local-registry/storage"
+                }
+            }
+        }
+    },
+    "dependencies": {
+        "@biomejs/biome": "^2.4.9"
+    }
+}
