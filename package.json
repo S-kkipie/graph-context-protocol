@@ -1,5 +1,5 @@
 {
-    "name": "@ai-do/ecosystem-context-protocol",
+    "name": "graph-context-protocol",
     "version": "0.0.0",
     "license": "MIT",
     "scripts": {

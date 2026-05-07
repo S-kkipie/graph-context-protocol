@@ -1,37 +1,10 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compileOnSave": false,
-  "files": [],
-  "references": [
-    {
-      "path": "./packages/strings"
-    },
-    {
-      "path": "./packages/colors"
-    },
-    {
-      "path": "./packages/async"
-    },
-    {
-      "path": "./packages/utils"
-    },
-    {
-      "path": "./packages"
-    },
-    {
-      "path": "./core"
-    },
-    {
-      "path": "./packages"
-    },
-    {
-      "path": "./packages/core"
-    },
-    {
-      "path": "./packages/protocol"
-    },
-    {
-      "path": "./packages/core"
-    }
-  ]
+    "extends": "./tsconfig.base.json",
+    "compileOnSave": false,
+    "files": [],
+    "references": [
+        {
+            "path": "./packages/core"
+        }
+    ]
 }
