@@ -91,6 +91,15 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
 
+  packages/server:
+    dependencies:
+      '@graph-context-protocol/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+
 packages:
 
   '@babel/code-frame@7.29.0':
