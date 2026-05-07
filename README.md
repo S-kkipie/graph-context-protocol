@@ -1,203 +1,217 @@
-# Nx TypeScript Repository
+# Graph Context Protocol
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+> A TypeScript library for building graph-based, role-based context sharing systems between AI Native Apps and Autonomous Agents.
 
-✨ A repository showcasing key [Nx](https://nx.dev) features for TypeScript monorepos ✨
-🚀 If you haven't connected to Nx Cloud yet, [complete your setup here](https://cloud.nx.app/setup/connect-workspace/guide). Get faster builds with remote caching, distributed task execution, and self-healing CI. [See how your workspace can benefit](#nx-cloud).
-## 📦 Project Overview
+## What is Graph Context Protocol?
 
-This repository demonstrates a production-ready TypeScript monorepo with:
+Unlike traditional A2A (Agent-to-Agent) direct messaging, the **Graph Context Protocol (GCP)** enables structured context propagation through graph relationships. This approach provides:
 
-- **3 Publishable Packages** - Ready for NPM publishing
+- **Decoupled communication** - Agents don't need to know about each other directly
+- **Context scoping** - Data flows based on permissions and relationships
+- **Auditability** - Full provenance tracking of context changes
+- **Scalability** - Graph topology handles complex agent networks
 
-  - `@org/strings` - String manipulation utilities
-  - `@org/async` - Async utility functions with retry logic
-  - `@org/colors` - Color conversion and manipulation utilities
+## Packages
 
-- **1 Internal Library**
-  - `@org/utils` - Shared utilities (private, not published)
+### `@graph-context-protocol/core`
 
-## 🚀 Quick Start
+Core library providing the foundational data structures and operations:
+
+- **Graph Domain** - Immutable nodes and typed edges
+- **Role Domain** - Role-based access control with capabilities
+- **Context Domain** - Context propagation with filtering
+- **Protocol Domain** - Message handling with provenance tracking
+
+See [packages/core/README.md](./packages/core/README.md) for detailed documentation.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Graph Context Protocol                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐              │
+│  │  Graph   │───▶│  Role    │───▶│ Context  │              │
+│  │  Nodes   │    │  Access  │    │  Flow    │              │
+│  └──────────┘    └──────────┘    └──────────┘              │
+│         │                            │                      │
+│         └────────────────────────────┘                      │
+│                                      │                      │
+│                              ┌───────▼──────┐              │
+│                              │   Protocol   │              │
+│                              │   Messages   │              │
+│                              └──────────────┘              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Quick Start
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run tests
+pnpm nx test core
+
+# Build the project
+pnpm nx run-many -t build
+
+# Visualize project graph
+pnpm nx graph
+```
+
+## Key Concepts
+
+### Graph-Based Context
+
+Context flows through the graph based on node relationships:
+
+```typescript
+const node = createNode('agent-1', role);
+const edge = createEdge('edge-1', 'agent-1', 'context-1', 'can-access');
+```
+
+### Role-Based Access
+
+Roles define what context data can be accessed:
+
+```typescript
+const role = createRole(
+    'role:agent',
+    'AI Agent',
+    'Autonomous agent',
+    [createCapability('cap:read', 'Read', 'Can read data')],
+    [{ path: 'public.*', access: 'read' }]
+);
+```
+
+### Context Propagation
+
+Context propagates with filtering based on permissions:
+
+```typescript
+const context = createContext('ctx:1', 'graph:1', node.id, role, data);
+const result = propagateContext(context, targetNode, filters);
+```
+
+## Development
+
+### Prerequisites
+
+- Node.js 20+
+- pnpm 8+
+
+### Setup
 
 ```bash
 # Clone the repository
-git clone <your-fork-url>
-cd typescript-template
+git clone <repo-url>
+cd graph-context-protocol
 
 # Install dependencies
-npm install
+pnpm install
+```
+
+### Development Commands
+
+```bash
+# Format code (REQUIRED before commits)
+pnpm format
+
+# Run all tests
+pnpm nx run-many -t test
+
+# Run tests in watch mode
+pnpm nx test core --watch
+
+# Type check
+pnpm nx run-many -t typecheck
 
 # Build all packages
-npx nx run-many -t build
-
-# Run tests
-npx nx run-many -t test
-
-# Lint all projects
-npx nx run-many -t lint
-
-# Run everything in parallel
-npx nx run-many -t lint test build --parallel=3
-
-# Visualize the project graph
-npx nx graph
+pnpm nx run-many -t build
 ```
 
-## ⭐ Featured Nx Capabilities
-
-This repository showcases several powerful Nx features:
-
-### 1. 🔒 Module Boundaries
-
-Enforces architectural constraints using tags. Each package has specific dependencies it can use:
-
-- `scope:shared` (utils) - Can be used by all packages
-- `scope:strings` - Can only depend on shared utilities
-- `scope:async` - Can only depend on shared utilities
-- `scope:colors` - Can only depend on shared utilities
-
-**Try it out:**
-
-```bash
-# See the current project graph and boundaries
-npx nx graph
-
-# View a specific project's details
-npx nx show project strings --web
-```
-
-[Learn more about module boundaries →](https://nx.dev/features/enforce-module-boundaries)
-
-### 2. 🛠️ Custom Run Commands
-
-Packages can define custom commands beyond standard build/test/lint:
-
-```bash
-# Run the custom build-base command for strings package
-npx nx run strings:build-base
-
-# See all available targets for a project
-npx nx show project strings
-```
-
-[Learn more about custom run commands →](https://nx.dev/concepts/executors-and-configurations)
-
-### 3. 🔧 Self-Healing CI
-
-The CI pipeline includes `nx fix-ci` which automatically identifies and suggests fixes for common issues. To test it, you can make a change to `async-retry.spec.ts` so that it fails, and create a PR.
-
-```bash
-# Run tests and see the failure
-npx nx test async
-
-# In CI, this command provides automated fixes
-npx nx fix-ci
-```
-
-[Learn more about self-healing CI →](https://nx.dev/ci/features/self-healing-ci)
-
-### 4. 📦 Package Publishing
-
-Manage releases and publishing with Nx Release:
-
-```bash
-# Dry run to see what would be published
-npx nx release --dry-run
-
-# Version and release packages
-npx nx release
-
-# Publish only specific packages
-npx nx release publish --projects=strings,colors
-```
-
-[Learn more about Nx Release →](https://nx.dev/features/manage-releases)
-
-## 📁 Project Structure
+## Project Structure
 
 ```
+├── context/                    # Documentation
+│   ├── 01-architecture.md      # Architecture guide
+│   ├── 02-code-style.md        # Code style rules
+│   ├── 03-patterns.md          # Common patterns
+│   ├── 04-testing.md           # Testing guidelines
+│   ├── 05-nx-workflow.md       # Nx commands
+│   ├── 06-protocol-specific.md # GCP guidelines
+│   ├── 07-ai-agent-rules.md    # AI agent rules
+│   ├── 08-ci-cd.md             # CI/CD guide
+│   ├── 09-dependencies.md      # Dependency management
+│   └── 10-quick-reference.md   # Quick reference
 ├── packages/
-│   ├── strings/     [scope:strings] - String utilities (publishable)
-│   ├── async/       [scope:async]   - Async utilities (publishable)
-│   ├── colors/      [scope:colors]  - Color utilities (publishable)
-│   └── utils/       [scope:shared]  - Shared utilities (private)
-├── nx.json          - Nx configuration
-├── tsconfig.json    - TypeScript configuration
-└── eslint.config.mjs - ESLint with module boundary rules
+│   └── core/                   # Core protocol library
+│       ├── src/
+│       │   ├── lib/
+│       │   │   ├── types.ts    # Base types
+│       │   │   ├── result.ts   # Result type
+│       │   │   ├── graph/      # Graph domain
+│       │   │   ├── role/       # Role domain
+│       │   │   ├── context/    # Context domain
+│       │   │   └── protocol/   # Protocol domain
+│       │   └── index.ts        # Public API
+│       └── README.md
+├── AGENTS.md                   # AI Agent Guidelines
+└── package.json
 ```
 
-## 🏷️ Understanding Tags
+## Design Principles
 
-This repository uses tags to enforce module boundaries:
+1. **Immutable Data** - All structures are immutable
+2. **Pure Functions** - No side effects, return new objects
+3. **Validation First** - Runtime validation with Zod
+4. **Explicit Exports** - No wildcard exports
+5. **Co-located Tests** - Tests next to source files
 
-| Package        | Tag             | Can Import From        |
-| -------------- | --------------- | ---------------------- |
-| `@org/utils`   | `scope:shared`  | Nothing (base library) |
-| `@org/strings` | `scope:strings` | `scope:shared`         |
-| `@org/async`   | `scope:async`   | `scope:shared`         |
-| `@org/colors`  | `scope:colors`  | `scope:shared`         |
+## Technology Stack
 
-The ESLint configuration enforces these boundaries, preventing circular dependencies and maintaining clean architecture.
+| Technology | Purpose |
+|------------|---------|
+| TypeScript | Primary language (strict mode) |
+| Nx | Monorepo management |
+| Vitest | Testing framework |
+| Biome | Linting and formatting |
+| Zod | Runtime validation |
+| pnpm | Package manager |
 
-## 🧪 Testing Module Boundaries
+## Contributing
 
-To see module boundary enforcement in action:
+Please read [AGENTS.md](./AGENTS.md) for detailed guidelines on working with this codebase.
 
-1. Try importing `@org/colors` into `@org/strings`
-2. Run `npx nx lint strings`
-3. You'll see an error about violating module boundaries
+Key points:
+- Always run `pnpm format` before committing
+- Write tests for new functionality
+- Follow the existing code patterns
+- Add JSDoc to public APIs
 
-## 📚 Useful Commands
+## Documentation
 
-```bash
-# Project exploration
-npx nx graph                                    # Interactive dependency graph
-npx nx list                                     # List installed plugins
-npx nx show project strings --web              # View project details
+- [Architecture](context/01-architecture.md) - Core concepts and design
+- [Code Style](context/02-code-style.md) - Coding standards
+- [Patterns](context/03-patterns.md) - Implementation patterns
+- [Testing](context/04-testing.md) - Testing guidelines
+- [AI Agent Rules](context/07-ai-agent-rules.md) - DO and DON'T
+- [Quick Reference](context/10-quick-reference.md) - Command cheat sheet
 
-# Development
-npx nx build strings                           # Build a specific package
-npx nx test async                              # Test a specific package
-npx nx lint colors                             # Lint a specific package
-
-# Running multiple tasks
-npx nx run-many -t build                       # Build all projects
-npx nx run-many -t test --parallel=3          # Test in parallel
-npx nx run-many -t lint test build            # Run multiple targets
-
-# Affected commands (great for CI)
-npx nx affected -t build                       # Build only affected projects
-npx nx affected -t test                        # Test only affected projects
-
-# Release management
-npx nx release --dry-run                       # Preview release changes
-npx nx release                                 # Create a new release
-```
-
-## Nx Cloud
-
-Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## 🔗 Learn More
+## Resources
 
 - [Nx Documentation](https://nx.dev)
-- [Module Boundaries](https://nx.dev/features/enforce-module-boundaries)
-- [Custom Commands](https://nx.dev/concepts/executors-and-configurations)
-- [Self-Healing CI](https://nx.dev/ci/features/self-healing-ci)
-- [Releasing Packages](https://nx.dev/features/manage-releases)
-- [Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud)
+- [Vitest Documentation](https://vitest.dev)
+- [Biome Documentation](https://biomejs.dev)
+- [Zod Documentation](https://zod.dev)
 
-## 💬 Community
+## License
 
-Join the Nx community:
+MIT
 
-- [Discord](https://go.nx.dev/community)
-- [X (Twitter)](https://twitter.com/nxdevtools)
-- [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [YouTube](https://www.youtube.com/@nxdevtools)
-- [Blog](https://nx.dev/blog)
+---
+
+*Built with [Nx](https://nx.dev)*
