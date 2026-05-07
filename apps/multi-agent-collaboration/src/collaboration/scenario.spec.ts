@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runCollaborationScenario, getDefaultSteps } from "./scenario";
+import { getDefaultSteps, runCollaborationScenario } from "./scenario";
 
 describe("Scenario", () => {
     describe("getDefaultSteps", () => {

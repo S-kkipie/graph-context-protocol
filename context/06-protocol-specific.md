@@ -8,10 +8,12 @@ Nodes should be:
 - **Immutable**: Changes create new node instances
 - **Context-aware**: Carry role and permission information
 - **Serializable**: Can be serialized to JSON for transmission
+- **Typed**: Have a `kind` field for node taxonomy
 
 ```typescript
 interface GraphNode {
     readonly id: NodeId;
+    readonly kind: NodeKind;  // "agent", "knowledge", "context", "generic"
     readonly role: RoleDefinition;
     readonly metadata: NodeMetadata;
     readonly createdAt: Timestamp;
@@ -20,6 +22,41 @@ interface GraphNode {
     withMetadata(metadata: Partial<NodeMetadata>): GraphNode;
     canAccess(context: GraphContext): boolean;
 }
+```
+
+### Node Taxonomy
+
+The protocol supports different node types:
+
+```typescript
+// Agent node - can discover, query, and communicate
+interface AgentNode extends GraphNode {
+    readonly kind: "agent";
+}
+
+// Knowledge node - contains information/documents
+interface KnowledgeNode extends GraphNode {
+    readonly kind: "knowledge";
+}
+```
+
+### Creating Typed Nodes
+
+```typescript
+// Generic node (backward compatible)
+const node = createNode('node-1', role, { key: 'value' });
+
+// Agent node
+const agent = createAgentNode('agent:researcher', role, {
+    capabilities: ['cap:read-context']
+});
+
+// Knowledge node
+const doc = createKnowledgeNode('knowledge:api-docs', role, {
+    tags: ['api', 'documentation'],
+    contentType: 'text/markdown',
+    source: 'github.com/org/repo'
+});
 ```
 
 ### Node Factory Pattern
@@ -157,6 +194,8 @@ export const SystemCapabilities = {
     MODIFY_GRAPH: "cap:modify-graph",
     SEND_MESSAGES: "cap:send-messages",
     RECEIVE_MESSAGES: "cap:receive-messages",
+    DISCOVER_AGENTS: "cap:discover-agents",
+    DISCOVER_KNOWLEDGE: "cap:discover-knowledge",
 } as const;
 ```
 
@@ -213,12 +252,14 @@ type MessageType =
 type MessagePriority = "low" | "normal" | "high" | "critical";
 ```
 
-## Edge Types
+## Edge Types (Extensible System)
 
-Types of relationships between nodes:
+The protocol supports an extensible edge system where edges are class-based and can be customized:
+
+### Built-in Edge Types
 
 ```typescript
-export const EdgeTypeSchema = z.enum([
+export const BuiltInEdgeTypeSchema = z.enum([
     "can-access",
     "can-modify",
     "can-traverse",
@@ -234,6 +275,36 @@ export const EdgeTypeSchema = z.enum([
 - **depends-on**: Source depends on target
 - **notifies**: Source receives notifications from target
 - **custom**: User-defined relationship
+
+### Custom Edges
+
+Create custom edge types by extending `BaseGraphEdge`:
+
+```typescript
+class CustomEdge extends BaseGraphEdge<"my-edge-type"> {
+    override isValidBetween(source: GraphNode, target: GraphNode): boolean {
+        // Custom validation logic
+        return source.kind === "agent" && target.kind === "knowledge";
+    }
+}
+
+// Register in registry
+const registry = defaultEdgeRegistry.register({
+    type: "my-edge-type",
+    create: (id, source, target, metadata, bidirectional) => 
+        new CustomEdge(id, source, target, "my-edge-type", metadata, new Date().toISOString(), bidirectional)
+});
+```
+
+### Edge Registry
+
+The `EdgeRegistry` allows registering and creating custom edge types:
+
+```typescript
+const registry = createDefaultEdgeRegistry();
+const customRegistry = registry.register(customEdgeDefinition);
+const edge = customRegistry.createEdge("edge:1", "node:a", "node:b", "my-edge-type");
+```
 
 ## Context Rules
 
@@ -270,6 +341,132 @@ export function validateContext(context: GraphContext): boolean {
 
     return true;
 }
+```
+
+## Discovery System
+
+The discovery system allows agents to find other agents and knowledge in the graph through BFS traversal with role-based access control.
+
+### Discovery Query
+
+```typescript
+interface DiscoveryQuery {
+    readonly kinds?: readonly NodeKind[];        // Filter by node type
+    readonly maxDepth?: number;                   // BFS depth limit (default: 10)
+    readonly edgeTypes?: readonly EdgeType[];    // Which edges to follow
+    readonly filters?: DiscoveryFilters;          // Additional filters
+}
+```
+
+### Discovery Filters
+
+```typescript
+interface DiscoveryFilters {
+    readonly nodeIds?: readonly NodeId[];
+    readonly metadata?: Metadata;
+    readonly roleIds?: readonly RoleId[];
+    readonly capabilities?: readonly CapabilityId[];  // For agent nodes
+    readonly tags?: readonly string[];                // For knowledge nodes
+    readonly tagMode?: "any" | "all";                 // Tag matching mode
+    readonly contentTypes?: readonly string[];        // For knowledge nodes
+    readonly sources?: readonly string[];             // For knowledge nodes
+}
+```
+
+### Discovery Functions
+
+```typescript
+// Discover any nodes
+const result = discoverNodes(graph, 'agent:researcher', {
+    kinds: ['agent', 'knowledge'],
+    maxDepth: 3,
+    edgeTypes: ['can-traverse', 'can-access'],
+    filters: {
+        metadata: { status: 'active' },
+        tags: ['documentation']
+    }
+});
+
+// Discover agents specifically
+const agents = discoverAgents(graph, 'agent:researcher', {
+    capabilities: ['cap:read-context'],
+    roleIds: ['role:admin']
+});
+
+// Discover knowledge specifically
+const knowledge = discoverKnowledge(graph, 'agent:researcher', {
+    tags: ['api', 'documentation'],
+    tagMode: 'any',
+    contentTypes: ['text/markdown']
+});
+```
+
+### Discovery Result
+
+```typescript
+interface DiscoveryResult<T extends GraphNode> {
+    readonly requester: AgentNode;
+    readonly nodes: readonly DiscoveredNode<T>[];
+    readonly denied: readonly NodeId[];
+}
+
+interface DiscoveredNode<T extends GraphNode> {
+    readonly node: T;
+    readonly path: readonly NodeId[];
+    readonly distance: number;
+}
+```
+
+### Access Control for Discovery
+
+Discovery requires specific capabilities:
+
+```typescript
+// Role that can discover agents
+const role = createRole(
+    'role:coordinator',
+    'Coordinator',
+    'Can discover and coordinate agents',
+    [
+        createCapability(SystemCapabilities.DISCOVER_AGENTS, 'Discover Agents', ''),
+        createCapability(SystemCapabilities.TRAVERSE_GRAPH, 'Traverse Graph', '')
+    ],
+    [
+        { path: 'graph.nodes.agent', access: 'read' }
+    ]
+);
+
+// Role that can discover knowledge
+const researcherRole = createRole(
+    'role:researcher',
+    'Researcher',
+    'Can discover knowledge sources',
+    [
+        createCapability(SystemCapabilities.DISCOVER_KNOWLEDGE, 'Discover Knowledge', ''),
+        createCapability(SystemCapabilities.TRAVERSE_GRAPH, 'Traverse Graph', '')
+    ],
+    [
+        { path: 'graph.nodes.knowledge', access: 'read' }
+    ]
+);
+```
+
+### Context Rules for Discovery
+
+Discovery respects context rules with path matching:
+
+- `graph.nodes.agent` - Controls access to agent discovery
+- `graph.nodes.knowledge` - Controls access to knowledge discovery
+- `graph.nodes.*` - Wildcard for all node types
+
+Deny rules override allow rules:
+
+```typescript
+// Allow all discovery except agents
+[
+    { path: 'graph.nodes.*', access: 'read' },
+    { path: 'graph.nodes.agent', access: 'none' }
+]
 ```
 
 ## Message Expiration

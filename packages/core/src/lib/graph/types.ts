@@ -9,11 +9,32 @@ import type { EdgeId, GraphId, Metadata, NodeId, Timestamp } from "../types";
  */
 
 /**
+ * Zod schema for built-in node kinds.
+ */
+export const BuiltInNodeKindSchema = z.enum([
+    "agent",
+    "knowledge",
+    "context",
+    "generic",
+]);
+
+/**
+ * Built-in node kinds.
+ */
+export type BuiltInNodeKind = z.infer<typeof BuiltInNodeKindSchema>;
+
+/**
+ * Node kind - extensible string for custom node types.
+ */
+export type NodeKind = string;
+
+/**
  * Represents a node in the graph context protocol.
  * Nodes are immutable and context-aware.
  */
 export interface GraphNode {
     readonly id: NodeId;
+    readonly kind: NodeKind;
     readonly role: RoleDefinition;
     readonly metadata: Metadata;
     readonly createdAt: Timestamp;
@@ -36,9 +57,24 @@ export interface GraphNode {
 }
 
 /**
- * Zod schema for EdgeType validation.
+ * Agent node - represents an AI agent or autonomous actor.
  */
-export const EdgeTypeSchema = z.enum([
+export interface AgentNode extends GraphNode {
+    readonly kind: "agent";
+}
+
+/**
+ * Knowledge node - represents information, documents, or data.
+ */
+export interface KnowledgeNode extends GraphNode {
+    readonly kind: "knowledge";
+}
+
+/**
+ * Zod schema for built-in edge types.
+ * These are the predefined edge types in the system.
+ */
+export const BuiltInEdgeTypeSchema = z.enum([
     "can-access",
     "can-modify",
     "can-traverse",
@@ -48,14 +84,35 @@ export const EdgeTypeSchema = z.enum([
 ]);
 
 /**
- * Types of relationships that can exist between nodes.
+ * Built-in edge types for standard relationships.
  */
-export type EdgeType = z.infer<typeof EdgeTypeSchema>;
+export type BuiltInEdgeType = z.infer<typeof BuiltInEdgeTypeSchema>;
 
 /**
- * Represents a directed edge between two nodes in the graph.
+ * Zod schema for any edge type (extensible).
+ * Allows custom edge types beyond built-ins.
  */
-export interface GraphEdge {
+export const EdgeTypeSchema = z.string().min(1);
+
+/**
+ * Edge type - extensible string for custom edge types.
+ */
+export type EdgeType = string;
+
+/**
+ * Context for edge validation between nodes.
+ */
+export interface EdgeValidationContext {
+    readonly source: GraphNode;
+    readonly target: GraphNode;
+}
+
+/**
+ * Serialized representation of a graph edge.
+ * Used for storage and transmission.
+ */
+export interface SerializedGraphEdge {
+    readonly version: 1;
     readonly id: EdgeId;
     readonly source: NodeId;
     readonly target: NodeId;
@@ -63,6 +120,36 @@ export interface GraphEdge {
     readonly metadata: Metadata;
     readonly createdAt: Timestamp;
     readonly bidirectional: boolean;
+}
+
+/**
+ * Represents a directed edge between two nodes in the graph.
+ * This is an extensible interface - custom edge types can implement it.
+ */
+export interface GraphEdge<TType extends string = string> {
+    readonly id: EdgeId;
+    readonly source: NodeId;
+    readonly target: NodeId;
+    readonly type: TType;
+    readonly metadata: Metadata;
+    readonly createdAt: Timestamp;
+    readonly bidirectional: boolean;
+
+    /**
+     * Validates if this edge is valid between the given source and target nodes.
+     * Each edge type implements its own validation logic.
+     */
+    isValidBetween(source: GraphNode, target: GraphNode): boolean;
+
+    /**
+     * Returns the edge type identifier.
+     */
+    getEdgeType(): TType;
+
+    /**
+     * Serializes the edge to a plain object.
+     */
+    toJSON(): SerializedGraphEdge;
 }
 
 /**

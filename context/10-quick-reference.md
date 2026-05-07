@@ -62,10 +62,11 @@ packages/
 │   │   └── lib/
 │   │       ├── types.ts     # Base identifiers
 │   │       ├── result.ts    # Result<T,E> type
-│   │       ├── graph/       # Graph domain
-│   │       ├── role/        # Role domain
-│   │       ├── context/     # Context domain
-│   │       └── protocol/    # Protocol domain
+│   │       ├── graph/       # Graph domain (nodes, edges, graph container)
+│   │       ├── role/        # Role domain (roles, capabilities)
+│   │       ├── context/     # Context domain (propagation)
+│   │       ├── protocol/    # Protocol domain (messages)
+│   │       └── discovery/   # Discovery domain (query system)
 │   ├── package.json
 │   └── vitest.config.mts
 └── [future-packages]/       # Additional protocol layers
@@ -96,12 +97,22 @@ function mayFail(): Result<string, Error> {
 }
 ```
 
-### Creating a Node
+### Creating Nodes
 
 ```typescript
-import { createNode } from '@graph-context-protocol/core';
+import { createNode, createAgentNode, createKnowledgeNode } from '@graph-context-protocol/core';
 
+// Generic node
 const node = createNode('node-1', role, { key: 'value' });
+
+// Agent node (for discovery/communication)
+const agent = createAgentNode('agent:1', role, { capabilities: ['cap:read'] });
+
+// Knowledge node (for information storage)
+const doc = createKnowledgeNode('knowledge:1', role, {
+    tags: ['documentation'],
+    contentType: 'text/markdown'
+});
 ```
 
 ### Creating a Role
@@ -125,6 +136,44 @@ import { createContext, propagateContext } from '@graph-context-protocol/core';
 
 const context = createContext('ctx:1', 'graph:1', 'node:1', role);
 const result = propagateContext(context, targetNode);
+```
+
+### Creating a Graph
+
+```typescript
+import { createGraph, createAgentNode, createKnowledgeNode, createEdge } from '@graph-context-protocol/core';
+
+const graph = createGraph('graph:main')
+    .addNode(createAgentNode('agent:1', role))
+    .addNode(createKnowledgeNode('knowledge:1', role))
+    .addEdge(createEdge('edge:1', 'agent:1', 'knowledge:1', 'can-access'));
+```
+
+### Discovery
+
+```typescript
+import { discoverAgents, discoverKnowledge, SystemCapabilities } from '@graph-context-protocol/core';
+
+// Discover agents
+const agents = discoverAgents(graph, 'agent:researcher', {
+    capabilities: ['cap:read-context'],
+    maxDepth: 3
+});
+
+// Discover knowledge
+const docs = discoverKnowledge(graph, 'agent:researcher', {
+    tags: ['documentation'],
+    tagMode: 'any'
+});
+
+// Role with discovery capabilities
+const role = createRole('role:researcher', 'Researcher', '', [
+    createCapability(SystemCapabilities.DISCOVER_AGENTS, 'Discover Agents', ''),
+    createCapability(SystemCapabilities.DISCOVER_KNOWLEDGE, 'Discover Knowledge', '')
+], [
+    { path: 'graph.nodes.agent', access: 'read' },
+    { path: 'graph.nodes.knowledge', access: 'read' }
+]);
 ```
 
 ## File Naming

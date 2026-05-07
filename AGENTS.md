@@ -37,17 +37,19 @@
 ### What We're Building
 
 - **Core Library**: A TypeScript package (`@graph-context-protocol/core`) providing:
-  - Graph data structures (nodes, edges)
+  - Graph data structures (nodes, edges) with extensible edge system
   - Role-based access control with capabilities
   - Context propagation with filtering
   - Protocol message handling
+  - Discovery and query system for agents and knowledge
   - Runtime validation with Zod
 
 - **Architecture**: Domain-driven design with separated types and implementations:
-  - `graph/` - Graph operations and immutable nodes
+  - `graph/` - Graph operations, immutable nodes, and extensible edge system
   - `role/` - Role definitions, capabilities, and context rules
   - `context/` - Context propagation and validation
   - `protocol/` - Message handling and provenance tracking
+  - `discovery/` - Query and discovery system for agent/knowledge discovery
 
 ### Technology Stack
 
@@ -67,6 +69,8 @@
 - **Validation-First**: All public APIs validate inputs with Zod
 - **Explicit Exports**: No wildcard exports in public API
 - **Co-located Tests**: Test files next to source files (*.spec.ts)
+- **Extensible Edges**: Edge system uses classes that can be extended (not enums)
+- **Node Taxonomy**: Nodes have a `kind` field for type discrimination (agent, knowledge, etc.)
 
 ---
 
@@ -121,10 +125,11 @@ packages/
 │   │   └── lib/
 │   │       ├── types.ts     # Base identifiers (NodeId, EdgeId, Metadata)
 │   │       ├── result.ts    # Result<T,E> type and helpers
-│   │       ├── graph/       # Graph domain (types, implementation, tests)
-│   │       ├── role/        # Role domain (types, implementation, tests)
-│   │       ├── context/     # Context domain (types, implementation, tests)
-│   │       └── protocol/    # Protocol domain (types, implementation, tests)
+│   │       ├── graph/       # Graph domain (nodes, edges, graph container)
+│   │       ├── role/        # Role domain (roles, capabilities)
+│   │       ├── context/     # Context domain (propagation)
+│   │       ├── protocol/    # Protocol domain (messages)
+│   │       └── discovery/   # Discovery domain (query system)
 │   ├── package.json
 │   └── vitest.config.mts
 └── [future-packages]/       # Additional protocol layers
@@ -156,6 +161,81 @@ When working on Graph Context Protocol:
 9. **Never use `@ts-ignore`** without explanation
 10. **Follow graph/role/context patterns** for protocol features
 11. **Check `pnpm nx run-many -t lint test build typecheck`** before finishing
+
+### Extensible Edge System
+
+Edges are implemented as classes that can be extended:
+
+```typescript
+// Built-in edge classes extend BaseGraphEdge
+const edge = new TraverseEdge('edge:1', 'node:a', 'node:b', metadata, timestamp);
+
+// Custom edges can extend BaseGraphEdge
+class MyCustomEdge extends BaseGraphEdge<'custom-type'> {
+    isValidBetween(source: GraphNode, target: GraphNode): boolean {
+        // Custom validation logic
+        return true;
+    }
+}
+
+// Register custom edge types
+const registry = defaultEdgeRegistry.register({
+    type: 'custom-type',
+    create: (id, source, target, metadata) => new MyCustomEdge(id, source, target, metadata)
+});
+```
+
+### Node Taxonomy
+
+Nodes have a `kind` field for type discrimination:
+
+```typescript
+// Agent nodes can discover and communicate
+const agent = createAgentNode('agent:1', role);
+
+// Knowledge nodes contain information
+const doc = createKnowledgeNode('knowledge:1', role, {
+    tags: ['documentation'],
+    contentType: 'text/markdown'
+});
+
+// Type guards
+if (isAgentNode(node)) {
+    // node is AgentNode
+}
+if (isKnowledgeNode(node)) {
+    // node is KnowledgeNode
+}
+```
+
+### Discovery System
+
+Agents can discover other agents and knowledge:
+
+```typescript
+// Create a graph with discovery-capable agents
+const researcherRole = createRole('role:researcher', 'Researcher', '', [
+    createCapability(SystemCapabilities.DISCOVER_AGENTS, '', ''),
+    createCapability(SystemCapabilities.DISCOVER_KNOWLEDGE, '', '')
+], [
+    { path: 'graph.nodes.agent', access: 'read' },
+    { path: 'graph.nodes.knowledge', access: 'read' }
+]);
+
+const graph = createGraph('graph:main')
+    .addNode(createAgentNode('agent:researcher', researcherRole))
+    .addNode(createAgentNode('agent:planner', plannerRole))
+    .addNode(createKnowledgeNode('knowledge:specs', publicRole, { tags: ['api'] }));
+
+// Discover agents
+const agents = discoverAgents(graph, 'agent:researcher');
+
+// Discover knowledge
+const docs = discoverKnowledge(graph, 'agent:researcher', {
+    tags: ['api'],
+    tagMode: 'any'
+});
+```
 
 ---
 

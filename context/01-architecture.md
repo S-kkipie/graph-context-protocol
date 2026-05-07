@@ -124,6 +124,13 @@ Protocol messages and handlers:
 - `MessageProvenance` - Path tracking
 - Functions: `createMessageHeader()`, `createProtocolMessage()`
 
+### Discovery Domain (`lib/discovery/`)
+Query and discovery system:
+- `DiscoveryQuery` - Query parameters for discovery
+- `DiscoveryResult` - Discovery results with paths
+- `DiscoveryFilters` - Filters for agents and knowledge
+- Functions: `discoverNodes()`, `discoverAgents()`, `discoverKnowledge()`
+
 ## Cross-Domain Dependencies
 
 ```
@@ -138,6 +145,8 @@ graph (lib/graph/) ← uses role, base-types
 context (lib/context/) ← uses graph, role, base-types
     ↑
 protocol (lib/protocol/) ← uses context, base-types
+    ↑
+discovery (lib/discovery/) ← uses graph, role, base-types
 ```
 
 ## File Organization
@@ -173,11 +182,16 @@ packages/core/src/
     │   ├── implementation.ts
     │   ├── index.ts
     │   └── context.spec.ts
-    └── protocol/
-        ├── types.ts      # ProtocolMessage, MessageHeader
+    ├── protocol/
+    │   ├── types.ts      # ProtocolMessage, MessageHeader
+    │   ├── implementation.ts
+    │   ├── index.ts
+    │   └── protocol.spec.ts
+    └── discovery/
+        ├── types.ts      # DiscoveryQuery, DiscoveryResult
         ├── implementation.ts
         ├── index.ts
-        └── protocol.spec.ts
+        └── discovery.spec.ts
 ```
 
 ## See Also

@@ -3,7 +3,7 @@
  * @module collaboration/report
  */
 
-import type { ScenarioResult, ReportOutput } from "./types";
+import type { ReportOutput, ScenarioResult } from "./types";
 
 /** Renders the agent graph section */
 function renderAgentGraph(result: ScenarioResult): string {

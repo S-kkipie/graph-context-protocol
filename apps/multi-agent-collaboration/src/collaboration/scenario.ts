@@ -3,6 +3,11 @@
  * @module collaboration/scenario
  */
 
+import type {
+    GraphContext,
+    GraphNode,
+    ProtocolMessage,
+} from "@graph-context-protocol/core";
 import {
     addProvenance,
     createContext,
@@ -10,11 +15,6 @@ import {
     createMessageHeader,
     createProtocolMessage,
     propagateContext,
-} from "@graph-context-protocol/core";
-import type {
-    GraphContext,
-    GraphNode,
-    ProtocolMessage,
 } from "@graph-context-protocol/core";
 import { createAgentNodes, getAgentConfig } from "./agents";
 import type {

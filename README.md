@@ -17,10 +17,11 @@ Unlike traditional A2A (Agent-to-Agent) direct messaging, the **Graph Context Pr
 
 Core library providing the foundational data structures and operations:
 
-- **Graph Domain** - Immutable nodes and typed edges
+- **Graph Domain** - Immutable nodes (agents, knowledge) and extensible typed edges
 - **Role Domain** - Role-based access control with capabilities
 - **Context Domain** - Context propagation with filtering
 - **Protocol Domain** - Message handling with provenance tracking
+- **Discovery Domain** - Query and discovery system for agents to find other agents and knowledge
 
 See [packages/core/README.md](./packages/core/README.md) for detailed documentation.
 
@@ -71,6 +72,39 @@ Context flows through the graph based on node relationships:
 ```typescript
 const node = createNode('agent-1', role);
 const edge = createEdge('edge-1', 'agent-1', 'context-1', 'can-access');
+```
+
+### Node Taxonomy
+
+Nodes can be agents or knowledge containers:
+
+```typescript
+// Agent node - can discover and query
+const agent = createAgentNode('agent:planner', role);
+
+// Knowledge node - contains information
+const doc = createKnowledgeNode('knowledge:specs', role, {
+    tags: ['api', 'documentation'],
+    contentType: 'text/markdown'
+});
+```
+
+### Discovery System
+
+Agents can discover other agents and knowledge in the graph:
+
+```typescript
+// Discover reachable agents
+const agents = discoverAgents(graph, 'agent:researcher', {
+    capabilities: ['cap:read-context']
+});
+
+// Discover knowledge with filters
+const knowledge = discoverKnowledge(graph, 'agent:researcher', {
+    tags: ['documentation'],
+    tagMode: 'any',
+    maxDepth: 2
+});
 ```
 
 ### Role-Based Access

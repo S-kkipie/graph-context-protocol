@@ -3,8 +3,8 @@
  * @module app
  */
 
-import { runCollaborationScenario } from "./collaboration/scenario";
 import { renderScenarioReport } from "./collaboration/report";
+import { runCollaborationScenario } from "./collaboration/scenario";
 
 /** Runs the multi-agent collaboration demo and returns the report */
 export function run(): string {

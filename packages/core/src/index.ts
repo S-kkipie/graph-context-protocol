@@ -15,20 +15,56 @@ export type {
     PropagationResult,
 } from "./lib/context/types";
 export {
+    discoverAgents,
+    discoverKnowledge,
+    discoverNodes,
+} from "./lib/discovery";
+export type {
+    DiscoveredNode,
+    DiscoveryFilters,
+    DiscoveryQuery,
+    DiscoveryResult,
+} from "./lib/discovery/types";
+export { DiscoveryError } from "./lib/discovery/types";
+export {
+    AccessEdge,
+    BaseGraphEdge,
+    BuiltInEdgeTypeSchema,
+    BuiltInNodeKindSchema,
     CreateEdgeInputSchema,
     CreateNodeInputSchema,
+    CustomEdge,
+    createAgentNode,
+    createDefaultEdgeRegistry,
     createEdge,
+    createGraph,
+    createKnowledgeNode,
     createNode,
+    DependencyEdge,
+    defaultEdgeRegistry,
+    deserializeEdge,
     EdgeTypeSchema,
+    ModifyEdge,
+    NotificationEdge,
+    serializeEdge,
+    TraverseEdge,
 } from "./lib/graph";
-// Graph domain
+export type { EdgeDefinition, EdgeRegistry } from "./lib/graph/implementation";
 export type {
+    AgentNode,
+    BuiltInEdgeType,
+    BuiltInNodeKind,
     EdgeType,
+    EdgeValidationContext,
     Graph,
     GraphConfig,
     GraphEdge,
     GraphNode,
+    KnowledgeNode,
+    NodeKind,
+    SerializedGraphEdge,
 } from "./lib/graph/types";
+
 export {
     addProvenance,
     createMessageHeader,

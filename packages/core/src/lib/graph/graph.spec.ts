@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { RoleDefinition } from "../role/types";
-import { createEdge, createNode, EdgeTypeSchema } from "./index";
+import {
+    BuiltInEdgeTypeSchema,
+    CustomEdge,
+    createEdge,
+    createNode,
+    deserializeEdge,
+    EdgeTypeSchema,
+    serializeEdge,
+} from "./index";
 
 // Mock role for testing
 const mockRole: RoleDefinition = {
@@ -25,9 +33,18 @@ describe("graph module", () => {
             expect(EdgeTypeSchema.parse("custom")).toBe("custom");
         });
 
-        it("should reject unknown edge types", () => {
-            expect(() => EdgeTypeSchema.parse("unknown")).toThrow();
-            expect(() => EdgeTypeSchema.parse("invalid")).toThrow();
+        it("should accept any string as extensible edge type", () => {
+            expect(EdgeTypeSchema.parse("unknown")).toBe("unknown");
+            expect(EdgeTypeSchema.parse("my-custom-type")).toBe(
+                "my-custom-type",
+            );
+        });
+
+        it("should reject unknown types in BuiltInEdgeTypeSchema", () => {
+            expect(() => BuiltInEdgeTypeSchema.parse("unknown")).toThrow();
+            expect(() =>
+                BuiltInEdgeTypeSchema.parse("my-custom-type"),
+            ).toThrow();
         });
     });
 
@@ -141,10 +158,91 @@ describe("graph module", () => {
             ).toThrow();
         });
 
-        it("should reject invalid edge type", () => {
-            expect(() =>
-                createEdge("edge-1", "node-a", "node-b", "invalid" as any),
-            ).toThrow();
+        it("should create CustomEdge for custom edge types", () => {
+            const edge = createEdge(
+                "edge-1",
+                "node-a",
+                "node-b",
+                "my-custom-type",
+            );
+            expect(edge).toBeInstanceOf(CustomEdge);
+            expect(edge.type).toBe("my-custom-type");
+            expect(edge.getEdgeType()).toBe("my-custom-type");
+        });
+    });
+
+    describe("serializeEdge and deserializeEdge", () => {
+        it("should serialize an edge to JSON", () => {
+            const edge = createEdge(
+                "edge-1",
+                "node-a",
+                "node-b",
+                "can-access",
+                { weight: 1 },
+                true,
+            );
+            const serialized = serializeEdge(edge);
+
+            expect(serialized.version).toBe(1);
+            expect(serialized.id).toBe("edge-1");
+            expect(serialized.source).toBe("node-a");
+            expect(serialized.target).toBe("node-b");
+            expect(serialized.type).toBe("can-access");
+            expect(serialized.metadata).toEqual({ weight: 1 });
+            expect(serialized.bidirectional).toBe(true);
+            expect(serialized.createdAt).toBeDefined();
+        });
+
+        it("should deserialize and recreate the same edge", () => {
+            const original = createEdge(
+                "edge-1",
+                "node-a",
+                "node-b",
+                "can-access",
+                { weight: 1 },
+            );
+            const serialized = serializeEdge(original);
+            const deserialized = deserializeEdge(serialized);
+
+            expect(deserialized.id).toBe(original.id);
+            expect(deserialized.source).toBe(original.source);
+            expect(deserialized.target).toBe(original.target);
+            expect(deserialized.type).toBe(original.type);
+            expect(deserialized.metadata).toEqual(original.metadata);
+            expect(deserialized.bidirectional).toBe(original.bidirectional);
+        });
+
+        it("should deserialize custom edge types", () => {
+            const customEdge = createEdge(
+                "edge-1",
+                "node-a",
+                "node-b",
+                "my-custom-type",
+            );
+            const serialized = serializeEdge(customEdge);
+            const deserialized = deserializeEdge(serialized);
+
+            expect(deserialized).toBeInstanceOf(CustomEdge);
+            expect(deserialized.type).toBe("my-custom-type");
+        });
+
+        it("should round-trip all built-in edge types", () => {
+            const types = [
+                "can-access",
+                "can-modify",
+                "can-traverse",
+                "depends-on",
+                "notifies",
+            ] as const;
+
+            for (const type of types) {
+                const original = createEdge("edge-1", "node-a", "node-b", type);
+                const serialized = serializeEdge(original);
+                const deserialized = deserializeEdge(serialized);
+
+                expect(deserialized.type).toBe(type);
+                expect(deserialized.getEdgeType()).toBe(type);
+            }
         });
     });
 });

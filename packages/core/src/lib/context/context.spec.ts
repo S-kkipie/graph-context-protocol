@@ -29,6 +29,7 @@ const createMockNode = (
     id = "node:target",
 ): GraphNode => ({
     id,
+    kind: "generic",
     role,
     metadata: {},
     createdAt: new Date().toISOString(),

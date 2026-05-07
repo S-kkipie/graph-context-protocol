@@ -108,4 +108,6 @@ export const SystemCapabilities = {
     MODIFY_GRAPH: "cap:modify-graph",
     SEND_MESSAGES: "cap:send-messages",
     RECEIVE_MESSAGES: "cap:receive-messages",
+    DISCOVER_AGENTS: "cap:discover-agents",
+    DISCOVER_KNOWLEDGE: "cap:discover-knowledge",
 } as const;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runCollaborationScenario } from "./scenario";
 import { renderScenarioReport } from "./report";
+import { runCollaborationScenario } from "./scenario";
 
 describe("Report", () => {
     it("should render a complete report", () => {

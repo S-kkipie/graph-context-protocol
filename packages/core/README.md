@@ -20,8 +20,8 @@ src/lib/
 ├── types.ts              # Base identifiers (NodeId, EdgeId, Metadata, Timestamp)
 ├── result.ts             # Result<T,E> type for functional error handling
 ├── graph/                # Graph data structures
-│   ├── types.ts          # GraphNode, GraphEdge, EdgeType interfaces
-│   ├── implementation.ts # createNode(), createEdge() factories
+│   ├── types.ts          # GraphNode, GraphEdge, EdgeType, NodeKind interfaces
+│   ├── implementation.ts # createNode(), createEdge(), createGraph() factories
 │   ├── index.ts          # Public exports
 │   └── graph.spec.ts     # Tests
 ├── role/                 # Role and capability management
@@ -34,11 +34,16 @@ src/lib/
 │   ├── implementation.ts # createContext(), propagateContext()
 │   ├── index.ts          # Public exports
 │   └── context.spec.ts   # Tests
-└── protocol/             # Protocol messages
-    ├── types.ts          # ProtocolMessage, MessageHeader, MessageProvenance
-    ├── implementation.ts # createMessageHeader(), createProtocolMessage()
+├── protocol/             # Protocol messages
+│   ├── types.ts          # ProtocolMessage, MessageHeader, MessageProvenance
+│   ├── implementation.ts # createMessageHeader(), createProtocolMessage()
+│   ├── index.ts          # Public exports
+│   └── protocol.spec.ts  # Tests
+└── discovery/            # Discovery and query system
+    ├── types.ts          # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
+    ├── implementation.ts # discoverNodes(), discoverAgents(), discoverKnowledge()
     ├── index.ts          # Public exports
-    └── protocol.spec.ts  # Tests
+    └── discovery.spec.ts # Tests
 ```
 
 ## Key Features
@@ -53,9 +58,10 @@ const updatedNode = node.withRole(newRole);
 const withMetadata = node.withMetadata({ new: 'data' });
 ```
 
-Typed edges between nodes:
+Typed edges between nodes (extensible system):
 
 ```typescript
+// Built-in edge types
 const edge = createEdge(
     'edge-1',
     'node-a',
@@ -64,6 +70,22 @@ const edge = createEdge(
     { weight: 1 },
     true // bidirectional
 );
+
+// Custom edge types via registry
+const registry = defaultEdgeRegistry.register({
+    type: 'my-custom-edge',
+    create: (id, source, target, metadata, bidirectional) => 
+        new CustomEdge(id, source, target, 'my-custom-edge', metadata, new Date().toISOString(), bidirectional)
+});
+```
+
+Graph container with immutable operations:
+
+```typescript
+const graph = createGraph('graph:main')
+    .addNode(createAgentNode('agent:1', role))
+    .addNode(createKnowledgeNode('knowledge:1', role))
+    .addEdge(createEdge('edge:1', 'agent:1', 'knowledge:1', 'can-access'));
 ```
 
 ### Role Domain (`role/`)
@@ -139,6 +161,58 @@ const forwarded = addProvenance(message, 'node:intermediate', 'forwarded');
 isMessageExpired(message); // false
 ```
 
+### Discovery Domain (`discovery/`)
+
+Agents can discover other agents and knowledge through the graph:
+
+```typescript
+// Discover all reachable nodes
+const result = discoverNodes(graph, 'agent:researcher', {
+    kinds: ['agent', 'knowledge'],
+    maxDepth: 3,
+    edgeTypes: ['can-traverse', 'can-access'],
+    filters: {
+        metadata: { status: 'active' },
+        tags: ['documentation']
+    }
+});
+
+// Discover agents with specific capabilities
+const agents = discoverAgents(graph, 'agent:researcher', {
+    capabilities: ['cap:read-context', 'cap:write-context'],
+    roleIds: ['role:admin', 'role:developer']
+});
+
+// Discover knowledge by tags
+const docs = discoverKnowledge(graph, 'agent:researcher', {
+    tags: ['api', 'documentation'],
+    tagMode: 'any',
+    contentTypes: ['text/markdown', 'text/plain'],
+    maxDepth: 2
+});
+
+console.log(result.nodes);    // Discovered nodes with paths
+console.log(result.denied);   // Node IDs found but access denied
+```
+
+Role-based discovery access:
+
+```typescript
+const role = createRole(
+    'role:researcher',
+    'Researcher',
+    'Can discover agents and knowledge',
+    [
+        createCapability(SystemCapabilities.DISCOVER_AGENTS, 'Discover Agents', ''),
+        createCapability(SystemCapabilities.DISCOVER_KNOWLEDGE, 'Discover Knowledge', '')
+    ],
+    [
+        { path: 'graph.nodes.agent', access: 'read' },
+        { path: 'graph.nodes.knowledge', access: 'read' }
+    ]
+);
+```
+
 ## Design Principles
 
 1. **Immutable Data** - All structures use readonly properties
@@ -155,6 +229,44 @@ isMessageExpired(message); // false
 - `ContextId`, `RoleId`, `CapabilityId`, `MessageId` - Domain identifiers
 - `Timestamp` - ISO 8601 timestamps
 - `Metadata` - Flexible metadata records
+- `NodeKind` - Node type discriminator ('agent', 'knowledge', 'context', 'generic')
+- `EdgeType` - Edge type for relationships
+
+### Node Types
+
+- `GraphNode` - Base node interface with `kind` field
+- `AgentNode` - Node representing an agent (`kind: 'agent'`)
+- `KnowledgeNode` - Node representing knowledge/information (`kind: 'knowledge'`)
+
+### Edge System
+
+- `BaseGraphEdge<TType>` - Abstract base class for edges
+- `AccessEdge`, `ModifyEdge`, `TraverseEdge` - Built-in edge classes
+- `DependencyEdge`, `NotificationEdge`, `CustomEdge` - Additional edge classes
+- `EdgeRegistry` - Registry for custom edge types
+- `EdgeDefinition` - Type for edge registration
+- `serializeEdge()` / `deserializeEdge()` - Edge serialization
+
+### Graph Container
+
+- `Graph` - Immutable graph container
+- `createGraph(id)` - Create new graph
+- `graph.addNode(node)` - Add node (returns new graph)
+- `graph.removeNode(nodeId)` - Remove node (returns new graph)
+- `graph.addEdge(edge)` - Add edge (returns new graph)
+- `graph.removeEdge(edgeId)` - Remove edge (returns new graph)
+- `graph.getNode(nodeId)` - Get node by ID
+- `graph.getEdge(edgeId)` - Get edge by ID
+- `graph.getNodeEdges(nodeId)` - Get all edges connected to a node
+- `graph.hasPath(from, to, maxDepth?)` - Check if path exists between nodes
+
+### Discovery Types
+
+- `DiscoveryQuery` - Query parameters for discovery
+- `DiscoveryResult<T>` - Discovery results with nodes and paths
+- `DiscoveryFilters` - Filters for agents and knowledge
+- `DiscoveredNode<T>` - Discovered node with path and distance
+- `DiscoveryError` - Error class for discovery failures
 
 ### Result Type
 
@@ -180,12 +292,14 @@ SystemRoles.OBSERVER   // 'role:observer'
 SystemCapabilities.READ_CONTEXT      // 'cap:read-context'
 SystemCapabilities.WRITE_CONTEXT     // 'cap:write-context'
 SystemCapabilities.TRAVERSE_GRAPH    // 'cap:traverse-graph'
+SystemCapabilities.DISCOVER_AGENTS   // 'cap:discover-agents'
+SystemCapabilities.DISCOVER_KNOWLEDGE // 'cap:discover-knowledge'
 // ... etc
 ```
 
 ## Testing
 
-76 tests cover all domains:
+81 tests cover all domains:
 
 ```bash
 # Run all tests
@@ -209,10 +323,16 @@ pnpm add @graph-context-protocol/core
 ```typescript
 import {
     createNode,
+    createAgentNode,
+    createKnowledgeNode,
+    createEdge,
+    createGraph,
     createRole,
     createCapability,
     createContext,
     propagateContext,
+    discoverAgents,
+    discoverKnowledge,
     SystemRoles,
     SystemCapabilities
 } from '@graph-context-protocol/core';
@@ -246,6 +366,21 @@ const context = createContext(
     role,
     { 'public.data': 'value', 'private.secret': 'hidden' }
 );
+
+// Create a graph with typed nodes
+const graph = createGraph('graph:main')
+    .addNode(createAgentNode('agent:1', role))
+    .addNode(createKnowledgeNode('knowledge:1', role, {
+        tags: ['documentation'],
+        contentType: 'text/markdown'
+    }))
+    .addEdge(createEdge('edge:1', 'agent:1', 'knowledge:1', 'can-access'));
+
+// Discover agents and knowledge
+const agents = discoverAgents(graph, 'agent:1');
+const docs = discoverKnowledge(graph, 'agent:1', {
+    tags: ['documentation']
+});
 ```
 
 ## Dependencies

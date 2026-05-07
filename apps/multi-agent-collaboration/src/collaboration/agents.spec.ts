@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-    createCollaborationCapabilities,
-    createCollaborationRoles,
-    createCollaborationGraph,
-    createAgentNodes,
     createAgentEdges,
+    createAgentNodes,
+    createCollaborationCapabilities,
+    createCollaborationGraph,
+    createCollaborationRoles,
     getAgentConfig,
 } from "./agents";
 
