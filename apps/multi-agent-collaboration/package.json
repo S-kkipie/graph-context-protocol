@@ -109,6 +109,8 @@
     },
     "dependencies": {
         "@graph-context-protocol/core": "workspace:*",
+        "@graph-context-protocol/langgraph": "workspace:*",
+        "@langchain/core": "^0.3.0",
         "zod": "^4.4.3"
     }
 }

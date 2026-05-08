@@ -10,6 +10,9 @@
     "exclude": [],
     "references": [
         {
+            "path": "../../packages/langgraph/tsconfig.lib.json"
+        },
+        {
             "path": "../../packages/core/tsconfig.lib.json"
         }
     ]
