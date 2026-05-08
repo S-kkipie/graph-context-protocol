@@ -1,6 +1,3 @@
-import type { Request, Response } from "express";
-import express from "express";
-import { z } from "zod";
 import {
     createAgentNode,
     createEdge,
@@ -11,6 +8,9 @@ import {
     discoverKnowledge,
     type Graph,
 } from "@graph-context-protocol/core";
+import type { Request, Response } from "express";
+import express from "express";
+import { z } from "zod";
 import { DescriptorSchema, GraphSnapshotSchema } from "./descriptor";
 import { buildDescriptor, buildGraphSnapshot, createLocalGraph } from "./graph";
 

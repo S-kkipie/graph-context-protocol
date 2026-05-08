@@ -6,8 +6,8 @@ import {
     createGraph,
     createKnowledgeNode,
     createRole,
-    SystemCapabilities,
     type Graph,
+    SystemCapabilities,
 } from "@graph-context-protocol/core";
 import type { DescriptorDto, GraphSnapshotDto } from "./descriptor";
 

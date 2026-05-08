@@ -1,6 +1,6 @@
 import http from "node:http";
 import { describe, expect, it } from "vitest";
-import { createLocalGraph, buildDescriptor, buildGraphSnapshot } from "./graph";
+import { buildDescriptor, buildGraphSnapshot, createLocalGraph } from "./graph";
 import { createGcpServer } from "./server";
 
 function request(
