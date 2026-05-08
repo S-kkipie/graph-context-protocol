@@ -1,14 +1,14 @@
 import type {
-    ProtocolMessage,
     Graph,
+    ProtocolMessage,
     Result,
 } from "@graph-context-protocol/core";
-import type { ServerId } from "../types.js";
-import type { ServerError } from "../errors.js";
-import type { ConnectionManager } from "../connection/types.js";
 import type { ExternalAgentRegistry } from "../agents/types.js";
-import type { KnowledgeSourceRegistry } from "../knowledge/types.js";
 import type { CacheStore } from "../cache/types.js";
+import type { ConnectionManager } from "../connection/types.js";
+import type { ServerError } from "../errors.js";
+import type { KnowledgeSourceRegistry } from "../knowledge/types.js";
+import type { ServerId } from "../types.js";
 
 export interface HandlerContext {
     readonly serverId: ServerId;

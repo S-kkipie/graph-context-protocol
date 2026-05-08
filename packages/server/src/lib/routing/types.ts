@@ -1,8 +1,11 @@
-import type { ProtocolMessage, NodeId } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import type { Result } from "@graph-context-protocol/core";
-import type { ConnectionManager } from "../connection/types.js";
+import type {
+    NodeId,
+    ProtocolMessage,
+    Result,
+} from "@graph-context-protocol/core";
 import type { ExternalAgentRegistry } from "../agents/types.js";
+import type { ConnectionManager } from "../connection/types.js";
+import type { ServerError } from "../errors.js";
 import type { KnowledgeSourceRegistry } from "../knowledge/types.js";
 
 export type RouteKind =

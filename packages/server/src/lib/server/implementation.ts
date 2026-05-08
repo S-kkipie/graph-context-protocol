@@ -1,33 +1,33 @@
+import type { ProtocolMessage } from "@graph-context-protocol/core";
 import {
-    fail,
-    succeed,
-    type Result,
     addProvenance,
+    fail,
+    type Result,
+    succeed,
 } from "@graph-context-protocol/core";
+import { createExternalAgentRegistry } from "../agents/implementation.js";
+import { createAllowAllAuthProvider } from "../auth/implementation.js";
+import { createMemoryCacheStore } from "../cache/implementation.js";
+import { createConnectionManager } from "../connection/implementation.js";
+import type { ServerError } from "../errors.js";
+import { createServerError } from "../errors.js";
+import { createHandlerRegistry } from "../handlers/implementation.js";
+import { createKnowledgeSourceRegistry } from "../knowledge/implementation.js";
+import { createLifecycleManager } from "../lifecycle/implementation.js";
+import { createMessageRouter } from "../routing/implementation.js";
+import { createSyncScheduler } from "../sync/implementation.js";
+import { createTransportRegistry } from "../transport/implementation.js";
+import type {
+    DeliveryReceipt,
+    InboundMessageEnvelope,
+    ServerConfig,
+    ServerStatus,
+} from "../types.js";
 import type {
     GraphContextServer,
     ServerDependencies,
     ServerSnapshot,
 } from "./types.js";
-import type {
-    ServerStatus,
-    DeliveryReceipt,
-    InboundMessageEnvelope,
-    ServerConfig,
-} from "../types.js";
-import type { ProtocolMessage } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
-import { createLifecycleManager } from "../lifecycle/implementation.js";
-import { createTransportRegistry } from "../transport/implementation.js";
-import { createConnectionManager } from "../connection/implementation.js";
-import { createAllowAllAuthProvider } from "../auth/implementation.js";
-import { createMessageRouter } from "../routing/implementation.js";
-import { createHandlerRegistry } from "../handlers/implementation.js";
-import { createExternalAgentRegistry } from "../agents/implementation.js";
-import { createKnowledgeSourceRegistry } from "../knowledge/implementation.js";
-import { createMemoryCacheStore } from "../cache/implementation.js";
-import { createSyncScheduler } from "../sync/implementation.js";
 
 interface ServerState {
     readonly config: ServerConfig;

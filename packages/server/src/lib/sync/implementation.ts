@@ -1,15 +1,15 @@
-import { fail, succeed, type Result } from "@graph-context-protocol/core";
-import type {
-    SyncScheduler,
-    SyncRequest,
-    SyncResult,
-    SyncOperation,
-    SyncStatus,
-} from "./types.js";
-import type { KnowledgeSourceId } from "../types.js";
+import { fail, type Result, succeed } from "@graph-context-protocol/core";
 import type { ServerError } from "../errors.js";
 import { createServerError } from "../errors.js";
 import type { KnowledgeSourceAdapter } from "../knowledge/types.js";
+import type { KnowledgeSourceId } from "../types.js";
+import type {
+    SyncOperation,
+    SyncRequest,
+    SyncResult,
+    SyncScheduler,
+    SyncStatus,
+} from "./types.js";
 
 interface SyncSchedulerState {
     readonly operations: ReadonlyMap<KnowledgeSourceId, SyncOperation>;

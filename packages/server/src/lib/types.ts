@@ -7,8 +7,8 @@
 import type {
     Metadata,
     NodeId,
-    Timestamp,
     ProtocolMessage,
+    Timestamp,
 } from "@graph-context-protocol/core";
 import { z } from "zod";
 

@@ -1,8 +1,8 @@
 export { createSyncScheduler } from "./implementation.js";
 export type {
-    SyncScheduler,
+    SyncOperation,
     SyncRequest,
     SyncResult,
+    SyncScheduler,
     SyncStatus,
-    SyncOperation,
 } from "./types.js";

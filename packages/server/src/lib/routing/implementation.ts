@@ -1,9 +1,13 @@
-import { fail, succeed, type Result } from "@graph-context-protocol/core";
-import type { MessageRouter, MessageRoute, RoutingContext } from "./types.js";
 import type { ProtocolMessage } from "@graph-context-protocol/core";
+import {
+    fail,
+    isMessageExpired,
+    type Result,
+    succeed,
+} from "@graph-context-protocol/core";
 import type { ServerError } from "../errors.js";
 import { createServerError } from "../errors.js";
-import { isMessageExpired } from "@graph-context-protocol/core";
+import type { MessageRoute, MessageRouter, RoutingContext } from "./types.js";
 
 class MessageRouterImpl implements MessageRouter {
     route(

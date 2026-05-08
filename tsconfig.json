@@ -11,6 +11,9 @@
         },
         {
             "path": "./packages/server"
+        },
+        {
+            "path": "./apps/server-demo"
         }
     ]
 }
