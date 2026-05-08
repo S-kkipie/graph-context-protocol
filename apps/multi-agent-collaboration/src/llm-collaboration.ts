@@ -172,7 +172,7 @@ function createLLMAgents(
     graph: ReturnType<typeof createCollaborationGraph>["graph"],
 ) {
     const llm = createOpenRouterLLM({
-        model: "minimax/minimax-m2.5:free",
+        model: "google/gemma-4-31b-it:free",
         temperature: 0.7,
     });
 

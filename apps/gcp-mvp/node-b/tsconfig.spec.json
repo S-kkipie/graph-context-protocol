@@ -1,0 +1,11 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "types": ["node", "vitest/globals"],
+        "rootDir": "src",
+        "tsBuildInfoFile": "dist/tsconfig.spec.tsbuildinfo"
+    },
+    "include": ["src/**/*.ts", "src/**/*.spec.ts"],
+    "exclude": []
+}
