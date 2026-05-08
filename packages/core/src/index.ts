@@ -1,5 +1,19 @@
 // Re-export from submodules with explicit organization
 
+// Agent domain
+export {
+    createAgent,
+    createDiscoverAgentsTool,
+    createDiscoverKnowledgeTool,
+    createGraphInfoTool,
+    createSendMessageTool,
+} from "./lib/agent";
+export type {
+    Agent,
+    AgentContext,
+    AgentTool,
+    AgentToolResult,
+} from "./lib/agent/types";
 export {
     createContext,
     createContextFilter,
