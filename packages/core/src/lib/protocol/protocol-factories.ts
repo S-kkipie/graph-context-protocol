@@ -1,16 +1,16 @@
-import type { GraphContext } from "../context/types";
+import type { GraphContext } from "../context/context-types";
 import type { MessageId, NodeId } from "../types";
 import type {
     MessageHeader,
     MessageOptions,
     MessageType,
     ProtocolMessage,
-} from "./types";
+} from "./protocol-types";
 
 /**
- * Protocol implementation functions.
+ * Protocol factory functions.
  *
- * @module protocol/implementation
+ * @module protocol/protocol-factories
  */
 
 /**

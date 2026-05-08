@@ -4,10 +4,10 @@ export {
     createDiscoverKnowledgeTool,
     createGraphInfoTool,
     createSendMessageTool,
-} from "./implementation";
+} from "./agent-factories";
 export type {
     Agent,
     AgentContext,
     AgentTool,
     AgentToolResult,
-} from "./types";
+} from "./agent-types";

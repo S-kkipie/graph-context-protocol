@@ -13,38 +13,46 @@ This package provides the foundational data structures and operations for the Gr
 
 ## Architecture
 
-The core is organized into domain modules, each with separated types and implementation:
+The core is organized into domain modules, each using **semantic file names** that describe their contents:
 
 ```
 src/lib/
-├── types.ts              # Base identifiers (NodeId, EdgeId, Metadata, Timestamp)
-├── result.ts             # Result<T,E> type for functional error handling
-├── graph/                # Graph data structures
-│   ├── types.ts          # GraphNode, GraphEdge, EdgeType, NodeKind interfaces
-│   ├── implementation.ts # createNode(), createEdge(), createGraph() factories
-│   ├── index.ts          # Public exports
-│   └── graph.spec.ts     # Tests
-├── role/                 # Role and capability management
-│   ├── types.ts          # RoleDefinition, Capability, ContextRule
-│   ├── implementation.ts # createRole(), createCapability() factories
-│   ├── index.ts          # Public exports
-│   └── role.spec.ts      # Tests
-├── context/              # Context propagation
-│   ├── types.ts          # GraphContext, ContextFilter, PropagationResult
-│   ├── implementation.ts # createContext(), propagateContext()
-│   ├── index.ts          # Public exports
-│   └── context.spec.ts   # Tests
-├── protocol/             # Protocol messages
-│   ├── types.ts          # ProtocolMessage, MessageHeader, MessageProvenance
-│   ├── implementation.ts # createMessageHeader(), createProtocolMessage()
-│   ├── index.ts          # Public exports
-│   └── protocol.spec.ts  # Tests
-└── discovery/            # Discovery and query system
-    ├── types.ts          # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
-    ├── implementation.ts # discoverNodes(), discoverAgents(), discoverKnowledge()
-    ├── index.ts          # Public exports
-    └── discovery.spec.ts # Tests
+├── types.ts                  # Base identifiers (NodeId, EdgeId, Metadata, Timestamp)
+├── result.ts                 # Result<T,E> type for functional error handling
+├── graph/                    # Graph data structures
+│   ├── graph-types.ts        # GraphNode, GraphEdge, EdgeType, NodeKind interfaces
+│   ├── graph-factories.ts    # createNode(), createEdge(), createGraph() factories
+│   ├── graph-type-guards.ts  # isAgentNode(), isKnowledgeNode() type guards
+│   ├── index.ts              # Public exports
+│   └── *.spec.ts             # Tests
+├── role/                     # Role and capability management
+│   ├── role-types.ts         # RoleDefinition, Capability, ContextRule
+│   ├── role-factories.ts     # createRole(), createCapability() factories
+│   ├── index.ts              # Public exports
+│   └── *.spec.ts             # Tests
+├── context/                  # Context propagation
+│   ├── context-types.ts      # GraphContext, ContextFilter, PropagationResult
+│   ├── context-factories.ts  # createContext(), propagateContext()
+│   ├── index.ts              # Public exports
+│   └── *.spec.ts             # Tests
+├── protocol/                 # Protocol messages
+│   ├── protocol-types.ts     # ProtocolMessage, MessageHeader, MessageProvenance
+│   ├── protocol-factories.ts # createMessageHeader(), createProtocolMessage()
+│   ├── index.ts              # Public exports
+│   └── *.spec.ts             # Tests
+├── discovery/                # Discovery and query system
+│   ├── discovery-types.ts    # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
+│   ├── discovery-functions.ts # discoverNodes(), discoverAgents(), discoverKnowledge()
+│   ├── index.ts              # Public exports
+│   └── *.spec.ts             # Tests
+└── agent/                    # Agent and knowledge nodes
+    ├── agent-types.ts        # Agent, AgentTool, AgentContext interfaces
+    ├── agent-factories.ts    # createAgent(), agent tool factories
+    ├── index.ts              # Public exports
+    └── *.spec.ts             # Tests
 ```
+
+> **Note**: `lib/types.ts` is the shared base identifier/metadata contract (NodeId, EdgeId, etc.), not a per-domain file. A `types.ts` file is only appropriate for shared public contracts, multi-file local contracts, or cycle avoidance.
 
 ## Key Features
 
@@ -299,7 +307,7 @@ SystemCapabilities.DISCOVER_KNOWLEDGE // 'cap:discover-knowledge'
 
 ## Testing
 
-81 tests cover all domains:
+98 tests cover all domains:
 
 ```bash
 # Run all tests

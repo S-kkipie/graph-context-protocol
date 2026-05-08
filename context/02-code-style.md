@@ -34,7 +34,7 @@ Use standard ES modules. Import WITHOUT `.js` extension:
 ```typescript
 // ✅ Correct
 import { core } from './core';
-import { GraphNode } from '../graph/node';
+import { GraphNode } from '../graph/graph-types';
 
 // ❌ Incorrect
 import { core } from './core.js';
@@ -51,7 +51,7 @@ import { core } from './core.ts';
 
 | Type | Convention | Example |
 |------|------------|---------|
-| Files | kebab-case | `graph-node.ts`, `role-manager.ts` |
+| Files | kebab-case with domain prefix | `graph-types.ts`, `role-factories.ts` |
 | Types/Interfaces | PascalCase | `GraphNode`, `RoleDefinition` |
 | Functions | camelCase | `createNode`, `propagateContext` |
 | Constants | UPPER_SNAKE_CASE | `MAX_DEPTH`, `DEFAULT_TTL` |
@@ -97,8 +97,8 @@ export function createNode(id: NodeId, role: RoleDefinition): GraphNode {
 // ✅ Good: Ordered imports, descriptive names
 import { z } from 'zod';
 import type { NodeId } from '../types';
-import { validateNode } from '../validation';
-import { GraphNode } from './graph-node';
+import { validateNode } from '../graph/graph-factories';
+import { GraphNode } from './graph-types';
 
 /**
  * Creates a context-aware graph node with role bindings.

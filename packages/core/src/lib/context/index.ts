@@ -6,11 +6,11 @@ export {
     createContextFilter,
     propagateContext,
     validateContext,
-} from "./implementation";
+} from "./context-factories";
 export type {
     ContextData,
     ContextFilter,
     GraphContext,
     PropagationOptions,
     PropagationResult,
-} from "./types";
+} from "./context-types";

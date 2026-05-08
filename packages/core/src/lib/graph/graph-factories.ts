@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { RoleDefinition } from "../role/types";
+import type { RoleDefinition } from "../role/role-types";
 import type { EdgeId, GraphId, Metadata, NodeId, Timestamp } from "../types";
 import {
     EdgeIdSchema,
@@ -16,13 +16,13 @@ import type {
     GraphNode,
     KnowledgeNode,
     SerializedGraphEdge,
-} from "./types";
-import { EdgeTypeSchema } from "./types";
+} from "./graph-types";
+import { EdgeTypeSchema } from "./graph-types";
 
 /**
- * Graph implementation functions.
+ * Graph factory functions.
  *
- * @module graph/implementation
+ * @module graph/graph-factories
  */
 
 /**
@@ -670,7 +670,8 @@ export function createGraph(
             visited.add(source);
 
             while (queue.length > 0) {
-                const current = queue.shift()!;
+                const current = queue.shift();
+                if (current === undefined) continue;
 
                 for (const edge of edges.values()) {
                     let next: NodeId | null = null;

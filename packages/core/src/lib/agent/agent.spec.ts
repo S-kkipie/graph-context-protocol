@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createGraph } from "../graph";
-import { createAgentNode } from "../graph";
-import type { AgentNode } from "../graph/types";
+import { createAgentNode, createGraph } from "../graph";
+import type { AgentNode } from "../graph/graph-types";
 import { createRole } from "../role";
 import {
     createAgent,
@@ -9,8 +8,8 @@ import {
     createDiscoverKnowledgeTool,
     createGraphInfoTool,
     createSendMessageTool,
-} from "./implementation";
-import type { AgentContext } from "./types";
+} from "./agent-factories";
+import type { AgentContext } from "./agent-types";
 
 function createTestRole(id: string) {
     return createRole(id, "Test", "Test role", [], []);

@@ -1,11 +1,11 @@
 import { z } from "zod";
-import type { RoleDefinition } from "../role/types";
+import type { RoleDefinition } from "../role/role-types";
 import type { EdgeId, GraphId, Metadata, NodeId, Timestamp } from "../types";
 
 /**
  * Graph types and schemas.
  *
- * @module graph/types
+ * @module graph/graph-types
  */
 
 /**

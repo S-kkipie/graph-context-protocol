@@ -6,14 +6,14 @@ import {
     ModifyEdge,
     NotificationEdge,
     TraverseEdge,
-} from "./implementation";
+} from "./graph-factories";
 import type {
     AgentNode,
     BuiltInEdgeType,
     GraphEdge,
     GraphNode,
     KnowledgeNode,
-} from "./types";
+} from "./graph-types";
 
 /**
  * Type guard for AccessEdge.

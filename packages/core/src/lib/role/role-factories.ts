@@ -1,13 +1,13 @@
 import { z } from "zod";
 import type { CapabilityId, Metadata, RoleId } from "../types";
 import { CapabilityIdSchema, MetadataSchema } from "../types";
-import type { Capability, ContextRule, RoleDefinition } from "./types";
-import { RoleDefinitionSchema } from "./types";
+import type { Capability, ContextRule, RoleDefinition } from "./role-types";
+import { RoleDefinitionSchema } from "./role-types";
 
 /**
- * Role implementation functions.
+ * Role factory functions.
  *
- * @module role/implementation
+ * @module role/role-factories
  */
 
 /**

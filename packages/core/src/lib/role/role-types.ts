@@ -5,7 +5,7 @@ import { CapabilityIdSchema, MetadataSchema, RoleIdSchema } from "../types";
 /**
  * Role types and schemas.
  *
- * @module role/types
+ * @module role/role-types
  */
 
 /**

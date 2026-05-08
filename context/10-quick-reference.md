@@ -60,13 +60,14 @@ packages/
 │   ├── src/
 │   │   ├── index.ts         # Public API exports
 │   │   └── lib/
-│   │       ├── types.ts     # Base identifiers
+│   │       ├── types.ts     # Base identifiers (NodeId, EdgeId, Metadata)
 │   │       ├── result.ts    # Result<T,E> type
 │   │       ├── graph/       # Graph domain (nodes, edges, graph container)
 │   │       ├── role/        # Role domain (roles, capabilities)
 │   │       ├── context/     # Context domain (propagation)
 │   │       ├── protocol/    # Protocol domain (messages)
-│   │       └── discovery/   # Discovery domain (query system)
+│   │       ├── discovery/   # Discovery domain (query system)
+│   │       └── agent/       # Agent domain (agent/knowledge nodes)
 │   ├── package.json
 │   └── vitest.config.mts
 └── [future-packages]/       # Additional protocol layers
@@ -74,15 +75,34 @@ packages/
 
 ## Domain Module Structure
 
-Each domain follows this pattern:
+Each domain uses **semantic file names** that describe their contents:
 
 ```
 lib/<domain>/
-├── types.ts           # Domain-specific types and interfaces
-├── implementation.ts  # Factory functions and logic
-├── index.ts          # Public API exports
-└── *.spec.ts         # Co-located tests
+├── <domain>-types.ts      # Domain-specific types and interfaces
+├── <domain>-factories.ts   # Factory functions and business logic
+├── <domain>-type-guards.ts # Type guards (only where needed)
+├── index.ts                # Public API barrel exports
+└── *.spec.ts               # Co-located tests
 ```
+
+Concrete examples:
+```
+lib/graph/
+├── graph-types.ts          # GraphNode, GraphEdge, EdgeType, NodeKind
+├── graph-factories.ts      # createNode(), createEdge(), createGraph()
+├── graph-type-guards.ts    # isAgentNode(), isKnowledgeNode()
+├── index.ts
+└── *.spec.ts
+
+lib/role/
+├── role-types.ts            # RoleDefinition, Capability, ContextRule
+├── role-factories.ts        # createRole(), createCapability()
+├── index.ts
+└── *.spec.ts
+```
+
+> **Note**: `lib/types.ts` is the shared base identifier/metadata contract, not a per-domain file. A `types.ts` file is only appropriate for shared public contracts, multi-file local contracts, or cycle avoidance.
 
 ## Quick Patterns
 
@@ -180,7 +200,7 @@ const role = createRole('role:researcher', 'Researcher', '', [
 
 | Type | Convention | Example |
 |------|------------|---------|
-| Files | kebab-case | `graph-node.ts` |
+| Files | kebab-case with domain prefix | `graph-types.ts`, `role-factories.ts` |
 | Types | PascalCase | `GraphNode` |
 | Functions | camelCase | `createNode` |
 | Constants | UPPER_SNAKE | `MAX_DEPTH` |

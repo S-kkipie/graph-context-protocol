@@ -1,10 +1,10 @@
-import { tool } from "@langchain/core/tools";
-import type { StructuredTool } from "@langchain/core/tools";
 import type {
     Agent,
     AgentContext,
     AgentTool,
 } from "@graph-context-protocol/core";
+import type { StructuredTool } from "@langchain/core/tools";
+import { tool } from "@langchain/core/tools";
 
 /**
  * Converts a Graph Context Protocol AgentTool to a LangChain StructuredTool.

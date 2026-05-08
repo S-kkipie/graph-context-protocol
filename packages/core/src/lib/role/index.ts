@@ -7,12 +7,12 @@ export {
     createCapability,
     createContextRule,
     createRole,
-} from "./implementation";
+} from "./role-factories";
 export type {
     Capability,
     ContextRule,
     RoleDefinition,
-} from "./types";
+} from "./role-types";
 // Schemas and constants
 export {
     CapabilitySchema,
@@ -20,4 +20,4 @@ export {
     RoleDefinitionSchema,
     SystemCapabilities,
     SystemRoles,
-} from "./types";
+} from "./role-types";

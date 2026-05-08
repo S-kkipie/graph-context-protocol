@@ -1,17 +1,17 @@
-import type { GraphNode } from "../graph/types";
-import type { RoleDefinition } from "../role/types";
+import type { GraphNode } from "../graph/graph-types";
+import type { RoleDefinition } from "../role/role-types";
 import type { ContextId, GraphId, Metadata, NodeId } from "../types";
 import type {
     ContextData,
     ContextFilter,
     GraphContext,
     PropagationResult,
-} from "./types";
+} from "./context-types";
 
 /**
- * Context implementation functions.
+ * Context factory functions.
  *
- * @module context/implementation
+ * @module context/context-factories
  */
 
 /**

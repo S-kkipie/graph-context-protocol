@@ -1,11 +1,11 @@
-import type { GraphNode } from "../graph/types";
-import type { RoleDefinition } from "../role/types";
+import type { GraphNode } from "../graph/graph-types";
+import type { RoleDefinition } from "../role/role-types";
 import type { ContextId, GraphId, Metadata, NodeId } from "../types";
 
 /**
  * Context types.
  *
- * @module context/types
+ * @module context/context-types
  */
 
 /**

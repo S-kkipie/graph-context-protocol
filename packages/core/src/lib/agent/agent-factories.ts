@@ -1,12 +1,17 @@
 import { z } from "zod";
 import { discoverAgents, discoverKnowledge } from "../discovery";
-import type { DiscoveryFilters } from "../discovery/types";
-import { isAgentNode } from "../graph/type-guards";
-import type { AgentNode } from "../graph/types";
+import type { DiscoveryFilters } from "../discovery/discovery-types";
+import { isAgentNode } from "../graph/graph-type-guards";
+import type { AgentNode } from "../graph/graph-types";
 import { createMessageHeader, createProtocolMessage } from "../protocol";
-import { MetadataSchema } from "../types";
 import type { Metadata } from "../types";
-import type { Agent, AgentContext, AgentTool, AgentToolResult } from "./types";
+import { MetadataSchema } from "../types";
+import type {
+    Agent,
+    AgentContext,
+    AgentTool,
+    AgentToolResult,
+} from "./agent-types";
 
 export const CreateAgentInputSchema = z.object({
     metadata: MetadataSchema.default({}),

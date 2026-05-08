@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { GraphNode } from "../graph/types";
-import type { RoleDefinition } from "../role/types";
+import type { GraphNode } from "../graph/graph-types";
+import type { RoleDefinition } from "../role/role-types";
+import type { ContextData } from "./context-types";
 import {
     createContext,
     createContextFilter,
     propagateContext,
     validateContext,
 } from "./index";
-import type { ContextData } from "./types";
 
 // Mock role with specific context rules
 const createMockRole = (

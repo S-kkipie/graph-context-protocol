@@ -195,7 +195,7 @@ function withNode(graph: Graph, node: GraphNode): Graph {
 
 ## Barrel Exports
 
-Each module exposes its public API through an `index.ts`:
+Each module exposes its public API through an `index.ts` barrel file, re-exporting from semantic file names:
 
 ```typescript
 // lib/graph/index.ts
@@ -206,18 +206,21 @@ export type {
     GraphConfig,
     GraphEdge,
     GraphNode,
-} from "./types";
+} from "./graph-types";
 
 // Schemas
-export { EdgeTypeSchema } from "./types";
+export { EdgeTypeSchema } from "./graph-types";
 
-// Implementation
+// Factories
 export {
     CreateNodeInputSchema,
     createNode,
     CreateEdgeInputSchema,
     createEdge,
-} from "./implementation";
+} from "./graph-factories";
+
+// Type guards
+export { isAgentNode, isKnowledgeNode } from "./graph-type-guards";
 ```
 
 ## Error Handling

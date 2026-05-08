@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { GraphContext } from "../context/types";
-import type { RoleDefinition } from "../role/types";
+import type { GraphContext } from "../context/context-types";
+import type { RoleDefinition } from "../role/role-types";
 import {
     addProvenance,
     createMessageHeader,

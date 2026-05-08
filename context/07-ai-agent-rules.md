@@ -32,8 +32,8 @@ Make APIs discoverable through explicit barrel exports:
 
 ```typescript
 // ✅ Good - In packages/core/src/lib/graph/index.ts
-export { Graph } from './graph';
-export type { GraphConfig } from './types';
+export { Graph } from './graph-factories';
+export type { GraphConfig } from './graph-types';
 
 // Then in packages/core/src/index.ts
 export * from './lib/graph';

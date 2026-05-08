@@ -13,7 +13,7 @@ export type {
     AgentContext,
     AgentTool,
     AgentToolResult,
-} from "./lib/agent/types";
+} from "./lib/agent/agent-types";
 export {
     createContext,
     createContextFilter,
@@ -27,7 +27,7 @@ export type {
     GraphContext,
     PropagationOptions,
     PropagationResult,
-} from "./lib/context/types";
+} from "./lib/context/context-types";
 export {
     discoverAgents,
     discoverKnowledge,
@@ -38,8 +38,8 @@ export type {
     DiscoveryFilters,
     DiscoveryQuery,
     DiscoveryResult,
-} from "./lib/discovery/types";
-export { DiscoveryError } from "./lib/discovery/types";
+} from "./lib/discovery/discovery-types";
+export { DiscoveryError } from "./lib/discovery/discovery-types";
 export {
     AccessEdge,
     BaseGraphEdge,
@@ -63,7 +63,7 @@ export {
     serializeEdge,
     TraverseEdge,
 } from "./lib/graph";
-export type { EdgeDefinition, EdgeRegistry } from "./lib/graph/implementation";
+export type { EdgeDefinition, EdgeRegistry } from "./lib/graph/graph-factories";
 export type {
     AgentNode,
     BuiltInEdgeType,
@@ -77,7 +77,7 @@ export type {
     KnowledgeNode,
     NodeKind,
     SerializedGraphEdge,
-} from "./lib/graph/types";
+} from "./lib/graph/graph-types";
 
 export {
     addProvenance,
@@ -93,7 +93,7 @@ export type {
     MessageProvenance,
     MessageType,
     ProtocolMessage,
-} from "./lib/protocol/types";
+} from "./lib/protocol/protocol-types";
 // Result type helpers
 export type { Result } from "./lib/result";
 export { fail, ResultSchema, succeed, validateWithSchema } from "./lib/result";
@@ -114,7 +114,7 @@ export type {
     Capability,
     ContextRule,
     RoleDefinition,
-} from "./lib/role/types";
+} from "./lib/role/role-types";
 // Base types (core identifiers)
 export type {
     CapabilityId,

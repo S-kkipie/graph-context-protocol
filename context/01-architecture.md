@@ -62,19 +62,22 @@ Messages in the protocol carry:
 
 ## Module Architecture
 
-Each domain module follows a consistent structure:
+Each domain module uses **semantic file names** that describe their contents, not generic names like `types.ts` or `implementation.ts`:
 
 ```
-lib/
-├── types.ts           # Domain-specific types and interfaces
-├── implementation.ts  # Factory functions and business logic
-├── index.ts           # Public API exports (barrel)
-└── *.spec.ts          # Co-located tests
+lib/<domain>/
+├── <domain>-types.ts      # Domain-specific types and interfaces
+├── <domain>-factories.ts   # Factory functions and business logic
+├── <domain>-type-guards.ts # Type guards (only where needed, e.g. graph)
+├── index.ts                # Public API exports (barrel)
+└── *.spec.ts               # Co-located tests
 ```
+
+> **Note**: `lib/types.ts` is the shared base identifier/metadata contract (NodeId, EdgeId, etc.), not a per-domain file. A `types.ts` file is only appropriate for shared public contracts, multi-file local contracts, or cycle avoidance.
 
 ### Design Principles
 
-1. **Separation of Concerns**: Types are separate from implementation
+1. **Separation of Concerns**: Domain contracts are separate from factories/functions
 2. **Immutability**: All data structures are immutable
 3. **Validation**: Runtime validation with Zod schemas
 4. **Pure Functions**: Minimize side effects
@@ -153,7 +156,7 @@ discovery (lib/discovery/) ← uses graph, role, base-types
 
 ### Naming Conventions
 
-- **Files**: kebab-case (`graph-node.ts`, `role-manager.ts`)
+- **Files**: kebab-case with domain prefix (`graph-types.ts`, `role-factories.ts`)
 - **Types/Interfaces**: PascalCase (`GraphNode`, `RoleDefinition`)
 - **Functions**: camelCase (`createNode`, `propagateContext`)
 - **Constants**: UPPER_SNAKE_CASE for true constants
@@ -163,35 +166,41 @@ discovery (lib/discovery/) ← uses graph, role, base-types
 
 ```
 packages/core/src/
-├── index.ts              # Public API with explicit exports
+├── index.ts                  # Public API with explicit exports
 └── lib/
-    ├── types.ts          # Base identifiers (NodeId, EdgeId, etc.)
-    ├── result.ts         # Result<T,E> type and helpers
+    ├── types.ts              # Base identifiers (NodeId, EdgeId, etc.)
+    ├── result.ts             # Result<T,E> type and helpers
     ├── graph/
-    │   ├── types.ts      # GraphNode, GraphEdge interfaces
-    │   ├── implementation.ts # Factory functions
-    │   ├── index.ts      # Barrel exports
-    │   └── graph.spec.ts # Tests
+    │   ├── graph-types.ts    # GraphNode, GraphEdge, EdgeType, NodeKind interfaces
+    │   ├── graph-factories.ts # createNode(), createEdge(), createGraph() factories
+    │   ├── graph-type-guards.ts # isAgentNode(), isKnowledgeNode() type guards
+    │   ├── index.ts          # Barrel exports
+    │   └── *.spec.ts         # Tests
     ├── role/
-    │   ├── types.ts      # RoleDefinition, Capability
-    │   ├── implementation.ts
+    │   ├── role-types.ts     # RoleDefinition, Capability, ContextRule
+    │   ├── role-factories.ts # createRole(), createCapability() factories
     │   ├── index.ts
-    │   └── role.spec.ts
+    │   └── *.spec.ts
     ├── context/
-    │   ├── types.ts      # GraphContext, ContextFilter
-    │   ├── implementation.ts
+    │   ├── context-types.ts  # GraphContext, ContextFilter, PropagationResult
+    │   ├── context-factories.ts # createContext(), propagateContext()
     │   ├── index.ts
-    │   └── context.spec.ts
+    │   └── *.spec.ts
     ├── protocol/
-    │   ├── types.ts      # ProtocolMessage, MessageHeader
-    │   ├── implementation.ts
+    │   ├── protocol-types.ts # ProtocolMessage, MessageHeader, MessageProvenance
+    │   ├── protocol-factories.ts # createMessageHeader(), createProtocolMessage()
     │   ├── index.ts
-    │   └── protocol.spec.ts
-    └── discovery/
-        ├── types.ts      # DiscoveryQuery, DiscoveryResult
-        ├── implementation.ts
+    │   └── *.spec.ts
+    ├── discovery/
+    │   ├── discovery-types.ts # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
+    │   ├── discovery-functions.ts # discoverNodes(), discoverAgents(), discoverKnowledge()
+    │   ├── index.ts
+    │   └── *.spec.ts
+    └── agent/
+        ├── agent-types.ts    # Agent, AgentTool, AgentContext interfaces
+        ├── agent-factories.ts # createAgent(), agent tool factories
         ├── index.ts
-        └── discovery.spec.ts
+        └── *.spec.ts
 ```
 
 ## See Also

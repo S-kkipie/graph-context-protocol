@@ -2,10 +2,15 @@
  * Discovery module for Graph Context Protocol.
  * Provides query/discovery capabilities for agents to find other agents and knowledge.
  *
- * @module discovery/types
+ * @module discovery/discovery-types
  */
 
-import type { AgentNode, EdgeType, GraphNode, NodeKind } from "../graph/types";
+import type {
+    AgentNode,
+    EdgeType,
+    GraphNode,
+    NodeKind,
+} from "../graph/graph-types";
 import type { CapabilityId, Metadata, NodeId, RoleId } from "../types";
 
 /**

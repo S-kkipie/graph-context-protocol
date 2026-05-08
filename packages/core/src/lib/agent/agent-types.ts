@@ -4,12 +4,12 @@
  * Provides a framework-agnostic abstraction for agents that interact
  * with the Graph Context Protocol through tools.
  *
- * @module agent/types
+ * @module agent/agent-types
  */
 
-import { z } from "zod";
-import type { AgentNode, Graph } from "../graph/types";
-import type { GraphContext } from "../context/types";
+import type { z } from "zod";
+import type { GraphContext } from "../context/context-types";
+import type { AgentNode, Graph } from "../graph/graph-types";
 import type { Metadata, NodeId } from "../types";
 
 /**

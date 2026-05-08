@@ -1,6 +1,6 @@
 // Types
 
-export type { EdgeDefinition, EdgeRegistry } from "./implementation";
+export type { EdgeDefinition, EdgeRegistry } from "./graph-factories";
 // Implementation - Base class and built-in edges
 export {
     AccessEdge,
@@ -22,7 +22,7 @@ export {
     SerializedGraphEdgeSchema,
     serializeEdge,
     TraverseEdge,
-} from "./implementation";
+} from "./graph-factories";
 // Type guards
 export {
     isAccessEdge,
@@ -34,7 +34,7 @@ export {
     isModifyEdge,
     isNotificationEdge,
     isTraverseEdge,
-} from "./type-guards";
+} from "./graph-type-guards";
 export type {
     AgentNode,
     BuiltInEdgeType,
@@ -48,10 +48,10 @@ export type {
     KnowledgeNode,
     NodeKind,
     SerializedGraphEdge,
-} from "./types";
+} from "./graph-types";
 // Schemas
 export {
     BuiltInEdgeTypeSchema,
     BuiltInNodeKindSchema,
     EdgeTypeSchema,
-} from "./types";
+} from "./graph-types";

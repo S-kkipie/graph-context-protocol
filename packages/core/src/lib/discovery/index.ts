@@ -2,11 +2,11 @@ export {
     discoverAgents,
     discoverKnowledge,
     discoverNodes,
-} from "./implementation";
+} from "./discovery-functions";
 export type {
     DiscoveredNode,
     DiscoveryFilters,
     DiscoveryQuery,
     DiscoveryResult,
-} from "./types";
-export { DiscoveryError } from "./types";
+} from "./discovery-types";
+export { DiscoveryError } from "./discovery-types";

@@ -185,12 +185,33 @@ pnpm nx run-many -t build
 │   └── core/                   # Core protocol library
 │       ├── src/
 │       │   ├── lib/
-│       │   │   ├── types.ts    # Base types
-│       │   │   ├── result.ts   # Result type
+│       │   │   ├── types.ts    # Base identifiers (NodeId, EdgeId, Metadata)
+│       │   │   ├── result.ts   # Result<T,E> type and helpers
 │       │   │   ├── graph/      # Graph domain
+│       │   │   │   ├── graph-types.ts
+│       │   │   │   ├── graph-factories.ts
+│       │   │   │   ├── graph-type-guards.ts
+│       │   │   │   └── index.ts
 │       │   │   ├── role/       # Role domain
+│       │   │   │   ├── role-types.ts
+│       │   │   │   ├── role-factories.ts
+│       │   │   │   └── index.ts
 │       │   │   ├── context/    # Context domain
-│       │   │   └── protocol/   # Protocol domain
+│       │   │   │   ├── context-types.ts
+│       │   │   │   ├── context-factories.ts
+│       │   │   │   └── index.ts
+│       │   │   ├── protocol/   # Protocol domain
+│       │   │   │   ├── protocol-types.ts
+│       │   │   │   ├── protocol-factories.ts
+│       │   │   │   └── index.ts
+│       │   │   ├── discovery/  # Discovery domain
+│       │   │   │   ├── discovery-types.ts
+│       │   │   │   ├── discovery-functions.ts
+│       │   │   │   └── index.ts
+│       │   │   └── agent/      # Agent domain
+│       │   │       ├── agent-types.ts
+│       │   │       ├── agent-factories.ts
+│       │   │       └── index.ts
 │       │   └── index.ts        # Public API
 │       └── README.md
 ├── AGENTS.md                   # AI Agent Guidelines

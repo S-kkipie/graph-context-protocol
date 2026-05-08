@@ -6,7 +6,7 @@ export {
     createMessageHeader,
     createProtocolMessage,
     isMessageExpired,
-} from "./implementation";
+} from "./protocol-factories";
 export type {
     MessageHeader,
     MessageOptions,
@@ -14,4 +14,4 @@ export type {
     MessageProvenance,
     MessageType,
     ProtocolMessage,
-} from "./types";
+} from "./protocol-types";

@@ -1,4 +1,4 @@
-import { isAgentNode, isKnowledgeNode } from "../graph/type-guards";
+import { isAgentNode, isKnowledgeNode } from "../graph/graph-type-guards";
 import type {
     AgentNode,
     Graph,
@@ -6,8 +6,8 @@ import type {
     GraphNode,
     KnowledgeNode,
     NodeKind,
-} from "../graph/types";
-import { SystemCapabilities } from "../role/types";
+} from "../graph/graph-types";
+import { SystemCapabilities } from "../role/role-types";
 import type { CapabilityId, NodeId } from "../types";
 import {
     type DiscoveredNode,
@@ -15,7 +15,7 @@ import {
     type DiscoveryFilters,
     type DiscoveryQuery,
     type DiscoveryResult,
-} from "./types";
+} from "./discovery-types";
 
 /**
  * Normalizes discovery query with defaults.
@@ -73,7 +73,7 @@ function matchesPath(pattern: string, path: string): boolean {
     if (pattern === path) return true;
     if (pattern.endsWith(".*")) {
         const prefix = pattern.slice(0, -2);
-        return path.startsWith(prefix + ".") || path === prefix;
+        return path.startsWith(`${prefix}.`) || path === prefix;
     }
     return false;
 }
@@ -205,7 +205,8 @@ export function discoverNodes(
     const denied = new Set<NodeId>();
 
     while (queue.length > 0) {
-        const current = queue.shift()!;
+        const current = queue.shift();
+        if (current === undefined) continue;
 
         if (current.distance >= normalized.maxDepth) continue;
 

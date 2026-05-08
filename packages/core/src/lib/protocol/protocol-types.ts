@@ -1,10 +1,10 @@
-import type { GraphContext } from "../context/types";
+import type { GraphContext } from "../context/context-types";
 import type { MessageId, Metadata, NodeId, Timestamp } from "../types";
 
 /**
  * Protocol types.
  *
- * @module protocol/types
+ * @module protocol/protocol-types
  */
 
 /**

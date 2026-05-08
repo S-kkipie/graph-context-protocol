@@ -129,20 +129,64 @@ packages/
 │   │       ├── role/        # Role domain (roles, capabilities)
 │   │       ├── context/     # Context domain (propagation)
 │   │       ├── protocol/    # Protocol domain (messages)
-│   │       └── discovery/   # Discovery domain (query system)
+│   │       ├── discovery/   # Discovery domain (query system)
+│   │       └── agent/       # Agent domain (agent/knowledge nodes)
 │   ├── package.json
 │   └── vitest.config.mts
 └── [future-packages]/       # Additional protocol layers
 ```
 
-Each domain module follows this structure:
+Each domain module uses **semantic file names** that describe their contents, not generic names like `types.ts` or `implementation.ts`:
 ```
 lib/<domain>/
-├── types.ts           # Domain-specific types and interfaces
-├── implementation.ts  # Factory functions and business logic
-├── index.ts          # Public API barrel exports
-└── *.spec.ts         # Co-located tests
+├── <domain>-types.ts      # Domain-specific types and interfaces
+├── <domain>-factories.ts   # Factory functions and business logic
+├── <domain>-type-guards.ts # Type guards (only where needed, e.g. graph)
+├── index.ts                # Public API barrel exports
+└── *.spec.ts               # Co-located tests
 ```
+
+Concrete file names per domain:
+```
+lib/graph/
+├── graph-types.ts          # GraphNode, GraphEdge, EdgeType, NodeKind
+├── graph-factories.ts      # createNode(), createEdge(), createGraph()
+├── graph-type-guards.ts    # isAgentNode(), isKnowledgeNode()
+├── index.ts
+└── *.spec.ts
+
+lib/role/
+├── role-types.ts            # RoleDefinition, Capability, ContextRule
+├── role-factories.ts        # createRole(), createCapability()
+├── index.ts
+└── *.spec.ts
+
+lib/context/
+├── context-types.ts         # GraphContext, ContextFilter, PropagationResult
+├── context-factories.ts     # createContext(), propagateContext()
+├── index.ts
+└── *.spec.ts
+
+lib/protocol/
+├── protocol-types.ts        # ProtocolMessage, MessageHeader, MessageProvenance
+├── protocol-factories.ts    # createMessageHeader(), createProtocolMessage()
+├── index.ts
+└── *.spec.ts
+
+lib/discovery/
+├── discovery-types.ts       # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
+├── discovery-functions.ts   # discoverNodes(), discoverAgents(), discoverKnowledge()
+├── index.ts
+└── *.spec.ts
+
+lib/agent/
+├── agent-types.ts           # Agent, AgentTool, AgentContext interfaces
+├── agent-factories.ts       # createAgent(), agent tool factories
+├── index.ts
+└── *.spec.ts
+```
+
+> **Note**: `lib/types.ts` remains the shared base identifier/metadata contract (NodeId, EdgeId, etc.) and `lib/result.ts` remains a shared utility. A `types.ts` file is only appropriate for shared public contracts, multi-file local contracts, or cycle avoidance.
 
 ---
 
