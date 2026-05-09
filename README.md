@@ -4,12 +4,14 @@
 
 ## What is Graph Context Protocol?
 
-Unlike traditional A2A (Agent-to-Agent) direct messaging, the **Graph Context Protocol (GCP)** enables structured context propagation through graph relationships. This approach provides:
+Unlike traditional A2A (Agent-to-Agent) direct messaging, the **Graph Context Protocol (GCP)** enables role-gated context access through graph relationships. The primary flow is read-first: peers expose queryable knowledge nodes, authenticate callers locally, authorize access against owner-side policy, and return permitted context results without transferring the remote source of truth. This approach provides:
 
 - **Decoupled communication** - Agents don't need to know about each other directly
 - **Context scoping** - Data flows based on permissions and relationships
 - **Auditability** - Full provenance tracking of context changes
 - **Scalability** - Graph topology handles complex agent networks
+
+Direct messages can still exist as a policy-controlled fallback, but they are not the primary protocol model.
 
 ## Packages
 
@@ -106,6 +108,28 @@ const knowledge = discoverKnowledge(graph, 'agent:researcher', {
     maxDepth: 2
 });
 ```
+
+### Remote Context Query
+
+Peers can advertise queryable knowledge surfaces with safe descriptors and then authorize each query locally:
+
+```typescript
+const requester = createRequesterDescriptor(
+    'principal:developer',
+    ['role:developer'],
+    [SystemCapabilities.QUERY_REMOTE_CONTEXT]
+);
+
+const query = createContextQuery(
+    'query:events-today',
+    requester,
+    'knowledge:node-b-events',
+    'text',
+    'what did node B do today?'
+);
+```
+
+The server-side `context-query` handler treats `requester` as audit metadata only. It authenticates credentials through the configured auth provider, checks the target knowledge node's `gcp.accessPolicy`, and only then executes the targeted knowledge adapter.
 
 ### Role-Based Access
 
