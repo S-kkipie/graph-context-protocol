@@ -6,6 +6,7 @@ import { createGcpServer } from "./server";
 function request(
     options: http.RequestOptions,
     body?: unknown,
+    headers?: Record<string, string>,
 ): Promise<{ status: number; body: unknown }> {
     return new Promise((resolve, reject) => {
         const req = http.request(options, (res) => {
@@ -25,6 +26,9 @@ function request(
             });
         });
         req.on("error", reject);
+        for (const [key, value] of Object.entries(headers ?? {})) {
+            req.setHeader(key, value);
+        }
         if (body) {
             req.setHeader("Content-Type", "application/json");
             req.write(JSON.stringify(body));
@@ -38,6 +42,7 @@ describe("Graph and Descriptor", () => {
         const graph = createLocalGraph("test-node");
         expect(graph.nodes.has("agent:test-node")).toBe(true);
         expect(graph.nodes.has("knowledge:test-node-specs")).toBe(true);
+        expect(graph.nodes.has("knowledge:test-node-events")).toBe(true);
     });
 
     it("builds descriptor DTO", () => {
@@ -61,8 +66,8 @@ describe("Graph and Descriptor", () => {
         const graph = createLocalGraph("test-node");
         const snapshot = buildGraphSnapshot(graph);
         expect(snapshot.id).toBe("graph:test-node");
-        expect(snapshot.nodes.length).toBe(2);
-        expect(snapshot.edges.length).toBe(1);
+        expect(snapshot.nodes.length).toBe(3);
+        expect(snapshot.edges.length).toBe(2);
     });
 });
 
@@ -177,19 +182,13 @@ describe("Express Server", () => {
         await serverB.stop();
     });
 
-    it("POST /gcp/discover with custom peerUrl overrides default", async () => {
+    it("POST /gcp/discover rejects peerUrl outside configured peer", async () => {
         const serverA = createGcpServer(
             "node-a",
             5121,
             "http://localhost:9999",
         );
-        const serverB = createGcpServer(
-            "node-b",
-            5122,
-            "http://localhost:9999",
-        );
         await serverA.start();
-        await serverB.start();
 
         const discoverRes = await request(
             {
@@ -201,12 +200,11 @@ describe("Express Server", () => {
             { peerUrl: "http://localhost:5122" },
         );
 
-        expect(discoverRes.status).toBe(200);
+        expect(discoverRes.status).toBe(400);
         const discoverBody = discoverRes.body as Record<string, unknown>;
-        expect(discoverBody).toHaveProperty("success", true);
+        expect(discoverBody).toHaveProperty("error", "Peer URL is not allowed");
 
         await serverA.stop();
-        await serverB.stop();
     });
 
     it("GET /gcp/discovery returns agents and knowledge", async () => {
@@ -244,6 +242,149 @@ describe("Express Server", () => {
         expect(body.nodes.some((n) => n.id === "knowledge:node-a-specs")).toBe(
             true,
         );
+
+        await server.stop();
+    });
+
+    it("GET /gcp/context/descriptor exposes queryable events without content", async () => {
+        const server = createGcpServer("node-a", 5151, "http://localhost:5152");
+        await server.start();
+
+        const res = await request({
+            hostname: "localhost",
+            port: 5151,
+            path: "/gcp/context/descriptor",
+            method: "GET",
+        });
+
+        expect(res.status).toBe(200);
+        const body = res.body as {
+            exposedKnowledge: Array<{
+                nodeId: string;
+                knowledgeType: string;
+                queryable: boolean;
+                metadata: Record<string, unknown>;
+            }>;
+        };
+        const events = body.exposedKnowledge.find(
+            (item) => item.nodeId === "knowledge:node-a-events",
+        );
+        expect(events?.knowledgeType).toBe("events");
+        expect(events?.queryable).toBe(true);
+        expect(events?.metadata.content).toBeUndefined();
+
+        await server.stop();
+    });
+
+    it("POST /gcp/context/query allows developer and denies external", async () => {
+        const server = createGcpServer("node-a", 5153, "http://localhost:5154");
+        await server.start();
+        const query = {
+            contractVersion: "gcp-context-contract/v1",
+            queryId: "query:test",
+            requester: {
+                principalId: "principal:developer",
+                roles: ["role:developer"],
+                capabilities: ["cap:query-remote-context"],
+                metadata: {},
+            },
+            targetNodeId: "knowledge:node-a-events",
+            mode: "text",
+            query: "what happened today?",
+            metadata: {},
+        };
+
+        const allowed = await request(
+            {
+                hostname: "localhost",
+                port: 5153,
+                path: "/gcp/context/query",
+                method: "POST",
+            },
+            query,
+            { authorization: "Bearer token:developer" },
+        );
+        expect(allowed.status).toBe(200);
+        expect((allowed.body as { status: string }).status).toBe("ok");
+
+        const denied = await request(
+            {
+                hostname: "localhost",
+                port: 5153,
+                path: "/gcp/context/query",
+                method: "POST",
+            },
+            { ...query, queryId: "query:denied" },
+            { authorization: "Bearer token:external" },
+        );
+        expect(denied.status).toBe(403);
+        expect((denied.body as { status: string }).status).toBe("denied");
+
+        await server.stop();
+    });
+
+    it("POST /gcp/context/query-peer queries peer events without importing graph", async () => {
+        const serverA = createGcpServer(
+            "node-a",
+            5155,
+            "http://localhost:5156",
+        );
+        const serverB = createGcpServer(
+            "node-b",
+            5156,
+            "http://localhost:5155",
+        );
+        await serverA.start();
+        await serverB.start();
+
+        const res = await request(
+            {
+                hostname: "localhost",
+                port: 5155,
+                path: "/gcp/context/query-peer",
+                method: "POST",
+            },
+            {
+                peerUrl: "http://localhost:5156",
+                authToken: "token:developer",
+                question: "what did node B do today?",
+            },
+        );
+
+        expect(res.status).toBe(200);
+        const body = res.body as {
+            status: string;
+            sourceNodeId: string;
+            result: { answer: string };
+        };
+        expect(body.status).toBe("ok");
+        expect(body.sourceNodeId).toBe("knowledge:node-b-events");
+        expect(body.result.answer).toContain("node-b recorded 2 events today");
+
+        await serverA.stop();
+        await serverB.stop();
+    });
+
+    it("POST /gcp/context/query-peer rejects peerUrl outside configured peer", async () => {
+        const server = createGcpServer("node-a", 5157, "http://localhost:5158");
+        await server.start();
+
+        const res = await request(
+            {
+                hostname: "localhost",
+                port: 5157,
+                path: "/gcp/context/query-peer",
+                method: "POST",
+            },
+            {
+                peerUrl: "http://localhost:9999",
+                authToken: "token:developer",
+                question: "what did node B do today?",
+            },
+        );
+
+        expect(res.status).toBe(400);
+        expect(res.body).toEqual({ error: "Peer URL is not allowed" });
 
         await server.stop();
     });
