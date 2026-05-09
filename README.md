@@ -21,32 +21,56 @@ Core library providing the foundational data structures and operations:
 
 - **Graph Domain** - Immutable nodes (agents, knowledge) and extensible typed edges
 - **Role Domain** - Role-based access control with capabilities
-- **Context Domain** - Context propagation with filtering
+- **Context Domain** - Context propagation with filtering and remote query
 - **Protocol Domain** - Message handling with provenance tracking
-- **Discovery Domain** - Query and discovery system for agents to find other agents and knowledge
+- **Discovery Domain** - Query and discovery system with peer descriptors and access contracts
 
 See [packages/core/README.md](./packages/core/README.md) for detailed documentation.
+
+### `@graph-context-protocol/server`
+
+Framework-agnostic server runtime that extends the core with:
+
+- **Transport abstraction** - Pluggable HTTP, WebSocket, or custom transports
+- **Protocol handlers** - Default `context-query` handler with auth and authorization
+- **Knowledge adapter registry** - Targeted single-adapter query execution
+- **External agent management** - Register and communicate with agents outside the local graph
+- **Lifecycle management** - Start, stop, and graceful shutdown with hooks
+
+See [packages/server/README.md](./packages/server/README.md) for detailed documentation.
+
+### `gcp-mvp-node-a` / `gcp-mvp-node-b`
+
+MVP demo applications showing the read-first context query flow between two independently owned nodes. Each node exposes a local graph with queryable event knowledge, authenticates callers, and enforces node-centered access policy. See `apps/gcp-mvp/`.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Graph Context Protocol                   │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐              │
-│  │  Graph   │───▶│  Role    │───▶│ Context  │              │
-│  │  Nodes   │    │  Access  │    │  Flow    │              │
-│  └──────────┘    └──────────┘    └──────────┘              │
-│         │                            │                      │
-│         └────────────────────────────┘                      │
-│                                      │                      │
-│                              ┌───────▼──────┐              │
-│                              │   Protocol   │              │
-│                              │   Messages   │              │
-│                              └──────────────┘              │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    Graph Context Protocol                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐     ┌────────────────┐     ┌───────────────┐ │
+│  │   @graph     │────▶│   @graph       │────▶│   gcp-mvp     │ │
+│  │   -context   │     │   -server      │     │   node-a/b    │ │
+│  │   -protocol  │     │   runtime      │     │   demos       │ │
+│  │   /core      │     │                │     │               │ │
+│  └──────┬───────┘     └───────┬────────┘     └───────────────┘ │
+│         │                     │                                 │
+│         ▼                     ▼                                 │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐                  │
+│  │  Graph   │───▶│  Role    │───▶│ Context  │                  │
+│  │  Nodes   │    │  Access  │    │  Query   │                  │
+│  └──────────┘    └──────────┘    └──────────┘                  │
+│         │                            │                          │
+│         └────────────────────────────┘                          │
+│                                      │                          │
+│                              ┌───────▼──────┐                  │
+│                              │   Protocol   │                  │
+│                              │   Messages   │                  │
+│                              └──────────────┘                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
@@ -178,17 +202,21 @@ pnpm install
 # Format code (REQUIRED before commits)
 pnpm format
 
-# Run all tests
+# Run all tests (core, server, demos)
 pnpm nx run-many -t test
 
-# Run tests in watch mode
-pnpm nx test core --watch
+# Run tests for specific project
+pnpm nx test core
+pnpm nx test server
 
-# Type check
+# Type check all projects
 pnpm nx run-many -t typecheck
 
-# Build all packages
+# Build all projects
 pnpm nx run-many -t build
+
+# Build specific project
+pnpm nx build gcp-mvp-node-a
 ```
 
 ## Project Structure
@@ -204,40 +232,38 @@ pnpm nx run-many -t build
 │   ├── 07-ai-agent-rules.md    # AI agent rules
 │   ├── 08-ci-cd.md             # CI/CD guide
 │   ├── 09-dependencies.md      # Dependency management
-│   └── 10-quick-reference.md   # Quick reference
+│   ├── 10-quick-reference.md   # Quick reference
+│   └── 11-direction.md         # Strategic direction
 ├── packages/
-│   └── core/                   # Core protocol library
+│   ├── core/                   # Core protocol library
+│   │   ├── src/
+│   │   │   ├── lib/
+│   │   │   │   ├── types.ts    # Base identifiers (NodeId, EdgeId, Metadata)
+│   │   │   │   ├── result.ts   # Result<T,E> type and helpers
+│   │   │   │   ├── graph/      # Graph domain
+│   │   │   │   ├── role/       # Role domain
+│   │   │   │   ├── context/    # Context propagation and remote query
+│   │   │   │   ├── protocol/   # Protocol messages
+│   │   │   │   ├── discovery/  # Discovery and peer contracts
+│   │   │   │   └── agent/      # Agent domain
+│   │   │   └── index.ts        # Public API
+│   │   └── README.md
+│   └── server/                 # Server runtime
 │       ├── src/
 │       │   ├── lib/
-│       │   │   ├── types.ts    # Base identifiers (NodeId, EdgeId, Metadata)
-│       │   │   ├── result.ts   # Result<T,E> type and helpers
-│       │   │   ├── graph/      # Graph domain
-│       │   │   │   ├── graph-types.ts
-│       │   │   │   ├── graph-factories.ts
-│       │   │   │   ├── graph-type-guards.ts
-│       │   │   │   └── index.ts
-│       │   │   ├── role/       # Role domain
-│       │   │   │   ├── role-types.ts
-│       │   │   │   ├── role-factories.ts
-│       │   │   │   └── index.ts
-│       │   │   ├── context/    # Context domain
-│       │   │   │   ├── context-types.ts
-│       │   │   │   ├── context-factories.ts
-│       │   │   │   └── index.ts
-│       │   │   ├── protocol/   # Protocol domain
-│       │   │   │   ├── protocol-types.ts
-│       │   │   │   ├── protocol-factories.ts
-│       │   │   │   └── index.ts
-│       │   │   ├── discovery/  # Discovery domain
-│       │   │   │   ├── discovery-types.ts
-│       │   │   │   ├── discovery-functions.ts
-│       │   │   │   └── index.ts
-│       │   │   └── agent/      # Agent domain
-│       │   │       ├── agent-types.ts
-│       │   │       ├── agent-factories.ts
-│       │   │       └── index.ts
+│       │   │   ├── auth/       # Authentication and authorization
+│       │   │   ├── handlers/   # Protocol message handlers
+│       │   │   ├── knowledge/  # Knowledge adapter registry and query execution
+│       │   │   ├── server/     # Server composition and lifecycle
+│       │   │   ├── transport/  # Transport abstraction
+│       │   │   └── ...         # Connection, routing, cache, agents
 │       │   └── index.ts        # Public API
 │       └── README.md
+├── apps/
+│   ├── gcp-mvp/                # MVP demo: node A and node B
+│   │   ├── node-a/             # Express server with context query endpoints
+│   │   └── node-b/             # Express server with context query endpoints
+│   └── server-demo/            # Server runtime demo
 ├── AGENTS.md                   # AI Agent Guidelines
 └── package.json
 ```
@@ -279,6 +305,7 @@ Key points:
 - [Testing](context/04-testing.md) - Testing guidelines
 - [AI Agent Rules](context/07-ai-agent-rules.md) - DO and DON'T
 - [Quick Reference](context/10-quick-reference.md) - Command cheat sheet
+- [Direction](context/11-direction.md) - Strategic direction for read-first context query
 
 ## Resources
 
