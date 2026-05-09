@@ -196,6 +196,8 @@ export const SystemCapabilities = {
     RECEIVE_MESSAGES: "cap:receive-messages",
     DISCOVER_AGENTS: "cap:discover-agents",
     DISCOVER_KNOWLEDGE: "cap:discover-knowledge",
+    QUERY_REMOTE_CONTEXT: "cap:query-remote-context",
+    DISCOVER_PEERS: "cap:discover-peers",
 } as const;
 ```
 
@@ -240,6 +242,8 @@ interface MessageProvenance {
 type MessageType =
     | "context-request"
     | "context-response"
+    | "context-query"
+    | "context-query-response"
     | "action-request"
     | "action-response"
     | "notification"
@@ -250,6 +254,169 @@ type MessageType =
 
 ```typescript
 type MessagePriority = "low" | "normal" | "high" | "critical";
+```
+
+## Remote Context Query
+
+The primary protocol flow is **read-first**: principals query permitted context exposed by knowledge nodes, rather than sending direct messages.
+
+### Context Query Request
+
+```typescript
+interface ContextQueryRequest {
+    readonly contractVersion: "gcp-context-contract/v1";
+    readonly queryId: string;
+    readonly requester: RequesterDescriptor;
+    readonly targetNodeId: NodeId;
+    readonly mode: QueryMode;
+    readonly query: string | Record<string, unknown>;
+    readonly filters?: Record<string, unknown>;
+    readonly metadata: Record<string, unknown>;
+}
+
+interface RequesterDescriptor {
+    readonly principalId: string;
+    readonly roles: readonly RoleId[];
+    readonly capabilities: readonly CapabilityId[];
+    readonly metadata: Record<string, unknown>;
+}
+```
+
+The `requester` field is **audit metadata only** and is never trusted for authorization. The server must authenticate the caller independently through its configured `AuthProvider`.
+
+### Context Query Response
+
+```typescript
+interface ContextQueryResponse {
+    readonly contractVersion: "gcp-context-contract/v1";
+    readonly queryId: string;
+    readonly status: ContextQueryStatus;
+    readonly sourceNodeId: NodeId;
+    readonly result?: unknown;
+    readonly error?: string;
+    readonly provenance?: Record<string, unknown>;
+    readonly metadata: Record<string, unknown>;
+}
+
+type ContextQueryStatus = "ok" | "denied" | "not-found" | "invalid-query" | "unavailable" | "error";
+```
+
+### Server Handler Flow
+
+1. **Validate payload** with `ContextQueryRequestSchema`
+2. **Authenticate caller** via `AuthProvider` (not from `requester` descriptor)
+3. **Resolve target node** from local graph
+4. **Authorize access** against node's `gcp.accessPolicy` metadata
+5. **Execute query** against exactly one matching knowledge adapter
+6. **Return result** without transferring source ownership
+
+Denied queries never call knowledge adapters.
+
+## Node-Centered Authorization
+
+Access decisions are local and node-centered. The target knowledge node's owner grants access through its `gcp.accessPolicy` metadata:
+
+```typescript
+interface AccessPolicyDescriptor {
+    readonly readableByRoles: readonly RoleId[];
+    readonly requiredCapabilities: readonly CapabilityId[];
+    readonly fallbackAllowed: boolean;
+    readonly denialMode: "error" | "empty-result" | "fallback-if-allowed";
+}
+```
+
+### Authorization Sequence
+
+```text
+incoming context query
+    ↓
+authenticate with host app adapter
+    ↓
+resolve Principal
+    ↓
+map Principal to RoleDefinition and capabilities
+    ↓
+resolve target knowledge node
+    ↓
+parse gcp.accessPolicy from node metadata
+    ↓
+check principal role against readableByRoles
+    ↓
+check principal capabilities against requiredCapabilities
+    ↓
+delegate to AuthProvider for baseline authorization
+    ↓
+authorize query or return denied
+```
+
+Example policy on a knowledge node:
+
+```typescript
+const eventsPolicy = createAccessPolicyDescriptor(
+    ["role:ceo", "role:developer"],
+    [SystemCapabilities.QUERY_REMOTE_CONTEXT],
+    false,  // fallback not allowed
+    "error"
+);
+
+const knowledgeNode = createKnowledgeNode(
+    'knowledge:issues-today',
+    role,
+    createMetadataWithAccessPolicy(eventsPolicy, {
+        tags: ['issues', 'today'],
+        knowledgeType: 'issues'
+    })
+);
+```
+
+## Context Peer Descriptors
+
+Peers advertise queryable knowledge surfaces through typed descriptors that are safe to expose before authorization:
+
+```typescript
+interface ContextPeerDescriptor {
+    readonly version: "gcp-context-contract/v1";
+    readonly id: string;
+    readonly peerId: PeerId;
+    readonly endpoint: string;
+    readonly graphId?: string;
+    readonly displayName?: string;
+    readonly auth: AuthContract;
+    readonly exposedKnowledge: readonly ExposedKnowledgeDescriptor[];
+    readonly capabilities: readonly string[];
+    readonly queryEndpoint?: string;
+    readonly metadata: Record<string, unknown>;
+}
+```
+
+Descriptors separate **discovery-time metadata** from **query-time data**. A peer descriptor reveals that `knowledge:events` exists and requires `role:developer`, but never reveals event contents until a valid `ContextQueryRequest` passes local auth and policy checks.
+
+### Building a Peer Descriptor
+
+```typescript
+const peerDescriptor = createContextPeerDescriptor(
+    'descriptor:node-b',
+    'peer:node-b',
+    'https://node-b.example.com',
+    createAuthContract(['bearer-token'], true, ['role:developer']),
+    [
+        createExposedKnowledgeDescriptor(
+            'knowledge:node-b-events',
+            'events',
+            true,
+            createKnowledgeQueryContract(['text', 'structured'], true, ['since', 'tag']),
+            createAccessPolicyDescriptor(
+                ['role:developer', 'role:ceo'],
+                [SystemCapabilities.QUERY_REMOTE_CONTEXT],
+                false,
+                'error'
+            ),
+            ['events', 'today'],
+            ['application/json']
+        )
+    ],
+    [SystemCapabilities.QUERY_REMOTE_CONTEXT, SystemCapabilities.DISCOVER_PEERS]
+);
 ```
 
 ## Edge Types (Extensible System)
@@ -490,3 +657,4 @@ Default TTL: 60 seconds
 - [Architecture](./01-architecture.md) - Overall architecture
 - [Patterns](./03-patterns.md) - Implementation patterns
 - [Testing](./04-testing.md) - Testing guidelines
+- [Direction](./11-direction.md) - Strategic direction for read-first context query

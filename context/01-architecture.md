@@ -4,7 +4,7 @@
 
 ## Overview
 
-The Graph Context Protocol (GCP) is a **graph-based, role-based context protocol** for communication between AI Native Apps and Autonomous Agents. Unlike A2A-style direct messaging, it uses structured context sharing through graph relationships.
+The Graph Context Protocol (GCP) is a **graph-based, role-based context protocol** for federated context access across independently owned graphs. Unlike A2A-style direct messaging, the primary flow is **read-first**: entities expose typed knowledge nodes, enforce their own authentication and authorization locally, and allow external principals to query permitted context without copying the source of truth. Direct messages remain as an optional fallback capability.
 
 ## Core Concepts
 
@@ -114,11 +114,14 @@ Role definitions and capability management:
 - Factory functions: `createRole()`, `createCapability()`
 
 ### Context Domain (`lib/context/`)
-Context propagation and scoping:
+Context propagation, scoping, and remote query:
 - `GraphContext` - Context snapshot at a node
 - `ContextFilter` - Filters for context propagation
 - `PropagationResult` - Result of context propagation
-- Functions: `createContext()`, `propagateContext()`, `validateContext()`
+- `ContextQuery` - Read-only request against a knowledge node
+- `ContextQueryResult` - Query result with status and provenance
+- `RequesterDescriptor` - Audit metadata about the calling principal
+- Functions: `createContext()`, `propagateContext()`, `validateContext()`, `createContextQuery()`
 
 ### Protocol Domain (`lib/protocol/`)
 Protocol messages and handlers:
@@ -132,7 +135,10 @@ Query and discovery system:
 - `DiscoveryQuery` - Query parameters for discovery
 - `DiscoveryResult` - Discovery results with paths
 - `DiscoveryFilters` - Filters for agents and knowledge
-- Functions: `discoverNodes()`, `discoverAgents()`, `discoverKnowledge()`
+- `ContextPeerDescriptor` - Peer advertisement with auth and exposed knowledge
+- `ExposedKnowledgeDescriptor` - Queryable knowledge node surface
+- `AccessPolicyDescriptor` - Role/capability requirements for node access
+- Functions: `discoverNodes()`, `discoverAgents()`, `discoverKnowledge()`, `filterPeersByQueryable()`
 
 ## Cross-Domain Dependencies
 
@@ -182,18 +188,23 @@ packages/core/src/
     │   ├── index.ts
     │   └── *.spec.ts
     ├── context/
-    │   ├── context-types.ts  # GraphContext, ContextFilter, PropagationResult
-    │   ├── context-factories.ts # createContext(), propagateContext()
+    │   ├── context-types.ts         # GraphContext, ContextFilter, PropagationResult
+    │   ├── context-factories.ts     # createContext(), propagateContext()
+    │   ├── context-query-types.ts   # ContextQuery, ContextQueryResult, RequesterDescriptor
+    │   ├── context-query-factories.ts # createContextQuery(), createContextQueryResult()
     │   ├── index.ts
     │   └── *.spec.ts
     ├── protocol/
-    │   ├── protocol-types.ts # ProtocolMessage, MessageHeader, MessageProvenance
-    │   ├── protocol-factories.ts # createMessageHeader(), createProtocolMessage()
+    │   ├── protocol-types.ts        # ProtocolMessage, MessageHeader, MessageProvenance
+    │   ├── protocol-factories.ts    # createMessageHeader(), createProtocolMessage()
     │   ├── index.ts
     │   └── *.spec.ts
     ├── discovery/
-    │   ├── discovery-types.ts # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
-    │   ├── discovery-functions.ts # discoverNodes(), discoverAgents(), discoverKnowledge()
+    │   ├── discovery-types.ts       # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
+    │   ├── discovery-functions.ts   # discoverNodes(), discoverAgents(), discoverKnowledge()
+    │   ├── context-contract-types.ts      # ContextPeerDescriptor, AccessPolicyDescriptor
+    │   ├── context-contract-factories.ts  # createContextPeerDescriptor(), createAccessPolicyDescriptor()
+    │   ├── peer-discovery.ts        # Peer filtering and discovery helpers
     │   ├── index.ts
     │   └── *.spec.ts
     └── agent/

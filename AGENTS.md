@@ -112,6 +112,7 @@ Detailed guidelines are organized into focused documents:
 
 ### Reference
 - **[10 - Quick Reference](context/10-quick-reference.md)** - Command cheat sheet and quick patterns
+- **[11 - Direction](context/11-direction.md)** - Strategic direction for read-first federated context query
 
 ---
 
@@ -164,6 +165,8 @@ lib/role/
 lib/context/
 ├── context-types.ts         # GraphContext, ContextFilter, PropagationResult
 ├── context-factories.ts     # createContext(), propagateContext()
+├── context-query-types.ts   # ContextQuery, ContextQueryResult, RequesterDescriptor
+├── context-query-factories.ts # createContextQuery(), createContextQueryResult()
 ├── index.ts
 └── *.spec.ts
 
@@ -176,6 +179,9 @@ lib/protocol/
 lib/discovery/
 ├── discovery-types.ts       # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
 ├── discovery-functions.ts   # discoverNodes(), discoverAgents(), discoverKnowledge()
+├── context-contract-types.ts      # ContextPeerDescriptor, AccessPolicyDescriptor
+├── context-contract-factories.ts  # createContextPeerDescriptor(), createAccessPolicyDescriptor()
+├── peer-discovery.ts        # Peer filtering and discovery helpers
 ├── index.ts
 └── *.spec.ts
 
@@ -204,7 +210,8 @@ When working on Graph Context Protocol:
 8. **Prefer pure functions** and immutable data
 9. **Never use `@ts-ignore`** without explanation
 10. **Follow graph/role/context patterns** for protocol features
-11. **Check `pnpm nx run-many -t lint test build typecheck`** before finishing
+11. **Follow context-query patterns** for remote context query features
+12. **Check `pnpm nx run-many -t lint test build typecheck`** before finishing
 
 ### Extensible Edge System
 
@@ -251,6 +258,28 @@ if (isKnowledgeNode(node)) {
     // node is KnowledgeNode
 }
 ```
+
+### Remote Context Query
+
+Peers expose queryable knowledge surfaces and authorize each query locally:
+
+```typescript
+const requester = createRequesterDescriptor(
+    'principal:developer',
+    ['role:developer'],
+    [SystemCapabilities.QUERY_REMOTE_CONTEXT]
+);
+
+const query = createContextQuery(
+    'query:events-today',
+    requester,
+    'knowledge:node-b-events',
+    'text',
+    'what did node B do today?'
+);
+```
+
+Server handlers authenticate credentials separately. `requester` is audit metadata, not authorization proof. Denied queries do not call adapters.
 
 ### Discovery System
 
