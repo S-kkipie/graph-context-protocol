@@ -13,10 +13,10 @@
 import {
     fail,
     GCP_ACCESS_POLICY_METADATA_KEY,
-    parseAccessPolicyFromMetadata,
-    succeed,
     type GraphNode,
+    parseAccessPolicyFromMetadata,
     type Result,
+    succeed,
 } from "@graph-context-protocol/core";
 import type { ServerError } from "../errors.js";
 import { createServerError } from "../errors.js";

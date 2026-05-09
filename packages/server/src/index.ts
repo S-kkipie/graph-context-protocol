@@ -9,13 +9,6 @@ export type {
     ExternalAgentSnapshot,
     ExternalAgentStatus,
 } from "./lib/agents/types.js";
-// Authentication
-export {
-    authorizeKnowledgeNodeAccess,
-    createAllowAllAuthProvider,
-    createCapabilityAuthProvider,
-    createStaticTokenAuthProvider,
-} from "./lib/auth/index.js";
 export type {
     AuthAction,
     AuthorizationDecision,
@@ -24,6 +17,13 @@ export type {
     Credentials,
     NodeAuthorizationOptions,
     Principal,
+} from "./lib/auth/index.js";
+// Authentication
+export {
+    authorizeKnowledgeNodeAccess,
+    createAllowAllAuthProvider,
+    createCapabilityAuthProvider,
+    createStaticTokenAuthProvider,
 } from "./lib/auth/index.js";
 // Cache
 export { createMemoryCacheStore } from "./lib/cache/index.js";
@@ -56,11 +56,6 @@ export type {
     HandlerResult,
     ProtocolHandler,
 } from "./lib/handlers/types.js";
-// Knowledge sources
-export {
-    createKnowledgeSourceRegistry,
-    executeTargetedContextQuery,
-} from "./lib/knowledge/index.js";
 export type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
@@ -71,6 +66,11 @@ export type {
     KnowledgeSourceRegistry,
     KnowledgeSourceStatus,
     TargetedQueryOptions,
+} from "./lib/knowledge/index.js";
+// Knowledge sources
+export {
+    createKnowledgeSourceRegistry,
+    executeTargetedContextQuery,
 } from "./lib/knowledge/index.js";
 // Lifecycle management
 export { createLifecycleManager } from "./lib/lifecycle/index.js";

@@ -1,23 +1,23 @@
-import type { Request, Response } from "express";
-import express from "express";
-import { z } from "zod";
 import {
-    createAgentNode,
-    createEdge,
-    createKnowledgeNode,
-    createRole,
-    createContextQuery,
-    createContextQueryResult,
-    createRequesterDescriptor,
     ContextPeerDescriptorSchema,
     ContextQueryRequestSchema,
-    parseAccessPolicyFromMetadata,
-    SystemCapabilities,
+    createAgentNode,
+    createContextQuery,
+    createContextQueryResult,
+    createEdge,
+    createKnowledgeNode,
+    createRequesterDescriptor,
+    createRole,
     deserializeEdge,
     discoverAgents,
     discoverKnowledge,
     type Graph,
+    parseAccessPolicyFromMetadata,
+    SystemCapabilities,
 } from "@graph-context-protocol/core";
+import type { Request, Response } from "express";
+import express from "express";
+import { z } from "zod";
 import { DescriptorSchema, GraphSnapshotSchema } from "./descriptor";
 import {
     buildContextPeerDescriptor,

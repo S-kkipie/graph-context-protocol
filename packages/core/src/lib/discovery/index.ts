@@ -1,16 +1,18 @@
 export {
-    discoverAgents,
-    discoverKnowledge,
-    discoverNodes,
-} from "./discovery-functions";
-export type {
-    DiscoveredNode,
-    DiscoveryFilters,
-    DiscoveryQuery,
-    DiscoveryResult,
-} from "./discovery-types";
-export { DiscoveryError } from "./discovery-types";
-
+    CreateAccessPolicyDescriptorInputSchema,
+    CreateAuthContractInputSchema,
+    CreateContextPeerDescriptorInputSchema,
+    CreateExposedKnowledgeDescriptorInputSchema,
+    CreateKnowledgeQueryContractInputSchema,
+    CreateSourceOfTruthDescriptorInputSchema,
+    createAccessPolicyDescriptor,
+    createAuthContract,
+    createContextPeerDescriptor,
+    createExposedKnowledgeDescriptor,
+    createExposedKnowledgeDescriptorFromNode,
+    createKnowledgeQueryContract,
+    createSourceOfTruthDescriptor,
+} from "./context-contract-factories";
 // Context contract types and factories
 export type {
     AccessPolicyDescriptor,
@@ -28,9 +30,9 @@ export {
     AccessPolicyDescriptorSchema,
     AuthContractSchema,
     AuthSchemeSchema,
+    ContextPeerDescriptorSchema,
     ContractVersion,
     ContractVersionSchema,
-    ContextPeerDescriptorSchema,
     createMetadataWithAccessPolicy,
     DenialModeSchema,
     ExposedKnowledgeDescriptorSchema,
@@ -42,20 +44,17 @@ export {
     SourceOfTruthDescriptorSchema,
 } from "./context-contract-types";
 export {
-    CreateAccessPolicyDescriptorInputSchema,
-    createAccessPolicyDescriptor,
-    CreateAuthContractInputSchema,
-    createAuthContract,
-    CreateContextPeerDescriptorInputSchema,
-    createContextPeerDescriptor,
-    CreateExposedKnowledgeDescriptorInputSchema,
-    createExposedKnowledgeDescriptor,
-    createExposedKnowledgeDescriptorFromNode,
-    CreateKnowledgeQueryContractInputSchema,
-    createKnowledgeQueryContract,
-    CreateSourceOfTruthDescriptorInputSchema,
-    createSourceOfTruthDescriptor,
-} from "./context-contract-factories";
+    discoverAgents,
+    discoverKnowledge,
+    discoverNodes,
+} from "./discovery-functions";
+export type {
+    DiscoveredNode,
+    DiscoveryFilters,
+    DiscoveryQuery,
+    DiscoveryResult,
+} from "./discovery-types";
+export { DiscoveryError } from "./discovery-types";
 export {
     discoverPeerContextSources,
     filterExposedKnowledge,

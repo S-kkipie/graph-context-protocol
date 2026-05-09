@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Result } from "../result";
 import type { CapabilityId, GraphId, Metadata, NodeId, RoleId } from "../types";
 import {
     CapabilityIdSchema,
@@ -7,7 +8,6 @@ import {
     NodeIdSchema,
     RoleIdSchema,
 } from "../types";
-import type { Result } from "../result";
 
 /** Contract version for federated context descriptors. */
 export const ContractVersion = "gcp-context-contract/v1" as const;

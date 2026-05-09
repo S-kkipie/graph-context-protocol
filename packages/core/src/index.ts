@@ -15,32 +15,20 @@ export type {
     AgentToolResult,
 } from "./lib/agent/agent-types";
 export {
-    createContext,
-    createContextFilter,
-    propagateContext,
-    validateContext,
-} from "./lib/context";
-export {
-    createContextQuery,
-    createContextQueryResult,
-    createRequesterDescriptor,
-} from "./lib/context";
-export {
     ContextQueryContractVersionSchema,
     ContextQueryRequestSchema,
     ContextQueryResponseSchema,
     ContextQueryStatusSchema,
+    createContext,
+    createContextFilter,
+    createContextQuery,
+    createContextQueryResult,
+    createRequesterDescriptor,
+    propagateContext,
     QueryModeSchema,
     RequesterDescriptorSchema,
+    validateContext,
 } from "./lib/context";
-// Context domain
-export type {
-    ContextData,
-    ContextFilter,
-    GraphContext,
-    PropagationOptions,
-    PropagationResult,
-} from "./lib/context/context-types";
 export type {
     ContextQuery,
     ContextQueryContractVersion,
@@ -51,18 +39,34 @@ export type {
     QueryMode,
     RequesterDescriptor,
 } from "./lib/context/context-query-types";
+// Context domain
+export type {
+    ContextData,
+    ContextFilter,
+    GraphContext,
+    PropagationOptions,
+    PropagationResult,
+} from "./lib/context/context-types";
 export {
     discoverAgents,
     discoverKnowledge,
     discoverNodes,
 } from "./lib/discovery";
-export type {
-    DiscoveredNode,
-    DiscoveryFilters,
-    DiscoveryQuery,
-    DiscoveryResult,
-} from "./lib/discovery/discovery-types";
-export { DiscoveryError } from "./lib/discovery/discovery-types";
+export {
+    CreateAccessPolicyDescriptorInputSchema,
+    CreateAuthContractInputSchema,
+    CreateContextPeerDescriptorInputSchema,
+    CreateExposedKnowledgeDescriptorInputSchema,
+    CreateKnowledgeQueryContractInputSchema,
+    CreateSourceOfTruthDescriptorInputSchema,
+    createAccessPolicyDescriptor,
+    createAuthContract,
+    createContextPeerDescriptor,
+    createExposedKnowledgeDescriptor,
+    createExposedKnowledgeDescriptorFromNode,
+    createKnowledgeQueryContract,
+    createSourceOfTruthDescriptor,
+} from "./lib/discovery/context-contract-factories";
 export type {
     AccessPolicyDescriptor,
     AuthContract,
@@ -78,9 +82,9 @@ export {
     AccessPolicyDescriptorSchema,
     AuthContractSchema,
     AuthSchemeSchema,
+    ContextPeerDescriptorSchema,
     ContractVersion,
     ContractVersionSchema,
-    ContextPeerDescriptorSchema,
     createMetadataWithAccessPolicy,
     DenialModeSchema,
     ExposedKnowledgeDescriptorSchema,
@@ -90,21 +94,13 @@ export {
     parseAccessPolicyFromMetadata,
     SourceOfTruthDescriptorSchema,
 } from "./lib/discovery/context-contract-types";
-export {
-    CreateAccessPolicyDescriptorInputSchema,
-    createAccessPolicyDescriptor,
-    CreateAuthContractInputSchema,
-    createAuthContract,
-    CreateContextPeerDescriptorInputSchema,
-    createContextPeerDescriptor,
-    CreateExposedKnowledgeDescriptorInputSchema,
-    createExposedKnowledgeDescriptor,
-    createExposedKnowledgeDescriptorFromNode,
-    CreateKnowledgeQueryContractInputSchema,
-    createKnowledgeQueryContract,
-    CreateSourceOfTruthDescriptorInputSchema,
-    createSourceOfTruthDescriptor,
-} from "./lib/discovery/context-contract-factories";
+export type {
+    DiscoveredNode,
+    DiscoveryFilters,
+    DiscoveryQuery,
+    DiscoveryResult,
+} from "./lib/discovery/discovery-types";
+export { DiscoveryError } from "./lib/discovery/discovery-types";
 export {
     discoverPeerContextSources,
     filterExposedKnowledge,

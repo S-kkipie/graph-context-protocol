@@ -1,11 +1,11 @@
 import {
+    type ContextQuery,
     createContextQuery,
     createKnowledgeNode,
     createRequesterDescriptor,
     createRole,
     fail,
     succeed,
-    type ContextQuery,
 } from "@graph-context-protocol/core";
 import { describe, expect, it, vi } from "vitest";
 import type { Principal } from "../auth/types.js";

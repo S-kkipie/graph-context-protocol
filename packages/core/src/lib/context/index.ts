@@ -1,11 +1,23 @@
 // Types
-export type {
-    ContextData,
-    ContextFilter,
-    GraphContext,
-    PropagationOptions,
-    PropagationResult,
-} from "./context-types";
+
+// Implementation
+export {
+    createContext,
+    createContextFilter,
+    propagateContext,
+    validateContext,
+} from "./context-factories";
+export {
+    ContextQueryContractVersionSchema,
+    ContextQueryRequestSchema,
+    ContextQueryResponseSchema,
+    ContextQueryStatusSchema,
+    createContextQuery,
+    createContextQueryResult,
+    createRequesterDescriptor,
+    QueryModeSchema,
+    RequesterDescriptorSchema,
+} from "./context-query-factories";
 export type {
     ContextQuery,
     ContextQueryContractVersion,
@@ -16,24 +28,10 @@ export type {
     QueryMode,
     RequesterDescriptor,
 } from "./context-query-types";
-
-// Implementation
-export {
-    createContext,
-    createContextFilter,
-    propagateContext,
-    validateContext,
-} from "./context-factories";
-export {
-    createContextQuery,
-    createContextQueryResult,
-    createRequesterDescriptor,
-} from "./context-query-factories";
-export {
-    ContextQueryContractVersionSchema,
-    ContextQueryRequestSchema,
-    ContextQueryResponseSchema,
-    ContextQueryStatusSchema,
-    QueryModeSchema,
-    RequesterDescriptorSchema,
-} from "./context-query-factories";
+export type {
+    ContextData,
+    ContextFilter,
+    GraphContext,
+    PropagationOptions,
+    PropagationResult,
+} from "./context-types";

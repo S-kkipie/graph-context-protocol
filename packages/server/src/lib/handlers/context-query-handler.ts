@@ -11,17 +11,17 @@
  */
 
 import {
+    type ContextQuery,
     ContextQueryRequestSchema,
+    type ContextQueryResult,
     createContextQueryResult,
     createMessageHeader,
     createProtocolMessage,
-    succeed,
-    type ContextQuery,
-    type ContextQueryResult,
     type Graph,
     type GraphNode,
     type ProtocolMessage,
     type Result,
+    succeed,
 } from "@graph-context-protocol/core";
 import type { Credentials, Principal } from "../auth/types.js";
 import type { ServerError } from "../errors.js";

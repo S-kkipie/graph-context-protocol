@@ -3,8 +3,8 @@ export {
     createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
 } from "./implementation.js";
-export { authorizeKnowledgeNodeAccess } from "./node-authorization.js";
 export type { NodeAuthorizationOptions } from "./node-authorization.js";
+export { authorizeKnowledgeNodeAccess } from "./node-authorization.js";
 
 export type {
     AuthAction,

@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-    createContextQuery,
-    createContextQueryResult,
-    createRequesterDescriptor,
-} from "./context-query-factories";
-import {
     ContextQueryRequestSchema,
     ContextQueryResponseSchema,
     ContextQueryStatusSchema,
+    createContextQuery,
+    createContextQueryResult,
+    createRequesterDescriptor,
     QueryModeSchema,
 } from "./context-query-factories";
 import type { ContextQuery, ContextQueryResult } from "./context-query-types";

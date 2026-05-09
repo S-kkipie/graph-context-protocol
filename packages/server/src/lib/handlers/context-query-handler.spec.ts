@@ -1,4 +1,6 @@
 import {
+    type ContextQuery,
+    type ContextQueryResult,
     createAccessPolicyDescriptor,
     createAgentNode,
     createCapability,
@@ -11,11 +13,9 @@ import {
     createRequesterDescriptor,
     createRole,
     fail,
-    succeed,
-    type ContextQuery,
-    type ContextQueryResult,
     type GraphNode,
     type ProtocolMessage,
+    succeed,
 } from "@graph-context-protocol/core";
 import { describe, expect, it, vi } from "vitest";
 import type { AuthProvider, Credentials, Principal } from "../auth/types.js";

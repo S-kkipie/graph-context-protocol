@@ -1,7 +1,7 @@
 import { z } from "zod";
+import type { KnowledgeNode } from "../graph/graph-types";
 import type { CapabilityId, GraphId, Metadata, NodeId, RoleId } from "../types";
 import { CapabilityIdSchema, GraphIdSchema, MetadataSchema } from "../types";
-import type { KnowledgeNode } from "../graph/graph-types";
 import {
     type AccessPolicyDescriptor,
     AccessPolicyDescriptorSchema,

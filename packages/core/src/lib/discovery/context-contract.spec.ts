@@ -2,18 +2,6 @@ import { describe, expect, it } from "vitest";
 import { createKnowledgeNode } from "../graph";
 import { createRole, SystemCapabilities } from "../role";
 import {
-    ContractVersion,
-    GCP_ACCESS_POLICY_METADATA_KEY,
-    createMetadataWithAccessPolicy,
-    parseAccessPolicyFromMetadata,
-} from "./context-contract-types";
-import type {
-    AccessPolicyDescriptor,
-    AuthContract,
-    ExposedKnowledgeDescriptor,
-    KnowledgeQueryContract,
-} from "./context-contract-types";
-import {
     createAccessPolicyDescriptor,
     createAuthContract,
     createContextPeerDescriptor,
@@ -22,6 +10,18 @@ import {
     createKnowledgeQueryContract,
     createSourceOfTruthDescriptor,
 } from "./context-contract-factories";
+import type {
+    AccessPolicyDescriptor,
+    AuthContract,
+    ExposedKnowledgeDescriptor,
+    KnowledgeQueryContract,
+} from "./context-contract-types";
+import {
+    ContractVersion,
+    createMetadataWithAccessPolicy,
+    GCP_ACCESS_POLICY_METADATA_KEY,
+    parseAccessPolicyFromMetadata,
+} from "./context-contract-types";
 import {
     discoverPeerContextSources,
     filterExposedKnowledge,

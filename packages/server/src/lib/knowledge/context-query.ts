@@ -10,10 +10,10 @@
  */
 
 import {
-    createContextQueryResult,
     type ContextQuery,
     type ContextQueryResult,
     type ContextQueryStatus,
+    createContextQueryResult,
     type GraphContext,
     type Metadata,
     type Result,

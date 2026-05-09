@@ -1,20 +1,20 @@
 import {
+    type ContextPeerDescriptor,
+    createAccessPolicyDescriptor,
     createAgentNode,
+    createAuthContract,
     createCapability,
+    createContextPeerDescriptor,
     createContextRule,
     createEdge,
+    createExposedKnowledgeDescriptor,
     createGraph,
     createKnowledgeNode,
-    createAccessPolicyDescriptor,
+    createKnowledgeQueryContract,
     createMetadataWithAccessPolicy,
     createRole,
     type Graph,
     SystemCapabilities,
-    createAuthContract,
-    createContextPeerDescriptor,
-    createExposedKnowledgeDescriptor,
-    createKnowledgeQueryContract,
-    type ContextPeerDescriptor,
 } from "@graph-context-protocol/core";
 import type { DescriptorDto, GraphSnapshotDto } from "./descriptor";
 
