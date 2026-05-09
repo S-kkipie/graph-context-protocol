@@ -1,9 +1,11 @@
 import type {
     Graph,
+    Metadata,
     ProtocolMessage,
     Result,
 } from "@graph-context-protocol/core";
 import type { ExternalAgentRegistry } from "../agents/types.js";
+import type { AuthProvider } from "../auth/types.js";
 import type { CacheStore } from "../cache/types.js";
 import type { ConnectionManager } from "../connection/types.js";
 import type { ServerError } from "../errors.js";
@@ -18,6 +20,10 @@ export interface HandlerContext {
     readonly externalAgents: ExternalAgentRegistry;
     readonly knowledgeSources: KnowledgeSourceRegistry;
     readonly cache?: CacheStore;
+    /** Auth provider for per-handler authentication and authorization. */
+    readonly auth?: AuthProvider;
+    /** Inbound envelope metadata propagated to handlers. */
+    readonly inboundMetadata: Metadata;
     readonly metadata: Record<string, unknown>;
 }
 
