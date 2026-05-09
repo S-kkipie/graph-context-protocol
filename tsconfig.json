@@ -23,6 +23,12 @@
         },
         {
             "path": "./apps/gcp-mvp/node-b"
+        },
+        {
+            "path": "./apps/executor"
+        },
+        {
+            "path": "./apps/researcher"
         }
     ]
 }

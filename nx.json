@@ -43,6 +43,17 @@
             "options": {
                 "testTargetName": "test"
             }
+        },
+        {
+            "plugin": "@nx/next/plugin",
+            "options": {
+                "startTargetName": "start",
+                "buildTargetName": "build",
+                "devTargetName": "dev",
+                "serveStaticTargetName": "serve-static",
+                "buildDepsTargetName": "build-deps",
+                "watchDepsTargetName": "watch-deps"
+            }
         }
     ],
     "release": {
@@ -64,5 +75,13 @@
             "inputs": ["production", "^production"]
         }
     },
-    "analytics": false
+    "analytics": false,
+    "generators": {
+        "@nx/next": {
+            "application": {
+                "style": "css",
+                "linter": "none"
+            }
+        }
+    }
 }

@@ -9,15 +9,19 @@
     "private": true,
     "devDependencies": {
         "@nx/esbuild": "22.6.2",
-        "@nx/js": "22.6.2",
+        "@nx/js": "22.7.1",
+        "@nx/next": "^22.7.1",
         "@nx/node": "22.6.2",
         "@nx/vite": "22.6.2",
         "@nx/vitest": "22.6.2",
         "@nx/web": "22.6.2",
         "@swc-node/register": "1.11.1",
+        "@swc/cli": "~0.8.0",
         "@swc/core": "1.15.8",
         "@swc/helpers": "0.5.18",
         "@types/node": "20.19.9",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
         "@vitest/coverage-v8": "4.0.9",
         "@vitest/ui": "4.0.9",
         "esbuild": "^0.19.2",
@@ -44,6 +48,9 @@
         }
     },
     "dependencies": {
-        "@biomejs/biome": "^2.4.9"
+        "@biomejs/biome": "^2.4.9",
+        "next": "~16.1.6",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
     }
 }

@@ -48,3 +48,7 @@ vitest.config.*.timestamp*
 .claude/worktrees
 .claude/settings.local.json
 .nx/polygraph
+
+# Next.js
+.next
+out
