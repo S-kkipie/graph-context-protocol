@@ -1,26 +1,4 @@
 import {
-    ComposerAddAttachment,
-    ComposerAttachments,
-    UserMessageAttachments,
-} from "@/components/assistant-ui/attachment";
-import { MarkdownText } from "@/components/assistant-ui/markdown-text";
-import {
-    Reasoning,
-    ReasoningContent,
-    ReasoningRoot,
-    ReasoningText,
-    ReasoningTrigger,
-} from "@/components/assistant-ui/reasoning";
-import {
-    ToolGroupContent,
-    ToolGroupRoot,
-    ToolGroupTrigger,
-} from "@/components/assistant-ui/tool-group";
-import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import {
     ActionBarMorePrimitive,
     ActionBarPrimitive,
     AuiIf,
@@ -46,6 +24,28 @@ import {
     SquareIcon,
 } from "lucide-react";
 import type { FC } from "react";
+import {
+    ComposerAddAttachment,
+    ComposerAttachments,
+    UserMessageAttachments,
+} from "@/components/assistant-ui/attachment";
+import { MarkdownText } from "@/components/assistant-ui/markdown-text";
+import {
+    Reasoning,
+    ReasoningContent,
+    ReasoningRoot,
+    ReasoningText,
+    ReasoningTrigger,
+} from "@/components/assistant-ui/reasoning";
+import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
+import {
+    ToolGroupContent,
+    ToolGroupRoot,
+    ToolGroupTrigger,
+} from "@/components/assistant-ui/tool-group";
+import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const Thread: FC = () => {
     return (

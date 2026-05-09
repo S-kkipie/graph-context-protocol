@@ -1,4 +1,5 @@
-import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
+import type { BaseMessage } from "@langchain/core/messages";
+import { MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
@@ -6,7 +7,7 @@ const model = new ChatOpenAI({
     temperature: 0.7,
 });
 
-const researcherAgent = async (state: typeof MessagesAnnotation.State) => {
+const researcherAgent = async (state: { messages: BaseMessage[] }) => {
     const response = await model.invoke(state.messages);
     return { messages: [response] };
 };

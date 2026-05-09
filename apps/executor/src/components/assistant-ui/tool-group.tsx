@@ -1,16 +1,16 @@
 "use client";
 
+import { useScrollLock } from "@assistant-ui/react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { ChevronDownIcon, LoaderIcon } from "lucide-react";
 import {
+    type FC,
     memo,
+    type PropsWithChildren,
     useCallback,
     useRef,
     useState,
-    type FC,
-    type PropsWithChildren,
 } from "react";
-import { ChevronDownIcon, LoaderIcon } from "lucide-react";
-import { cva, type VariantProps } from "class-variance-authority";
-import { useScrollLock } from "@assistant-ui/react";
 import {
     Collapsible,
     CollapsibleContent,
@@ -224,8 +224,8 @@ ToolGroup.Content = ToolGroupContent;
 
 export {
     ToolGroup,
+    ToolGroupContent,
     ToolGroupRoot,
     ToolGroupTrigger,
-    ToolGroupContent,
     toolGroupVariants,
 };
