@@ -116,6 +116,8 @@ describe("protocol module", () => {
             const types: MessageType[] = [
                 "context-request",
                 "context-response",
+                "context-query",
+                "context-query-response",
                 "action-request",
                 "action-response",
                 "notification",

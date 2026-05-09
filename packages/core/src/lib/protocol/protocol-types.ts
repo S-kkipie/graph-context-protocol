@@ -18,6 +18,8 @@ export type MessagePriority = "low" | "normal" | "high" | "critical";
 export type MessageType =
     | "context-request"
     | "context-response"
+    | "context-query"
+    | "context-query-response"
     | "action-request"
     | "action-response"
     | "notification"

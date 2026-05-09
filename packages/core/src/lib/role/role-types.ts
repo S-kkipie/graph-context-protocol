@@ -110,4 +110,6 @@ export const SystemCapabilities = {
     RECEIVE_MESSAGES: "cap:receive-messages",
     DISCOVER_AGENTS: "cap:discover-agents",
     DISCOVER_KNOWLEDGE: "cap:discover-knowledge",
+    QUERY_REMOTE_CONTEXT: "cap:query-remote-context",
+    DISCOVER_PEERS: "cap:discover-peers",
 } as const;

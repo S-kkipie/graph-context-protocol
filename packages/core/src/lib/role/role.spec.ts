@@ -169,6 +169,18 @@ describe("role module", () => {
             expect(SystemCapabilities.RECEIVE_MESSAGES).toBe(
                 "cap:receive-messages",
             );
+            expect(SystemCapabilities.DISCOVER_AGENTS).toBe(
+                "cap:discover-agents",
+            );
+            expect(SystemCapabilities.DISCOVER_KNOWLEDGE).toBe(
+                "cap:discover-knowledge",
+            );
+            expect(SystemCapabilities.QUERY_REMOTE_CONTEXT).toBe(
+                "cap:query-remote-context",
+            );
+            expect(SystemCapabilities.DISCOVER_PEERS).toBe(
+                "cap:discover-peers",
+            );
         });
     });
 });
