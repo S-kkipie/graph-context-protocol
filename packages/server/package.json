@@ -23,7 +23,7 @@
                 }
             },
             "typecheck": {
-                "command": "tsc --noEmit -p tsconfig.lib.json",
+                "command": "tsc --build --noEmit",
                 "options": {
                     "cwd": "packages/server"
                 }
