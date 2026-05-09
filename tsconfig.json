@@ -7,22 +7,10 @@
             "path": "./packages/core"
         },
         {
-            "path": "./apps/multi-agent-collaboration"
-        },
-        {
             "path": "./packages/server"
         },
         {
-            "path": "./apps/server-demo"
-        },
-        {
             "path": "./packages/langgraph"
-        },
-        {
-            "path": "./apps/gcp-mvp/node-a"
-        },
-        {
-            "path": "./apps/gcp-mvp/node-b"
         },
         {
             "path": "./apps/executor"
