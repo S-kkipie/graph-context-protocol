@@ -196,6 +196,32 @@ const role = createRole('role:researcher', 'Researcher', '', [
 ]);
 ```
 
+### Remote Context Query
+
+```typescript
+import {
+    createContextQuery,
+    createRequesterDescriptor,
+    SystemCapabilities,
+} from '@graph-context-protocol/core';
+
+const requester = createRequesterDescriptor(
+    'principal:developer',
+    ['role:developer'],
+    [SystemCapabilities.QUERY_REMOTE_CONTEXT]
+);
+
+const query = createContextQuery(
+    'query:events-today',
+    requester,
+    'knowledge:node-b-events',
+    'text',
+    'what did node B do today?'
+);
+```
+
+Server handlers must authenticate credentials separately. `requester` is audit metadata, not authorization proof.
+
 ## File Naming
 
 | Type | Convention | Example |
