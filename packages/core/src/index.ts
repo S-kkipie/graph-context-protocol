@@ -20,6 +20,19 @@ export {
     propagateContext,
     validateContext,
 } from "./lib/context";
+export {
+    createContextQuery,
+    createContextQueryResult,
+    createRequesterDescriptor,
+} from "./lib/context";
+export {
+    ContextQueryContractVersionSchema,
+    ContextQueryRequestSchema,
+    ContextQueryResponseSchema,
+    ContextQueryStatusSchema,
+    QueryModeSchema,
+    RequesterDescriptorSchema,
+} from "./lib/context";
 // Context domain
 export type {
     ContextData,
@@ -28,6 +41,16 @@ export type {
     PropagationOptions,
     PropagationResult,
 } from "./lib/context/context-types";
+export type {
+    ContextQuery,
+    ContextQueryContractVersion,
+    ContextQueryRequest,
+    ContextQueryResponse,
+    ContextQueryResult,
+    ContextQueryStatus,
+    QueryMode,
+    RequesterDescriptor,
+} from "./lib/context/context-query-types";
 export {
     discoverAgents,
     discoverKnowledge,
@@ -40,6 +63,60 @@ export type {
     DiscoveryResult,
 } from "./lib/discovery/discovery-types";
 export { DiscoveryError } from "./lib/discovery/discovery-types";
+export type {
+    AccessPolicyDescriptor,
+    AuthContract,
+    AuthScheme,
+    ContextPeerDescriptor,
+    DenialMode,
+    ExposedKnowledgeDescriptor,
+    KnowledgeQueryContract,
+    KnowledgeType,
+    SourceOfTruthDescriptor,
+} from "./lib/discovery/context-contract-types";
+export {
+    AccessPolicyDescriptorSchema,
+    AuthContractSchema,
+    AuthSchemeSchema,
+    ContractVersion,
+    ContractVersionSchema,
+    ContextPeerDescriptorSchema,
+    createMetadataWithAccessPolicy,
+    DenialModeSchema,
+    ExposedKnowledgeDescriptorSchema,
+    GCP_ACCESS_POLICY_METADATA_KEY,
+    KnowledgeQueryContractSchema,
+    KnowledgeTypeSchema,
+    parseAccessPolicyFromMetadata,
+    SourceOfTruthDescriptorSchema,
+} from "./lib/discovery/context-contract-types";
+export {
+    CreateAccessPolicyDescriptorInputSchema,
+    createAccessPolicyDescriptor,
+    CreateAuthContractInputSchema,
+    createAuthContract,
+    CreateContextPeerDescriptorInputSchema,
+    createContextPeerDescriptor,
+    CreateExposedKnowledgeDescriptorInputSchema,
+    createExposedKnowledgeDescriptor,
+    createExposedKnowledgeDescriptorFromNode,
+    CreateKnowledgeQueryContractInputSchema,
+    createKnowledgeQueryContract,
+    CreateSourceOfTruthDescriptorInputSchema,
+    createSourceOfTruthDescriptor,
+} from "./lib/discovery/context-contract-factories";
+export {
+    discoverPeerContextSources,
+    filterExposedKnowledge,
+    filterExposedKnowledgeByCapability,
+    filterExposedKnowledgeByQueryMode,
+    filterExposedKnowledgeByRole,
+    filterExposedKnowledgeByTags,
+    filterExposedKnowledgeByType,
+    filterPeersByCapability,
+    filterPeersByKnowledgeTags,
+    filterPeersByQueryable,
+} from "./lib/discovery/peer-discovery";
 export {
     AccessEdge,
     BaseGraphEdge,
