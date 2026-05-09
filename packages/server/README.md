@@ -226,6 +226,22 @@ knowledge.register({
 });
 ```
 
+### Remote Context Query Handling
+
+The default server registers a `context-query` handler. Incoming requests are validated with core `ContextQueryRequestSchema`, authenticated through the configured `AuthProvider`, authorized against the target knowledge node's `gcp.accessPolicy`, and then executed against exactly one matching knowledge adapter.
+
+```typescript
+import {
+    createContextQueryHandler,
+    createKnowledgeSourceRegistry,
+} from "@graph-context-protocol/server";
+
+const handlers = createHandlerRegistry().register(createContextQueryHandler());
+const knowledge = createKnowledgeSourceRegistry().register(myEventsAdapter);
+```
+
+Denied queries do not call knowledge adapters. Direct agent fallback remains opt-in owner policy and is not automatic.
+
 ### Message Routing
 
 Route protocol messages to appropriate targets:

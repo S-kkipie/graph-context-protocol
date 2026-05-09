@@ -12,6 +12,8 @@ import { createConnectionManager } from "../connection/implementation.js";
 import type { ServerError } from "../errors.js";
 import { createServerError } from "../errors.js";
 import { createHandlerRegistry } from "../handlers/implementation.js";
+import { createContextQueryHandler } from "../handlers/context-query-handler.js";
+import type { HandlerRegistry } from "../handlers/types.js";
 import { createKnowledgeSourceRegistry } from "../knowledge/implementation.js";
 import { createLifecycleManager } from "../lifecycle/implementation.js";
 import { createMessageRouter } from "../routing/implementation.js";
@@ -222,6 +224,8 @@ class GraphContextServerImpl implements GraphContextServer {
                 externalAgents: this.state.dependencies.externalAgents,
                 knowledgeSources: this.state.dependencies.knowledgeSources,
                 cache: this.state.dependencies.cache,
+                auth: this.state.dependencies.auth,
+                inboundMetadata: envelope.metadata ?? {},
                 metadata: {},
             },
         );
@@ -251,13 +255,14 @@ export function createGraphContextServer(
     config: ServerConfig,
     dependencies?: Partial<ServerDependencies>,
 ): GraphContextServer {
+    const defaultHandlers = createDefaultHandlerRegistry();
     const defaultDependencies: ServerDependencies = {
         lifecycle: createLifecycleManager(),
         transports: createTransportRegistry(),
         connections: createConnectionManager(),
         auth: createAllowAllAuthProvider(),
         router: createMessageRouter(),
-        handlers: createHandlerRegistry(),
+        handlers: defaultHandlers,
         externalAgents: createExternalAgentRegistry(),
         knowledgeSources: createKnowledgeSourceRegistry(),
         cache: createMemoryCacheStore(),
@@ -269,4 +274,15 @@ export function createGraphContextServer(
         dependencies: { ...defaultDependencies, ...dependencies },
         status: "idle",
     });
+}
+
+function createDefaultHandlerRegistry(): HandlerRegistry {
+    const registry = createHandlerRegistry();
+    const registered = registry.register(createContextQueryHandler());
+
+    if (registered.success) {
+        return registered.data;
+    }
+
+    return registry;
 }

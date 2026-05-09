@@ -11,7 +11,9 @@ export type {
 } from "./lib/agents/types.js";
 // Authentication
 export {
+    authorizeKnowledgeNodeAccess,
     createAllowAllAuthProvider,
+    createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
 } from "./lib/auth/index.js";
 export type {
@@ -20,8 +22,9 @@ export type {
     AuthorizationRequest,
     AuthProvider,
     Credentials,
+    NodeAuthorizationOptions,
     Principal,
-} from "./lib/auth/types.js";
+} from "./lib/auth/index.js";
 // Cache
 export { createMemoryCacheStore } from "./lib/cache/index.js";
 export type {
@@ -43,7 +46,10 @@ export type {
 export type { ServerError, ServerErrorCode } from "./lib/errors.js";
 export { createServerError, ServerErrorClass } from "./lib/errors.js";
 // Protocol handlers
-export { createHandlerRegistry } from "./lib/handlers/index.js";
+export {
+    createContextQueryHandler,
+    createHandlerRegistry,
+} from "./lib/handlers/index.js";
 export type {
     HandlerContext,
     HandlerRegistry,
@@ -51,7 +57,10 @@ export type {
     ProtocolHandler,
 } from "./lib/handlers/types.js";
 // Knowledge sources
-export { createKnowledgeSourceRegistry } from "./lib/knowledge/index.js";
+export {
+    createKnowledgeSourceRegistry,
+    executeTargetedContextQuery,
+} from "./lib/knowledge/index.js";
 export type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
@@ -61,7 +70,8 @@ export type {
     KnowledgeSourceQuery,
     KnowledgeSourceRegistry,
     KnowledgeSourceStatus,
-} from "./lib/knowledge/types.js";
+    TargetedQueryOptions,
+} from "./lib/knowledge/index.js";
 // Lifecycle management
 export { createLifecycleManager } from "./lib/lifecycle/index.js";
 export type {
