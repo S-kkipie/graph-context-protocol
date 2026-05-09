@@ -30,9 +30,11 @@ src/lib/
 │   ├── role-factories.ts     # createRole(), createCapability() factories
 │   ├── index.ts              # Public exports
 │   └── *.spec.ts             # Tests
-├── context/                  # Context propagation
+├── context/                  # Context propagation and remote query
 │   ├── context-types.ts      # GraphContext, ContextFilter, PropagationResult
 │   ├── context-factories.ts  # createContext(), propagateContext()
+│   ├── context-query-types.ts      # ContextQuery, ContextQueryResult, RequesterDescriptor
+│   ├── context-query-factories.ts  # createContextQuery(), createContextQueryResult()
 │   ├── index.ts              # Public exports
 │   └── *.spec.ts             # Tests
 ├── protocol/                 # Protocol messages
@@ -43,6 +45,9 @@ src/lib/
 ├── discovery/                # Discovery and query system
 │   ├── discovery-types.ts    # DiscoveryQuery, DiscoveryResult, DiscoveryFilters
 │   ├── discovery-functions.ts # discoverNodes(), discoverAgents(), discoverKnowledge()
+│   ├── context-contract-types.ts      # ContextPeerDescriptor, AccessPolicyDescriptor
+│   ├── context-contract-factories.ts  # createContextPeerDescriptor(), createAccessPolicyDescriptor()
+│   ├── peer-discovery.ts     # Peer filtering and discovery helpers
 │   ├── index.ts              # Public exports
 │   └── *.spec.ts             # Tests
 └── agent/                    # Agent and knowledge nodes
@@ -147,6 +152,26 @@ result.success; // true if target can access
 result.propagatedContext.accumulatedData; // { 'user.name': 'John' }
 ```
 
+Remote context query over knowledge nodes:
+
+```typescript
+const requester = createRequesterDescriptor(
+    'principal:developer',
+    ['role:developer'],
+    [SystemCapabilities.QUERY_REMOTE_CONTEXT]
+);
+
+const query = createContextQuery(
+    'query:events-today',
+    requester,
+    'knowledge:node-b-events',
+    'text',
+    'what did node B do today?'
+);
+
+// Server-side: authenticate, authorize against node policy, execute adapter
+```
+
 ### Protocol Domain (`protocol/`)
 
 Messages carry context and provenance:
@@ -201,6 +226,37 @@ const docs = discoverKnowledge(graph, 'agent:researcher', {
 
 console.log(result.nodes);    // Discovered nodes with paths
 console.log(result.denied);   // Node IDs found but access denied
+```
+
+Federated peer discovery with typed contracts:
+
+```typescript
+const peerDescriptor = createContextPeerDescriptor(
+    'descriptor:node-b',
+    'peer:node-b',
+    'https://node-b.example.com',
+    createAuthContract(['bearer-token'], true, ['role:developer']),
+    [
+        createExposedKnowledgeDescriptor(
+            'knowledge:node-b-events',
+            'events',
+            true,
+            createKnowledgeQueryContract(['text'], true, ['since']),
+            createAccessPolicyDescriptor(
+                ['role:developer', 'role:ceo'],
+                [SystemCapabilities.QUERY_REMOTE_CONTEXT],
+                false,
+                'error'
+            ),
+            ['events', 'today'],
+            ['application/json']
+        )
+    ],
+    [SystemCapabilities.QUERY_REMOTE_CONTEXT]
+);
+
+// Filter peers by capability
+const queryablePeers = filterPeersByQueryable([peerDescriptor]);
 ```
 
 Role-based discovery access:
@@ -268,6 +324,25 @@ const role = createRole(
 - `graph.getNodeEdges(nodeId)` - Get all edges connected to a node
 - `graph.hasPath(from, to, maxDepth?)` - Check if path exists between nodes
 
+### Context Query Types
+
+- `ContextQuery` - Read-only request against a knowledge node
+- `ContextQueryResult` - Query result with status, data, and provenance
+- `ContextQueryRequest` - Validated request payload for server handlers
+- `ContextQueryResponse` - Structured response with result or error
+- `RequesterDescriptor` - Audit metadata about the calling principal
+- `QueryMode` - Query shape: `text`, `semantic`, `structured`, `hybrid`
+- `ContextQueryStatus` - `ok`, `denied`, `not-found`, `invalid-query`, `unavailable`, `error`
+
+### Discovery Contract Types
+
+- `ContextPeerDescriptor` - Peer advertisement: auth, exposed knowledge, capabilities
+- `ExposedKnowledgeDescriptor` - Queryable knowledge node surface without content
+- `AccessPolicyDescriptor` - Role/capability requirements and fallback policy
+- `AuthContract` - Supported auth schemes and required credentials
+- `KnowledgeQueryContract` - Supported query modes, filters, and limits
+- `KnowledgeType` - `rag`, `logs`, `events`, `decisions`, `issues`, `documents`, `metrics`, `text`, `custom`
+
 ### Discovery Types
 
 - `DiscoveryQuery` - Query parameters for discovery
@@ -297,17 +372,18 @@ SystemRoles.AGENT      // 'role:agent'
 SystemRoles.USER       // 'role:user'
 SystemRoles.OBSERVER   // 'role:observer'
 
-SystemCapabilities.READ_CONTEXT      // 'cap:read-context'
-SystemCapabilities.WRITE_CONTEXT     // 'cap:write-context'
-SystemCapabilities.TRAVERSE_GRAPH    // 'cap:traverse-graph'
-SystemCapabilities.DISCOVER_AGENTS   // 'cap:discover-agents'
-SystemCapabilities.DISCOVER_KNOWLEDGE // 'cap:discover-knowledge'
-// ... etc
+SystemCapabilities.READ_CONTEXT         // 'cap:read-context'
+SystemCapabilities.WRITE_CONTEXT        // 'cap:write-context'
+SystemCapabilities.TRAVERSE_GRAPH       // 'cap:traverse-graph'
+SystemCapabilities.DISCOVER_AGENTS      // 'cap:discover-agents'
+SystemCapabilities.DISCOVER_KNOWLEDGE   // 'cap:discover-knowledge'
+SystemCapabilities.QUERY_REMOTE_CONTEXT // 'cap:query-remote-context'
+SystemCapabilities.DISCOVER_PEERS       // 'cap:discover-peers'
 ```
 
 ## Testing
 
-98 tests cover all domains:
+139 tests cover all domains:
 
 ```bash
 # Run all tests
@@ -401,6 +477,7 @@ const docs = discoverKnowledge(graph, 'agent:1', {
 - [Main README](../../README.md) - Project overview
 - [Architecture](../../context/01-architecture.md) - Detailed architecture
 - [Protocol Specific](../../context/06-protocol-specific.md) - GCP guidelines
+- [Direction](../../context/11-direction.md) - Strategic direction for read-first context query
 
 ---
 
