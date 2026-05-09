@@ -1,4 +1,6 @@
 export { createKnowledgeSourceRegistry } from "./implementation.js";
+export { executeTargetedContextQuery } from "./context-query.js";
+export type { TargetedQueryOptions } from "./context-query.js";
 export type {
     KnowledgeCapability,
     KnowledgeQueryRequest,

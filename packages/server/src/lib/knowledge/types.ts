@@ -12,6 +12,7 @@ import type {
     NodeId,
     Result,
     Timestamp,
+    ContextQuery,
 } from "@graph-context-protocol/core";
 import type { Principal } from "../auth/types.js";
 import type { ServerError } from "../errors.js";
@@ -44,6 +45,7 @@ export type KnowledgeCapability =
 export interface KnowledgeQueryRequest {
     readonly requester: Principal;
     readonly query: DiscoveryQuery;
+    readonly contextQuery?: ContextQuery;
     readonly context?: GraphContext;
     readonly metadata: Metadata;
 }
