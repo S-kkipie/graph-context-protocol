@@ -2,16 +2,45 @@
 
 > A TypeScript library for building graph-based, role-based context sharing systems between AI Native Apps and Autonomous Agents.
 
+## The Problem
+
+AI Native Apps and autonomous agents need to share context — decisions, logs, issues, knowledge, events — but current approaches force them into one of two broken models:
+
+- **Direct messaging (A2A)** — Agents send messages to each other, creating tight coupling, chatty networks, and no clear ownership of who holds the source of truth. Every agent must know about every other agent.
+- **Centralized knowledge stores** — A single global graph or database that everyone reads from, which breaks down at organizational boundaries and forces a single trust/auth model on all participants.
+
+Neither model handles the reality of agentic ecosystems: each entity (an app, an agent, a team system, a company service) owns its own memory, context, and policies. A product manager agent owns user stories and roadmap decisions. A CEO may read everything. A developer reads issues and technical decisions but not confidential strategy. An external agent only sees explicitly exposed summaries. These boundaries are local — the owner decides, not a central authority.
+
 ## What is Graph Context Protocol?
 
-Unlike traditional A2A (Agent-to-Agent) direct messaging, the **Graph Context Protocol (GCP)** enables role-gated context access through graph relationships. The primary flow is read-first: peers expose queryable knowledge nodes, authenticate callers locally, authorize access against owner-side policy, and return permitted context results without transferring the remote source of truth. This approach provides:
+**GCP** is a protocol and TypeScript SDK for **role-gated context access across independently owned graphs**. Instead of agents messaging each other, entities expose typed knowledge nodes, enforce their own authentication and authorization locally, and allow external principals to query permitted context — without copying the source of truth.
 
-- **Decoupled communication** - Agents don't need to know about each other directly
-- **Context scoping** - Data flows based on permissions and relationships
-- **Auditability** - Full provenance tracking of context changes
-- **Scalability** - Graph topology handles complex agent networks
+The primary flow is **read-first**: peers expose queryable knowledge surfaces, authenticate callers locally, authorize access against owner-side policy, and return permitted context results. This approach provides:
 
-Direct messages can still exist as a policy-controlled fallback, but they are not the primary protocol model.
+- **Local ownership is absolute** — Every entity owns its graph, auth, policy, and source of truth
+- **Context access over conversation** — Read authorized context instead of asking agents to explain themselves
+- **Role-gated boundaries** — The owner decides who can discover or query each knowledge node
+- **Knowledge stays local** — External callers receive query results, not ownership of the remote knowledge base
+- **Federation is optional** — Discovery works through nearby peers, registries, or local config — no global graph required
+- **Auditability** — Full provenance tracking of context changes
+
+Direct messages can exist as a policy-controlled fallback, but they are not the primary protocol model. Think of each participant as a semi-autonomous entity in an agentic ecosystem — it owns memory, context, tools, and policies, and decides what others can read.
+
+### What Can GCP Model?
+
+Every readable context source becomes a `knowledge` node in a local graph:
+
+| Kind | Example |
+|------|---------|
+| RAG indexes | Product docs, issue memory, vector-backed retrieval |
+| Logs | Operational logs, agent execution history |
+| Events | Timeline of actions, deployments, decisions |
+| Decisions | Architecture decisions, product approvals |
+| Issues | Tickets, user stories, bugs, tasks |
+| Documents | Markdown, PDFs, specs, contracts |
+| Metrics | Aggregated operational or product metrics |
+
+The protocol cares that it is queryable context with metadata and access policy — the storage engine comes later through adapters.
 
 ## Packages
 
@@ -39,9 +68,9 @@ Framework-agnostic server runtime that extends the core with:
 
 See [packages/server/README.md](./packages/server/README.md) for detailed documentation.
 
-### `gcp-mvp-node-a` / `gcp-mvp-node-b`
+### Demo Applications
 
-MVP demo applications showing the read-first context query flow between two independently owned nodes. Each node exposes a local graph with queryable event knowledge, authenticates callers, and enforces node-centered access policy. See `apps/gcp-mvp/`.
+The `apps/` directory contains example applications demonstrating GCP in practice, including MVP demos of the read-first context query flow between independently owned nodes.
 
 ## Architecture
 
@@ -51,9 +80,9 @@ MVP demo applications showing the read-first context query flow between two inde
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐     ┌────────────────┐     ┌───────────────┐ │
-│  │   @graph     │────▶│   @graph       │────▶│   gcp-mvp     │ │
-│  │   -context   │     │   -server      │     │   node-a/b    │ │
-│  │   -protocol  │     │   runtime      │     │   demos       │ │
+│  │   @graph     │────▶│   @graph       │────▶│   demo apps   │ │
+│  │   -context   │     │   -server      │     │   in /apps    │ │
+│  │   -protocol  │     │   runtime      │     │               │ │
 │  │   /core      │     │                │     │               │ │
 │  └──────┬───────┘     └───────┬────────┘     └───────────────┘ │
 │         │                     │                                 │
@@ -216,7 +245,7 @@ pnpm nx run-many -t typecheck
 pnpm nx run-many -t build
 
 # Build specific project
-pnpm nx build gcp-mvp-node-a
+pnpm nx build <project-name>
 ```
 
 ## Project Structure
@@ -259,11 +288,7 @@ pnpm nx build gcp-mvp-node-a
 │       │   │   └── ...         # Connection, routing, cache, agents
 │       │   └── index.ts        # Public API
 │       └── README.md
-├── apps/
-│   ├── gcp-mvp/                # MVP demo: node A and node B
-│   │   ├── node-a/             # Express server with context query endpoints
-│   │   └── node-b/             # Express server with context query endpoints
-│   └── server-demo/            # Server runtime demo
+├── apps/                      # Demo applications (see individual app READMEs)
 ├── AGENTS.md                   # AI Agent Guidelines
 └── package.json
 ```
