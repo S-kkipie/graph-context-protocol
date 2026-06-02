@@ -72,6 +72,27 @@ See [packages/server/README.md](./packages/server/README.md) for detailed docume
 
 The `apps/` directory contains example applications demonstrating GCP in practice, including MVP demos of the read-first context query flow between independently owned nodes.
 
+#### Running the GCP node demo
+
+`researcher` and `executor` each run as an independent GCP node. Each owns a
+`CONTEXT-1.md` knowledge file exposed at `POST /api/gcp`, and each app's agent
+has a `query_peer_context` tool that reads the *other* node's context over the
+read-first `context-query` protocol.
+
+```bash
+OPENROUTER_API_KEY=sk-... pnpm exec nx dev researcher --port=3000
+OPENROUTER_API_KEY=sk-... pnpm exec nx dev executor --port=3001
+```
+
+Ask the researcher "what has the executor done?" to watch a live GCP
+context-query between the two nodes (visible as a `query_peer_context` tool-call
+in the chat UI). Edit either `CONTEXT-1.md` to change what a node exposes, and
+override the peer location with `PEER_GCP_URL`.
+
+You can exercise the protocol directly without an LLM by POSTing a
+`context-query` message to a node's `/api/gcp` endpoint; the response carries
+the target node's context as `result` with `status: "ok"`.
+
 ## Architecture
 
 ```
