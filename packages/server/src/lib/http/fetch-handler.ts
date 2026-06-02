@@ -47,9 +47,19 @@ export function createFetchHandler(
             );
         }
 
+        // The server stamps provenance on receive (addProvenance spreads
+        // message.provenance), so a peer message that omits it must still
+        // carry an array rather than crashing the dispatch.
+        const normalizedMessage: ProtocolMessage = {
+            ...message,
+            provenance: Array.isArray(message.provenance)
+                ? message.provenance
+                : [],
+        };
+
         const envelope: InboundMessageEnvelope = {
             transportId,
-            payload: message,
+            payload: normalizedMessage,
             receivedAt: new Date().toISOString(),
             metadata: {},
         };

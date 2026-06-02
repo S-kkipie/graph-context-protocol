@@ -66,7 +66,7 @@ async function startServer() {
     return server;
 }
 
-function buildRequest(): Request {
+function buildRequest(options?: { omitProvenance?: boolean }): Request {
     const requester = createRequesterDescriptor("principal:test", [], []);
     const query = createContextQuery(
         "query:1",
@@ -97,10 +97,17 @@ function buildRequest(): Request {
         path: [],
     };
     const message = createProtocolMessage(header, ctx, query);
+    const body =
+        options?.omitProvenance === true
+            ? (() => {
+                  const { provenance: _provenance, ...rest } = message;
+                  return rest;
+              })()
+            : message;
     return new Request("http://peer.test/api/gcp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(message),
+        body: JSON.stringify(body),
     });
 }
 
@@ -110,6 +117,20 @@ describe("createFetchHandler", () => {
         const handler = createFetchHandler({ server });
 
         const response = await handler(buildRequest());
+
+        expect(response.status).toBe(200);
+        const body = (await response.json()) as {
+            payload: { status: string; result: unknown };
+        };
+        expect(body.payload.status).toBe("ok");
+        expect(body.payload.result).toBe("STUB CONTEXT TEXT");
+    });
+
+    it("handles a message that omits provenance without crashing", async () => {
+        const server = await startServer();
+        const handler = createFetchHandler({ server });
+
+        const response = await handler(buildRequest({ omitProvenance: true }));
 
         expect(response.status).toBe(200);
         const body = (await response.json()) as {
