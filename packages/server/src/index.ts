@@ -56,6 +56,11 @@ export type {
     HandlerResult,
     ProtocolHandler,
 } from "./lib/handlers/types";
+export type { QueryRemoteContextOptions } from "./lib/http/fetch-client";
+export { queryRemoteContext } from "./lib/http/fetch-client";
+export type { FetchHandlerOptions } from "./lib/http/fetch-handler";
+// HTTP helpers
+export { createFetchHandler } from "./lib/http/fetch-handler";
 export type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
@@ -119,11 +124,6 @@ export type {
     TransportSnapshot,
     TransportStatus,
 } from "./lib/transport/types";
-// HTTP helpers
-export { createFetchHandler } from "./lib/http/fetch-handler";
-export type { FetchHandlerOptions } from "./lib/http/fetch-handler";
-export { queryRemoteContext } from "./lib/http/fetch-client";
-export type { QueryRemoteContextOptions } from "./lib/http/fetch-client";
 export type {
     ConnectionId,
     DeliveryReceipt,

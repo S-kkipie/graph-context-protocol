@@ -1,4 +1,5 @@
 import path from "node:path";
+import { createMarkdownKnowledgeAdapter } from "@graph-context-protocol/adapters";
 import {
     createAccessPolicyDescriptor,
     createAgentNode,
@@ -7,7 +8,6 @@ import {
     createMetadataWithAccessPolicy,
     createRole,
 } from "@graph-context-protocol/core";
-import { createMarkdownKnowledgeAdapter } from "@graph-context-protocol/adapters";
 import {
     createGraphContextServer,
     createKnowledgeSourceRegistry,
