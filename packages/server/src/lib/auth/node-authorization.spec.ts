@@ -7,9 +7,9 @@ import {
     type GraphNode,
 } from "@graph-context-protocol/core";
 import { describe, expect, it } from "vitest";
-import { createAllowAllAuthProvider } from "./implementation.js";
-import { authorizeKnowledgeNodeAccess } from "./node-authorization.js";
-import type { AuthProvider, Principal } from "./types.js";
+import { createAllowAllAuthProvider } from "./implementation";
+import { authorizeKnowledgeNodeAccess } from "./node-authorization";
+import type { AuthProvider, Principal } from "./types";
 
 const viewerRole = createRole(
     "role:viewer",

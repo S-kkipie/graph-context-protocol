@@ -12,7 +12,7 @@ import {
     createRole,
     type GraphContext,
 } from "@graph-context-protocol/core";
-import type { Credentials } from "../auth/types.js";
+import type { Credentials } from "../auth/types";
 
 const ANONYMOUS_CREDENTIALS: Credentials = {
     type: "anonymous",

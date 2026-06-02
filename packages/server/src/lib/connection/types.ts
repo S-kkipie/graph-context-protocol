@@ -5,14 +5,14 @@
  */
 
 import type { Metadata, Result, Timestamp } from "@graph-context-protocol/core";
-import type { Principal } from "../auth/types.js";
-import type { ServerError } from "../errors.js";
+import type { Principal } from "../auth/types";
+import type { ServerError } from "../errors";
 import type {
     ConnectionId,
     ExternalAgentId,
     SessionId,
     TransportId,
-} from "../types.js";
+} from "../types";
 
 /**
  * Lifecycle status for a transport connection.

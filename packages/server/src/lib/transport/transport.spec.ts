@@ -3,16 +3,12 @@ import type {
     DeliveryReceipt,
     OutboundMessageEnvelope,
     TransportId,
-} from "../types.js";
+} from "../types";
 import {
     createMemoryTransport,
     createTransportRegistry,
-} from "./implementation.js";
-import type {
-    Transport,
-    TransportEnvelope,
-    TransportSnapshot,
-} from "./types.js";
+} from "./implementation";
+import type { Transport, TransportEnvelope, TransportSnapshot } from "./types";
 
 const createProtocolMessage = () => ({
     header: {

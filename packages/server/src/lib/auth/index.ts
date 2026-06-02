@@ -2,9 +2,9 @@ export {
     createAllowAllAuthProvider,
     createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
-} from "./implementation.js";
-export type { NodeAuthorizationOptions } from "./node-authorization.js";
-export { authorizeKnowledgeNodeAccess } from "./node-authorization.js";
+} from "./implementation";
+export type { NodeAuthorizationOptions } from "./node-authorization";
+export { authorizeKnowledgeNodeAccess } from "./node-authorization";
 
 export type {
     AuthAction,
@@ -13,4 +13,4 @@ export type {
     AuthProvider,
     Credentials,
     Principal,
-} from "./types.js";
+} from "./types";

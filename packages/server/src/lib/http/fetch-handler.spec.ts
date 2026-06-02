@@ -13,10 +13,10 @@ import {
     succeed,
 } from "@graph-context-protocol/core";
 import { describe, expect, it } from "vitest";
-import { createKnowledgeSourceRegistry } from "../knowledge/implementation.js";
-import type { KnowledgeSourceAdapter } from "../knowledge/types.js";
-import { createGraphContextServer } from "../server/implementation.js";
-import { createFetchHandler } from "./fetch-handler.js";
+import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
+import type { KnowledgeSourceAdapter } from "../knowledge/types";
+import { createGraphContextServer } from "../server/implementation";
+import { createFetchHandler } from "./fetch-handler";
 
 const KNOWLEDGE_ID = "knowledge:peer";
 

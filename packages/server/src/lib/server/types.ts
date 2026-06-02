@@ -10,21 +10,21 @@ import type {
     InboundMessageEnvelope,
     ServerId,
     ServerStatus,
-} from "../types.js";
+} from "../types";
 
-export type { ServerConfig } from "../types.js";
+export type { ServerConfig } from "../types";
 
-import type { ExternalAgentRegistry } from "../agents/types.js";
-import type { AuthProvider } from "../auth/types.js";
-import type { CacheStore } from "../cache/types.js";
-import type { ConnectionManager } from "../connection/types.js";
-import type { ServerError } from "../errors.js";
-import type { HandlerRegistry } from "../handlers/types.js";
-import type { KnowledgeSourceRegistry } from "../knowledge/types.js";
-import type { LifecycleManager } from "../lifecycle/types.js";
-import type { MessageRouter } from "../routing/types.js";
-import type { SyncScheduler } from "../sync/types.js";
-import type { TransportRegistry } from "../transport/types.js";
+import type { ExternalAgentRegistry } from "../agents/types";
+import type { AuthProvider } from "../auth/types";
+import type { CacheStore } from "../cache/types";
+import type { ConnectionManager } from "../connection/types";
+import type { ServerError } from "../errors";
+import type { HandlerRegistry } from "../handlers/types";
+import type { KnowledgeSourceRegistry } from "../knowledge/types";
+import type { LifecycleManager } from "../lifecycle/types";
+import type { MessageRouter } from "../routing/types";
+import type { SyncScheduler } from "../sync/types";
+import type { TransportRegistry } from "../transport/types";
 
 export interface ServerDependencies {
     readonly lifecycle: LifecycleManager;

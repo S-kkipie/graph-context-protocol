@@ -1,13 +1,13 @@
 import type { ProtocolMessage } from "@graph-context-protocol/core";
 import { fail, type Result, succeed } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
 import type {
     HandlerContext,
     HandlerRegistry,
     HandlerResult,
     ProtocolHandler,
-} from "./types.js";
+} from "./types";
 
 interface HandlerRegistryState {
     readonly handlers: ReadonlyMap<string, ProtocolHandler[]>;

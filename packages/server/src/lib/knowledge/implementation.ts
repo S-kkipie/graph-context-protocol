@@ -6,9 +6,9 @@
 
 import type { Result } from "@graph-context-protocol/core";
 import { fail, succeed } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
-import type { KnowledgeSourceId } from "../types.js";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
+import type { KnowledgeSourceId } from "../types";
 import type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
@@ -17,7 +17,7 @@ import type {
     KnowledgeSourceQuery,
     KnowledgeSourceRegistry,
     KnowledgeSourceStatus,
-} from "./types.js";
+} from "./types";
 
 const QUERY_CAPABILITIES: readonly KnowledgeCapability[] = [
     "lookup",

@@ -1,8 +1,8 @@
-export { createContextQueryHandler } from "./context-query-handler.js";
-export { createHandlerRegistry } from "./implementation.js";
+export { createContextQueryHandler } from "./context-query-handler";
+export { createHandlerRegistry } from "./implementation";
 export type {
     HandlerContext,
     HandlerRegistry,
     HandlerResult,
     ProtocolHandler,
-} from "./types.js";
+} from "./types";

@@ -1,6 +1,6 @@
-export type { TargetedQueryOptions } from "./context-query.js";
-export { executeTargetedContextQuery } from "./context-query.js";
-export { createKnowledgeSourceRegistry } from "./implementation.js";
+export type { TargetedQueryOptions } from "./context-query";
+export { executeTargetedContextQuery } from "./context-query";
+export { createKnowledgeSourceRegistry } from "./implementation";
 export type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
@@ -12,4 +12,4 @@ export type {
     KnowledgeSourceStatus,
     SyncRequest,
     SyncResult,
-} from "./types.js";
+} from "./types";

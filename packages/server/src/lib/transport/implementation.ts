@@ -13,10 +13,10 @@ import {
     TimestampSchema,
 } from "@graph-context-protocol/core";
 import { z } from "zod";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
-import type { ShutdownOptions } from "../lifecycle/types.js";
-import { ShutdownOptionsSchema } from "../lifecycle/types.js";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
+import type { ShutdownOptions } from "../lifecycle/types";
+import { ShutdownOptionsSchema } from "../lifecycle/types";
 import {
     ConnectionIdSchema,
     type DeliveryReceipt,
@@ -24,7 +24,7 @@ import {
     type OutboundMessageEnvelope,
     type TransportId,
     TransportIdSchema,
-} from "../types.js";
+} from "../types";
 import type {
     Transport,
     TransportEnvelope,
@@ -32,12 +32,12 @@ import type {
     TransportRegistry,
     TransportSnapshot,
     TransportStatus,
-} from "./types.js";
+} from "./types";
 import {
     ProtocolMessageSchema,
     TransportMessageListenerSchema,
     TransportSchema,
-} from "./types.js";
+} from "./types";
 
 const OutboundMessageEnvelopeSchema = z.object({
     transportId: TransportIdSchema,

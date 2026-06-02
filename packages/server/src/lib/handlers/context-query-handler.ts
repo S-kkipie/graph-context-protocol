@@ -23,13 +23,9 @@ import {
     type Result,
     succeed,
 } from "@graph-context-protocol/core";
-import type { Credentials, Principal } from "../auth/types.js";
-import type { ServerError } from "../errors.js";
-import type {
-    HandlerContext,
-    HandlerResult,
-    ProtocolHandler,
-} from "./types.js";
+import type { Credentials, Principal } from "../auth/types";
+import type { ServerError } from "../errors";
+import type { HandlerContext, HandlerResult, ProtocolHandler } from "./types";
 
 const METADATA_CREDENTIALS_KEY = "gcp.credentials" as const;
 const METADATA_AUTH_KEY = "auth" as const;
@@ -171,8 +167,8 @@ function buildErrorResponse(
 export function createContextQueryHandler(): ProtocolHandler {
     // Import node-authorization lazily to avoid circular deps between auth and handlers
     // For this to work at runtime, we import at call time.
-    let authorizeAccess: typeof import("../auth/node-authorization.js").authorizeKnowledgeNodeAccess;
-    let executeQuery: typeof import("../knowledge/context-query.js").executeTargetedContextQuery;
+    let authorizeAccess: typeof import("../auth/node-authorization").authorizeKnowledgeNodeAccess;
+    let executeQuery: typeof import("../knowledge/context-query").executeTargetedContextQuery;
 
     return {
         name: "context-query-handler",
@@ -274,7 +270,7 @@ export function createContextQueryHandler(): ProtocolHandler {
             // 4. Authorize target node access
             // Lazy-load to avoid import cycles
             if (!authorizeAccess) {
-                const mod = await import("../auth/node-authorization.js");
+                const mod = await import("../auth/node-authorization");
                 authorizeAccess = mod.authorizeKnowledgeNodeAccess;
             }
 
@@ -304,7 +300,7 @@ export function createContextQueryHandler(): ProtocolHandler {
             // 5. Execute targeted context query
             // Lazy-load to avoid import cycles
             if (!executeQuery) {
-                const mod = await import("../knowledge/context-query.js");
+                const mod = await import("../knowledge/context-query");
                 executeQuery = mod.executeTargetedContextQuery;
             }
 

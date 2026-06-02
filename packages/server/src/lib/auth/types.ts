@@ -12,8 +12,8 @@ import type {
     Result,
     RoleDefinition,
 } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import type { ExternalAgentId } from "../types.js";
+import type { ServerError } from "../errors";
+import type { ExternalAgentId } from "../types";
 
 /**
  * Authenticated identity for a remote caller.

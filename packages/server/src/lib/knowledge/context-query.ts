@@ -18,13 +18,13 @@ import {
     type Metadata,
     type Result,
 } from "@graph-context-protocol/core";
-import type { Principal } from "../auth/types.js";
-import type { ServerError } from "../errors.js";
+import type { Principal } from "../auth/types";
+import type { ServerError } from "../errors";
 import type {
     KnowledgeQueryRequest,
     KnowledgeQueryResult,
     KnowledgeSourceRegistry,
-} from "./types.js";
+} from "./types";
 
 /**
  * Options for executing a targeted context query.

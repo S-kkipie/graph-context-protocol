@@ -5,8 +5,8 @@
  */
 
 import { fail, succeed } from "@graph-context-protocol/core";
-import { createServerError } from "../errors.js";
-import type { ConnectionId, SessionId } from "../types.js";
+import { createServerError } from "../errors";
+import type { ConnectionId, SessionId } from "../types";
 import type {
     Connection,
     ConnectionManager,
@@ -15,7 +15,7 @@ import type {
     ConnectionStatus,
     OpenConnectionInput,
     Session,
-} from "./types.js";
+} from "./types";
 
 const connectionStatuses: readonly ConnectionStatus[] = [
     "connecting",

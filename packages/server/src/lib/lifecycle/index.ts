@@ -1,4 +1,4 @@
-export { createLifecycleManager } from "./implementation.js";
+export { createLifecycleManager } from "./implementation";
 export type {
     LifecycleContext,
     LifecycleHook,
@@ -6,11 +6,11 @@ export type {
     LifecyclePhase,
     LifecycleSnapshot,
     ShutdownOptions,
-} from "./types.js";
+} from "./types";
 export {
     LifecycleContextSchema,
     LifecycleHookSchema,
     LifecyclePhaseSchema,
     LifecycleSnapshotSchema,
     ShutdownOptionsSchema,
-} from "./types.js";
+} from "./types";

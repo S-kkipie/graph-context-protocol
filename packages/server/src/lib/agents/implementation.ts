@@ -10,16 +10,16 @@ import type {
     RoleDefinition,
 } from "@graph-context-protocol/core";
 import { createAgentNode, fail, succeed } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
-import type { ExternalAgentId } from "../types.js";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
+import type { ExternalAgentId } from "../types";
 import type {
     ExternalAgentDescriptor,
     ExternalAgentQuery,
     ExternalAgentRegistry,
     ExternalAgentSnapshot,
     ExternalAgentStatus,
-} from "./types.js";
+} from "./types";
 
 const EXTERNAL_AGENT_STATUSES: readonly ExternalAgentStatus[] = [
     "registered",

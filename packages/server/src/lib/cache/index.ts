@@ -1,2 +1,2 @@
-export { createMemoryCacheStore } from "./implementation.js";
-export type { CacheEntry, CacheOptions, CacheStore } from "./types.js";
+export { createMemoryCacheStore } from "./implementation";
+export type { CacheEntry, CacheOptions, CacheStore } from "./types";

@@ -7,7 +7,7 @@ import {
     createRole,
 } from "@graph-context-protocol/core";
 import { describe, expect, it, vi } from "vitest";
-import { queryRemoteContext } from "./fetch-client.js";
+import { queryRemoteContext } from "./fetch-client";
 
 function buildQuery() {
     const requester = createRequesterDescriptor("principal:test", [], []);

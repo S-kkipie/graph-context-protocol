@@ -1,6 +1,6 @@
 import type { Result, Timestamp } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import type { KnowledgeSourceId } from "../types.js";
+import type { ServerError } from "../errors";
+import type { KnowledgeSourceId } from "../types";
 
 export type SyncStatus =
     | "idle"

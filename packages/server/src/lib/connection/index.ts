@@ -1,4 +1,4 @@
-export { createConnectionManager } from "./implementation.js";
+export { createConnectionManager } from "./implementation";
 
 export type {
     Connection,
@@ -8,4 +8,4 @@ export type {
     ConnectionStatus,
     OpenConnectionInput,
     Session,
-} from "./types.js";
+} from "./types";

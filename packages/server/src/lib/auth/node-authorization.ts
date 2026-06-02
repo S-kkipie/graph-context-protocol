@@ -18,14 +18,14 @@ import {
     type Result,
     succeed,
 } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
 import type {
     AuthAction,
     AuthorizationRequest,
     AuthProvider,
     Principal,
-} from "./types.js";
+} from "./types";
 
 /**
  * Authorization options for node-level access control.

@@ -14,9 +14,9 @@ import type {
     Result,
     Timestamp,
 } from "@graph-context-protocol/core";
-import type { Principal } from "../auth/types.js";
-import type { ServerError } from "../errors.js";
-import type { KnowledgeSourceId } from "../types.js";
+import type { Principal } from "../auth/types";
+import type { ServerError } from "../errors";
+import type { KnowledgeSourceId } from "../types";
 
 /**
  * External knowledge source lifecycle status.
@@ -110,6 +110,6 @@ export interface KnowledgeSourceRegistry {
 import type {
     SyncRequest as SyncRequestType,
     SyncResult as SyncResultType,
-} from "../sync/types.js";
+} from "../sync/types";
 export type SyncRequest = SyncRequestType;
 export type SyncResult = SyncResultType;

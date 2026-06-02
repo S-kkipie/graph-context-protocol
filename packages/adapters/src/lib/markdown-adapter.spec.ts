@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { createMarkdownKnowledgeAdapter } from "./markdown-adapter.js";
+import { createMarkdownKnowledgeAdapter } from "./markdown-adapter";
 
 const FIXTURE = fileURLToPath(
     new URL("./__fixtures__/sample.md", import.meta.url),

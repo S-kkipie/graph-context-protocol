@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createMemoryCacheStore } from "./implementation.js";
+import { createMemoryCacheStore } from "./implementation";
 
 describe("cache module", () => {
     describe("createMemoryCacheStore", () => {

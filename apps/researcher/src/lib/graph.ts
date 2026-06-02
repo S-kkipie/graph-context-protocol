@@ -27,5 +27,5 @@ answer based on what you learn.`,
 export const graph = createReactAgent({
     llm,
     tools: [peerTool],
-    messageModifier: systemPrompt,
+    prompt: systemPrompt,
 });

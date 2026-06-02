@@ -13,8 +13,8 @@ import {
     TimestampSchema,
 } from "@graph-context-protocol/core";
 import { z } from "zod";
-import type { ServerError } from "../errors.js";
-import type { ShutdownOptions } from "../lifecycle/types.js";
+import type { ServerError } from "../errors";
+import type { ShutdownOptions } from "../lifecycle/types";
 import {
     type ConnectionId,
     ConnectionIdSchema,
@@ -25,7 +25,7 @@ import {
     type TransportId,
     TransportIdSchema,
     type Unsubscribe,
-} from "../types.js";
+} from "../types";
 
 /**
  * Runtime status for a transport.

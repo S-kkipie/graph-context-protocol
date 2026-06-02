@@ -1,4 +1,4 @@
-export { createExternalAgentRegistry, toAgentNode } from "./implementation.js";
+export { createExternalAgentRegistry, toAgentNode } from "./implementation";
 
 export type {
     ExternalAgentDescriptor,
@@ -6,4 +6,4 @@ export type {
     ExternalAgentRegistry,
     ExternalAgentSnapshot,
     ExternalAgentStatus,
-} from "./types.js";
+} from "./types";

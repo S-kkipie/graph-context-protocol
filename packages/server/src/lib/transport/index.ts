@@ -1,7 +1,7 @@
 export {
     createMemoryTransport,
     createTransportRegistry,
-} from "./implementation.js";
+} from "./implementation";
 export type {
     Transport,
     TransportEnvelope,
@@ -9,7 +9,7 @@ export type {
     TransportRegistry,
     TransportSnapshot,
     TransportStatus,
-} from "./types.js";
+} from "./types";
 export {
     ProtocolMessageSchema,
     TransportEnvelopeSchema,
@@ -17,4 +17,4 @@ export {
     TransportSchema,
     TransportSnapshotSchema,
     TransportStatusSchema,
-} from "./types.js";
+} from "./types";

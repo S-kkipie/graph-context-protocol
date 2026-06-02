@@ -5,8 +5,8 @@
  */
 
 import type { ProtocolMessage } from "@graph-context-protocol/core";
-import type { GraphContextServer } from "../server/types.js";
-import type { InboundMessageEnvelope } from "../types.js";
+import type { GraphContextServer } from "../server/types";
+import type { InboundMessageEnvelope } from "../types";
 
 /**
  * Options for {@link createFetchHandler}.

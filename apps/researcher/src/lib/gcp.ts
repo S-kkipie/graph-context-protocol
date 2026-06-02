@@ -54,9 +54,12 @@ async function buildServer(): Promise<GraphContextServer> {
         filePath: CONTEXT_FILE,
     });
     const registered = createKnowledgeSourceRegistry().register(adapter);
-    const knowledgeSources = registered.success
-        ? registered.data
-        : createKnowledgeSourceRegistry();
+    if (!registered.success) {
+        throw new Error(
+            `Failed to register knowledge adapter: ${registered.error.message}`,
+        );
+    }
+    const knowledgeSources = registered.data;
 
     const server = createGraphContextServer(
         {
