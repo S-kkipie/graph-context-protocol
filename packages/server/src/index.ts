@@ -119,6 +119,11 @@ export type {
     TransportSnapshot,
     TransportStatus,
 } from "./lib/transport/types.js";
+// HTTP helpers
+export { createFetchHandler } from "./lib/http/fetch-handler.js";
+export type { FetchHandlerOptions } from "./lib/http/fetch-handler.js";
+export { queryRemoteContext } from "./lib/http/fetch-client.js";
+export type { QueryRemoteContextOptions } from "./lib/http/fetch-client.js";
 export type {
     ConnectionId,
     DeliveryReceipt,
