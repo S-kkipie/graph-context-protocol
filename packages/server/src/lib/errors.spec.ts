@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createServerError, ServerErrorClass } from "./errors.js";
+import { createServerError, ServerErrorClass } from "./errors";
 
 describe("errors", () => {
     describe("createServerError", () => {

@@ -18,11 +18,11 @@ import {
     succeed,
 } from "@graph-context-protocol/core";
 import { describe, expect, it, vi } from "vitest";
-import type { AuthProvider, Credentials, Principal } from "../auth/types.js";
-import { createServerError } from "../errors.js";
-import { createKnowledgeSourceRegistry } from "../knowledge/implementation.js";
-import { createContextQueryHandler } from "./context-query-handler.js";
-import type { HandlerContext } from "./types.js";
+import type { AuthProvider, Credentials, Principal } from "../auth/types";
+import { createServerError } from "../errors";
+import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
+import { createContextQueryHandler } from "./context-query-handler";
+import type { HandlerContext } from "./types";
 
 const role = createRole("role:viewer", "Viewer", "Can view", [
     createCapability("cap:read", "Read", "Can read"),

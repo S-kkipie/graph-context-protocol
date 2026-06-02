@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createServerError } from "../errors.js";
-import { createLifecycleManager } from "./implementation.js";
-import type {
-    LifecycleContext,
-    LifecycleHook,
-    LifecyclePhase,
-} from "./types.js";
+import { createServerError } from "../errors";
+import { createLifecycleManager } from "./implementation";
+import type { LifecycleContext, LifecycleHook, LifecyclePhase } from "./types";
 
 const createContext = (): LifecycleContext => ({
     serverId: "server:test",

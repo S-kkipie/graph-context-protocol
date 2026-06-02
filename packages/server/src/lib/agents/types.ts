@@ -12,8 +12,8 @@ import type {
     RoleDefinition,
     RoleId,
 } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import type { ConnectionId, ExternalAgentId, TransportId } from "../types.js";
+import type { ServerError } from "../errors";
+import type { ConnectionId, ExternalAgentId, TransportId } from "../types";
 
 /**
  * External agent lifecycle status.

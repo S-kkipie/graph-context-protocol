@@ -10,6 +10,12 @@ const nextConfig = {
     // Use this to set Nx-specific options
     // See: https://nx.dev/recipes/next/next-config-setup
     nx: {},
+    transpilePackages: [
+        "@graph-context-protocol/core",
+        "@graph-context-protocol/server",
+        "@graph-context-protocol/adapters",
+        "@graph-context-protocol/langgraph",
+    ],
 };
 
 const plugins = [

@@ -117,6 +117,18 @@ importers:
       '@base-ui/react':
         specifier: ^1.4.1
         version: 1.4.1(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@graph-context-protocol/adapters':
+        specifier: workspace:*
+        version: link:../../packages/adapters
+      '@graph-context-protocol/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@graph-context-protocol/langgraph':
+        specifier: workspace:*
+        version: link:../../packages/langgraph
+      '@graph-context-protocol/server':
+        specifier: workspace:*
+        version: link:../../packages/server
       '@langchain/community':
         specifier: ^1.1.28
         version: 1.1.28(@browserbasehq/sdk@2.10.0(encoding@0.1.13))(@browserbasehq/stagehand@1.14.0(@playwright/test@1.59.1)(deepmerge@4.3.1)(dotenv@17.4.2)(encoding@0.1.13)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))(zod@4.4.3))(@ibm-cloud/watsonx-ai@1.7.11(@swc/core@1.15.8(@swc/helpers@0.5.18))(typescript@5.9.3))(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3)))(@opentelemetry/api@1.9.0)(ibm-cloud-sdk-core@5.4.14)(ignore@7.0.5)(jsonwebtoken@9.0.3)(lodash@4.17.23)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))(playwright@1.59.1)(ws@8.20.0)
@@ -211,6 +223,21 @@ importers:
       '@base-ui/react':
         specifier: ^1.4.1
         version: 1.4.1(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@graph-context-protocol/adapters':
+        specifier: workspace:*
+        version: link:../../packages/adapters
+      '@graph-context-protocol/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@graph-context-protocol/langgraph':
+        specifier: workspace:*
+        version: link:../../packages/langgraph
+      '@graph-context-protocol/server':
+        specifier: workspace:*
+        version: link:../../packages/server
+      '@langchain/community':
+        specifier: ^1.1.28
+        version: 1.1.28(@browserbasehq/sdk@2.10.0(encoding@0.1.13))(@browserbasehq/stagehand@1.14.0(@playwright/test@1.59.1)(deepmerge@4.3.1)(dotenv@17.4.2)(encoding@0.1.13)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))(zod@4.4.3))(@ibm-cloud/watsonx-ai@1.7.11(@swc/core@1.15.8(@swc/helpers@0.5.18))(typescript@5.9.3))(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3)))(@opentelemetry/api@1.9.0)(ibm-cloud-sdk-core@5.4.14)(ignore@7.0.5)(jsonwebtoken@9.0.3)(lodash@4.17.23)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))(playwright@1.59.1)(ws@8.20.0)
       '@langchain/core':
         specifier: ^0.3.80
         version: 0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))
@@ -220,6 +247,12 @@ importers:
       '@langchain/openai':
         specifier: ^0.5.18
         version: 0.5.18(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3)))(ws@8.20.0)
+      '@langchain/openrouter':
+        specifier: ^0.2.4
+        version: 0.2.4(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3)))(ws@8.20.0)(zod@4.4.3)
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.11
+        version: 0.13.11(typescript@5.9.3)(zod@4.4.3)
       ai:
         specifier: ^6.0.177
         version: 6.0.177(zod@4.4.3)
@@ -256,6 +289,9 @@ importers:
       tw-shimmer:
         specifier: ^0.4.11
         version: 0.4.11(tailwindcss@4.3.0)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
       zustand:
         specifier: ^5.0.13
         version: 5.0.13(@types/react@19.2.14)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
@@ -273,24 +309,14 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
 
-  apps/server-demo:
+  packages/adapters:
     dependencies:
       '@graph-context-protocol/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../core
       '@graph-context-protocol/server':
         specifier: workspace:*
-        version: link:../../packages/server
-      express:
-        specifier: ^5.2.1
-        version: 5.2.1
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@types/express':
-        specifier: ^5.0.6
-        version: 5.0.6
+        version: link:../server
 
   packages/core:
     dependencies:
@@ -303,6 +329,9 @@ importers:
       '@graph-context-protocol/core':
         specifier: workspace:*
         version: link:../core
+      '@graph-context-protocol/server':
+        specifier: workspace:*
+        version: link:../server
       '@langchain/core':
         specifier: ^0.3.0
         version: 0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))
@@ -2053,6 +2082,7 @@ packages:
   '@langchain/community@1.1.28':
     resolution: {integrity: sha512-Mb6vmLE4a7LLkH/flxNJgzNXCbrLH/osAvuplXTRqfsysfL8/EjtN7B98kuj/4HwLtBpn8pUQ5HbJIRXLrhP8Q==}
     engines: {node: '>=20'}
+    deprecated: This package has been deprecated. See https://github.com/langchain-ai/langchainjs-community/issues/61 for more info
     peerDependencies:
       '@arcjet/redact': ^v1.2.0
       '@aws-crypto/sha256-js': ^5.0.0
@@ -16497,7 +16527,7 @@ snapshots:
 
   axios@1.14.0:
     dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.15.11(debug@4.3.4)
       form-data: 4.0.5
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -16505,7 +16535,7 @@ snapshots:
 
   axios@1.15.0:
     dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.15.11(debug@4.3.4)
       form-data: 4.0.5
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -16513,7 +16543,7 @@ snapshots:
 
   axios@1.15.2(debug@4.3.4):
     dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.15.11(debug@4.3.4)
       form-data: 4.0.5
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -17923,6 +17953,10 @@ snapshots:
 
   flatted@3.4.2: {}
 
+  follow-redirects@1.15.11(debug@4.3.4):
+    optionalDependencies:
+      debug: 4.3.4
+
   follow-redirects@1.15.11(debug@4.4.3):
     optionalDependencies:
       debug: 4.4.3
@@ -18293,7 +18327,7 @@ snapshots:
   http-proxy-middleware@2.0.9(@types/express@4.17.25):
     dependencies:
       '@types/http-proxy': 1.17.17
-      http-proxy: 1.18.1(debug@4.4.3)
+      http-proxy: 1.18.1
       is-glob: 4.0.3
       is-plain-obj: 3.0.0
       micromatch: 4.0.8
@@ -18313,6 +18347,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  http-proxy@1.18.1:
+    dependencies:
+      eventemitter3: 4.0.7
+      follow-redirects: 1.15.11(debug@4.3.4)
+      requires-port: 1.0.0
+    transitivePeerDependencies:
+      - debug
+
   http-proxy@1.18.1(debug@4.4.3):
     dependencies:
       eventemitter3: 4.0.7
@@ -18328,7 +18370,7 @@ snapshots:
       corser: 2.0.1
       he: 1.2.0
       html-encoding-sniffer: 3.0.0
-      http-proxy: 1.18.1(debug@4.4.3)
+      http-proxy: 1.18.1
       mime: 1.6.0
       minimist: 1.2.8
       opener: 1.5.2
@@ -20006,7 +20048,7 @@ snapshots:
       escape-string-regexp: 1.0.5
       figures: 3.2.0
       flat: 5.0.2
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.15.11(debug@4.3.4)
       form-data: 4.0.5
       fs-constants: 1.0.0
       function-bind: 1.1.2

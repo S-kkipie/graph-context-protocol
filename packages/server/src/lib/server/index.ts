@@ -1,7 +1,7 @@
-export { createGraphContextServer } from "./implementation.js";
+export { createGraphContextServer } from "./implementation";
 export type {
     GraphContextServer,
     ServerConfig,
     ServerDependencies,
     ServerSnapshot,
-} from "./types.js";
+} from "./types";

@@ -5,7 +5,7 @@
  */
 
 import type { Result, Timestamp } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
+import type { ServerError } from "../errors";
 
 /**
  * Stored cache value with creation, expiry, and tag metadata.

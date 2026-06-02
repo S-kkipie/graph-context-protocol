@@ -5,31 +5,31 @@ import {
     type Result,
     succeed,
 } from "@graph-context-protocol/core";
-import { createExternalAgentRegistry } from "../agents/implementation.js";
-import { createAllowAllAuthProvider } from "../auth/implementation.js";
-import { createMemoryCacheStore } from "../cache/implementation.js";
-import { createConnectionManager } from "../connection/implementation.js";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
-import { createContextQueryHandler } from "../handlers/context-query-handler.js";
-import { createHandlerRegistry } from "../handlers/implementation.js";
-import type { HandlerRegistry } from "../handlers/types.js";
-import { createKnowledgeSourceRegistry } from "../knowledge/implementation.js";
-import { createLifecycleManager } from "../lifecycle/implementation.js";
-import { createMessageRouter } from "../routing/implementation.js";
-import { createSyncScheduler } from "../sync/implementation.js";
-import { createTransportRegistry } from "../transport/implementation.js";
+import { createExternalAgentRegistry } from "../agents/implementation";
+import { createAllowAllAuthProvider } from "../auth/implementation";
+import { createMemoryCacheStore } from "../cache/implementation";
+import { createConnectionManager } from "../connection/implementation";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
+import { createContextQueryHandler } from "../handlers/context-query-handler";
+import { createHandlerRegistry } from "../handlers/implementation";
+import type { HandlerRegistry } from "../handlers/types";
+import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
+import { createLifecycleManager } from "../lifecycle/implementation";
+import { createMessageRouter } from "../routing/implementation";
+import { createSyncScheduler } from "../sync/implementation";
+import { createTransportRegistry } from "../transport/implementation";
 import type {
     DeliveryReceipt,
     InboundMessageEnvelope,
     ServerConfig,
     ServerStatus,
-} from "../types.js";
+} from "../types";
 import type {
     GraphContextServer,
     ServerDependencies,
     ServerSnapshot,
-} from "./types.js";
+} from "./types";
 
 interface ServerState {
     readonly config: ServerConfig;

@@ -1,14 +1,14 @@
 // Base types and utilities
 
 // External agents
-export { createExternalAgentRegistry } from "./lib/agents/index.js";
+export { createExternalAgentRegistry } from "./lib/agents/index";
 export type {
     ExternalAgentDescriptor,
     ExternalAgentQuery,
     ExternalAgentRegistry,
     ExternalAgentSnapshot,
     ExternalAgentStatus,
-} from "./lib/agents/types.js";
+} from "./lib/agents/types";
 export type {
     AuthAction,
     AuthorizationDecision,
@@ -17,23 +17,23 @@ export type {
     Credentials,
     NodeAuthorizationOptions,
     Principal,
-} from "./lib/auth/index.js";
+} from "./lib/auth/index";
 // Authentication
 export {
     authorizeKnowledgeNodeAccess,
     createAllowAllAuthProvider,
     createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
-} from "./lib/auth/index.js";
+} from "./lib/auth/index";
 // Cache
-export { createMemoryCacheStore } from "./lib/cache/index.js";
+export { createMemoryCacheStore } from "./lib/cache/index";
 export type {
     CacheEntry,
     CacheOptions,
     CacheStore,
-} from "./lib/cache/types.js";
+} from "./lib/cache/types";
 // Connection management
-export { createConnectionManager } from "./lib/connection/index.js";
+export { createConnectionManager } from "./lib/connection/index";
 export type {
     Connection,
     ConnectionManager,
@@ -42,20 +42,25 @@ export type {
     ConnectionStatus,
     OpenConnectionInput,
     Session,
-} from "./lib/connection/types.js";
-export type { ServerError, ServerErrorCode } from "./lib/errors.js";
-export { createServerError, ServerErrorClass } from "./lib/errors.js";
+} from "./lib/connection/types";
+export type { ServerError, ServerErrorCode } from "./lib/errors";
+export { createServerError, ServerErrorClass } from "./lib/errors";
 // Protocol handlers
 export {
     createContextQueryHandler,
     createHandlerRegistry,
-} from "./lib/handlers/index.js";
+} from "./lib/handlers/index";
 export type {
     HandlerContext,
     HandlerRegistry,
     HandlerResult,
     ProtocolHandler,
-} from "./lib/handlers/types.js";
+} from "./lib/handlers/types";
+export type { QueryRemoteContextOptions } from "./lib/http/fetch-client";
+export { queryRemoteContext } from "./lib/http/fetch-client";
+export type { FetchHandlerOptions } from "./lib/http/fetch-handler";
+// HTTP helpers
+export { createFetchHandler } from "./lib/http/fetch-handler";
 export type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
@@ -66,14 +71,14 @@ export type {
     KnowledgeSourceRegistry,
     KnowledgeSourceStatus,
     TargetedQueryOptions,
-} from "./lib/knowledge/index.js";
+} from "./lib/knowledge/index";
 // Knowledge sources
 export {
     createKnowledgeSourceRegistry,
     executeTargetedContextQuery,
-} from "./lib/knowledge/index.js";
+} from "./lib/knowledge/index";
 // Lifecycle management
-export { createLifecycleManager } from "./lib/lifecycle/index.js";
+export { createLifecycleManager } from "./lib/lifecycle/index";
 export type {
     LifecycleContext,
     LifecycleHook,
@@ -81,36 +86,36 @@ export type {
     LifecyclePhase,
     LifecycleSnapshot,
     ShutdownOptions,
-} from "./lib/lifecycle/types.js";
+} from "./lib/lifecycle/types";
 // Message routing
-export { createMessageRouter } from "./lib/routing/index.js";
+export { createMessageRouter } from "./lib/routing/index";
 export type {
     MessageRoute,
     MessageRouter,
     RouteKind,
     RoutingContext,
-} from "./lib/routing/types.js";
+} from "./lib/routing/types";
 // Server runtime
-export { createGraphContextServer } from "./lib/server/index.js";
+export { createGraphContextServer } from "./lib/server/index";
 export type {
     GraphContextServer,
     ServerDependencies,
     ServerSnapshot,
-} from "./lib/server/types.js";
+} from "./lib/server/types";
 // Sync scheduler
-export { createSyncScheduler } from "./lib/sync/index.js";
+export { createSyncScheduler } from "./lib/sync/index";
 export type {
     SyncOperation,
     SyncRequest,
     SyncResult,
     SyncScheduler,
     SyncStatus,
-} from "./lib/sync/types.js";
+} from "./lib/sync/types";
 // Transport abstraction
 export {
     createMemoryTransport,
     createTransportRegistry,
-} from "./lib/transport/index.js";
+} from "./lib/transport/index";
 export type {
     Transport,
     TransportEnvelope,
@@ -118,7 +123,7 @@ export type {
     TransportRegistry,
     TransportSnapshot,
     TransportStatus,
-} from "./lib/transport/types.js";
+} from "./lib/transport/types";
 export type {
     ConnectionId,
     DeliveryReceipt,
@@ -132,7 +137,7 @@ export type {
     SessionId,
     TransportId,
     Unsubscribe,
-} from "./lib/types.js";
+} from "./lib/types";
 export {
     ConnectionIdSchema,
     DeliveryReceiptSchema,
@@ -143,7 +148,7 @@ export {
     ServerStatusSchema,
     SessionIdSchema,
     TransportIdSchema,
-} from "./lib/types.js";
+} from "./lib/types";
 
 // Re-export zod for consumers
 import { z } from "zod";

@@ -12,13 +12,13 @@ import {
     type Result,
 } from "@graph-context-protocol/core";
 import { z } from "zod";
-import type { ServerError } from "../errors.js";
+import type { ServerError } from "../errors";
 import {
     type ServerId,
     ServerIdSchema,
     type ServerStatus,
     ServerStatusSchema,
-} from "../types.js";
+} from "../types";
 
 /**
  * Lifecycle phase executed during server startup and shutdown.

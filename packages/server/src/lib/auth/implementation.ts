@@ -6,14 +6,14 @@
 
 import type { CapabilityId } from "@graph-context-protocol/core";
 import { fail, succeed } from "@graph-context-protocol/core";
-import { createServerError } from "../errors.js";
+import { createServerError } from "../errors";
 import type {
     AuthAction,
     AuthorizationRequest,
     AuthProvider,
     Credentials,
     Principal,
-} from "./types.js";
+} from "./types";
 
 type CapabilityRequirement = CapabilityId | readonly CapabilityId[];
 

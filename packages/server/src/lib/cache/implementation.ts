@@ -6,9 +6,9 @@
 
 import type { Result } from "@graph-context-protocol/core";
 import { fail, succeed } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
-import type { CacheEntry, CacheOptions, CacheStore } from "./types.js";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
+import type { CacheEntry, CacheOptions, CacheStore } from "./types";
 
 class MemoryCacheStore implements CacheStore {
     private readonly entries = new Map<string, CacheEntry<unknown>>();

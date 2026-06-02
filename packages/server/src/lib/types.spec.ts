@@ -8,7 +8,7 @@ import {
     ServerStatusSchema,
     SessionIdSchema,
     TransportIdSchema,
-} from "./types.js";
+} from "./types";
 
 describe("types", () => {
     describe("ServerIdSchema", () => {

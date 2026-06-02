@@ -5,9 +5,9 @@ import {
     type Result,
     succeed,
 } from "@graph-context-protocol/core";
-import type { ServerError } from "../errors.js";
-import { createServerError } from "../errors.js";
-import type { MessageRoute, MessageRouter, RoutingContext } from "./types.js";
+import type { ServerError } from "../errors";
+import { createServerError } from "../errors";
+import type { MessageRoute, MessageRouter, RoutingContext } from "./types";
 
 class MessageRouterImpl implements MessageRouter {
     route(

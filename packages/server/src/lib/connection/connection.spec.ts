@@ -1,7 +1,7 @@
 import type { Result } from "@graph-context-protocol/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createConnectionManager } from "./implementation.js";
-import type { Connection, Session } from "./types.js";
+import { createConnectionManager } from "./implementation";
+import type { Connection, Session } from "./types";
 
 const principal = {
     id: "principal:1",

@@ -4,8 +4,8 @@ import {
     createAllowAllAuthProvider,
     createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
-} from "./implementation.js";
-import type { Principal } from "./types.js";
+} from "./implementation";
+import type { Principal } from "./types";
 
 const principal: Principal = {
     id: "principal:1",

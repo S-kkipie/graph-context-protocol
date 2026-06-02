@@ -8,14 +8,11 @@ import {
     succeed,
 } from "@graph-context-protocol/core";
 import { describe, expect, it, vi } from "vitest";
-import type { Principal } from "../auth/types.js";
-import { createServerError } from "../errors.js";
-import { executeTargetedContextQuery } from "./context-query.js";
-import { createKnowledgeSourceRegistry } from "./implementation.js";
-import type {
-    KnowledgeSourceAdapter,
-    KnowledgeSourceRegistry,
-} from "./types.js";
+import type { Principal } from "../auth/types";
+import { createServerError } from "../errors";
+import { executeTargetedContextQuery } from "./context-query";
+import { createKnowledgeSourceRegistry } from "./implementation";
+import type { KnowledgeSourceAdapter, KnowledgeSourceRegistry } from "./types";
 
 const role = createRole("role:test", "Test Role", "Test");
 

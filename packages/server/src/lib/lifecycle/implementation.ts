@@ -5,9 +5,9 @@
  */
 
 import type { Result } from "@graph-context-protocol/core";
-import { createServerError, type ServerError } from "../errors.js";
-import type { ServerStatus } from "../types.js";
-import { ServerStatusSchema } from "../types.js";
+import { createServerError, type ServerError } from "../errors";
+import type { ServerStatus } from "../types";
+import { ServerStatusSchema } from "../types";
 import {
     type LifecycleContext,
     LifecycleContextSchema,
@@ -17,7 +17,7 @@ import {
     type LifecyclePhase,
     type ShutdownOptions,
     ShutdownOptionsSchema,
-} from "./types.js";
+} from "./types";
 
 const START_PHASES: readonly LifecyclePhase[] = [
     "before-start",

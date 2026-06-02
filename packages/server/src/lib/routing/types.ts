@@ -3,10 +3,10 @@ import type {
     ProtocolMessage,
     Result,
 } from "@graph-context-protocol/core";
-import type { ExternalAgentRegistry } from "../agents/types.js";
-import type { ConnectionManager } from "../connection/types.js";
-import type { ServerError } from "../errors.js";
-import type { KnowledgeSourceRegistry } from "../knowledge/types.js";
+import type { ExternalAgentRegistry } from "../agents/types";
+import type { ConnectionManager } from "../connection/types";
+import type { ServerError } from "../errors";
+import type { KnowledgeSourceRegistry } from "../knowledge/types";
 
 export type RouteKind =
     | "local-handler"

@@ -1,7 +1,7 @@
-export { createMessageRouter } from "./implementation.js";
+export { createMessageRouter } from "./implementation";
 export type {
     MessageRoute,
     MessageRouter,
     RouteKind,
     RoutingContext,
-} from "./types.js";
+} from "./types";

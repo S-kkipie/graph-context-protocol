@@ -5,11 +5,8 @@ import {
     type RoleDefinition,
 } from "@graph-context-protocol/core";
 import { describe, expect, it } from "vitest";
-import { createExternalAgentRegistry, toAgentNode } from "./implementation.js";
-import type {
-    ExternalAgentDescriptor,
-    ExternalAgentRegistry,
-} from "./types.js";
+import { createExternalAgentRegistry, toAgentNode } from "./implementation";
+import type { ExternalAgentDescriptor, ExternalAgentRegistry } from "./types";
 
 const READ_CAPABILITY_ID = "cap:read-context";
 const WRITE_CAPABILITY_ID = "cap:write-context";

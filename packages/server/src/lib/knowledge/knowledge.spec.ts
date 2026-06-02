@@ -6,15 +6,15 @@ import {
     succeed,
 } from "@graph-context-protocol/core";
 import { describe, expect, it, vi } from "vitest";
-import type { Principal } from "../auth/types.js";
-import { createServerError } from "../errors.js";
-import { createKnowledgeSourceRegistry } from "./implementation.js";
+import type { Principal } from "../auth/types";
+import { createServerError } from "../errors";
+import { createKnowledgeSourceRegistry } from "./implementation";
 import type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
     KnowledgeSourceAdapter,
     KnowledgeSourceRegistry,
-} from "./types.js";
+} from "./types";
 
 const role = createRole("role:test", "Test Role", "Role for tests");
 
