@@ -13,6 +13,9 @@
     "references": [
         {
             "path": "../core/tsconfig.lib.json"
+        },
+        {
+            "path": "../server/tsconfig.lib.json"
         }
     ],
     "exclude": [

@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "@graph-context-protocol/core": "workspace:*",
+        "@graph-context-protocol/server": "workspace:*",
         "@langchain/core": "^0.3.0",
         "@langchain/langgraph": "^0.2.0",
         "@langchain/openai": "^0.5.0",
