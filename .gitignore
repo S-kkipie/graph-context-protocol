@@ -52,3 +52,8 @@ vitest.config.*.timestamp*
 # Next.js
 .next
 out
+
+# env files (secrets — never commit)
+.env
+.env.local
+.env.*.local

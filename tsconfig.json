@@ -3,20 +3,23 @@
     "compileOnSave": false,
     "files": [],
     "references": [
-        {
-            "path": "./packages/core"
-        },
-        {
-            "path": "./packages/server"
-        },
-        {
-            "path": "./packages/langgraph"
-        },
-        {
-            "path": "./apps/executor"
-        },
-        {
-            "path": "./apps/researcher"
-        }
+      {
+        "path": "./packages/core"
+      },
+      {
+        "path": "./packages/server"
+      },
+      {
+        "path": "./packages/langgraph"
+      },
+      {
+        "path": "./apps/executor"
+      },
+      {
+        "path": "./apps/researcher"
+      },
+      {
+        "path": "./packages/adapters"
+      }
     ]
 }

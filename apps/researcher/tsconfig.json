@@ -41,5 +41,19 @@
         "src/**/*.spec.ts",
         "src/**/*.test.ts",
         ".next"
+    ],
+    "references": [
+      {
+        "path": "../../packages/server"
+      },
+      {
+        "path": "../../packages/langgraph"
+      },
+      {
+        "path": "../../packages/core"
+      },
+      {
+        "path": "../../packages/adapters"
+      }
     ]
 }
