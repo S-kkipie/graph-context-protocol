@@ -1,3 +1,4 @@
+import { toAssistantUiMessage } from "@graph-context-protocol/langgraph";
 import { graph } from "@/lib/graph";
 
 export async function POST(req: Request) {
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
                 for await (const [msg, metadata] of stream) {
                     const event = {
                         event: "messages",
-                        data: [msg, metadata],
+                        data: [toAssistantUiMessage(msg), metadata],
                     };
                     controller.enqueue(
                         encoder.encode(`${JSON.stringify(event)}\n`),

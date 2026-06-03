@@ -1,6 +1,10 @@
 export { toLangChainTool, toLangChainTools } from "./lib/adapter";
 export { createLangGraphAgent, type LangGraphAgentConfig } from "./lib/agent";
 export {
+    type AssistantUiMessage,
+    toAssistantUiMessage,
+} from "./lib/assistant-ui-stream";
+export {
     type ContextQueryToolConfig,
     createContextQueryTool,
 } from "./lib/context-query-tool";
