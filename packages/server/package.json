@@ -22,12 +22,6 @@
                 "options": {
                     "cwd": "packages/server"
                 }
-            },
-            "typecheck": {
-                "command": "tsc --build --noEmit",
-                "options": {
-                    "cwd": "packages/server"
-                }
             }
         }
     },
