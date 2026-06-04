@@ -12,6 +12,7 @@
         "@graph-context-protocol/adapters": "workspace:*",
         "@graph-context-protocol/core": "workspace:*",
         "@graph-context-protocol/langgraph": "workspace:*",
+        "@graph-context-protocol/scenario": "workspace:*",
         "@graph-context-protocol/server": "workspace:*",
         "@assistant-ui/react": "^0.14.0",
         "@assistant-ui/react-ai-sdk": "^1.3.23",
