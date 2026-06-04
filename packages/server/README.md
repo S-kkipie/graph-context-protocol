@@ -240,7 +240,7 @@ const handlers = createHandlerRegistry().register(createContextQueryHandler());
 const knowledge = createKnowledgeSourceRegistry().register(myEventsAdapter);
 ```
 
-Denied queries do not call knowledge adapters. Direct agent fallback remains opt-in owner policy and is not automatic.
+Denied queries do not call knowledge adapters. Task delegation and direct-agent fallback are stricter-capability operations gated by opt-in owner policy, never automatic.
 
 ### Message Routing
 

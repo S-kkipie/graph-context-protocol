@@ -4,7 +4,7 @@
 
 ## Overview
 
-The Graph Context Protocol (GCP) is a **graph-based, role-based context protocol** for federated context access across independently owned graphs. Unlike A2A-style direct messaging, the primary flow is **read-first**: entities expose typed knowledge nodes, enforce their own authentication and authorization locally, and allow external principals to query permitted context without copying the source of truth. Direct messages remain as an optional fallback capability.
+The Graph Context Protocol (GCP) is a **graph-based, role-based context protocol** for federated context access across independently owned graphs. Where A2A-style protocols center on point-to-point messaging, GCP's primary flow is **read-first**: entities expose typed knowledge nodes, enforce their own authentication and authorization locally, and allow external principals to query permitted context without copying the source of truth. **Task delegation** (asking a peer to perform an action and return a result) is supported as a stricter-capability layer on the same query path; the older "ask the agent directly when a read is denied" fallback is one special case of it. GCP interoperates with MCP and A2A through bridge adapters rather than replacing them, and A2A message-passing is the baseline GCP is evaluated against (see [Research & Evaluation](./12-research-and-evaluation.md)).
 
 ## Core Concepts
 

@@ -258,7 +258,7 @@ type MessagePriority = "low" | "normal" | "high" | "critical";
 
 ## Remote Context Query
 
-The primary protocol flow is **read-first**: principals query permitted context exposed by knowledge nodes, rather than sending direct messages.
+The primary protocol flow is **read-first**: principals query permitted context exposed by knowledge nodes, rather than sending direct messages. **Task delegation** rides the same request/response path but requires a stricter capability than read access — its result is an action outcome rather than stored context. Denial-fallback ("ask the agent directly when a read is denied") is one special case of delegation, gated by owner policy.
 
 ### Context Query Request
 
@@ -658,3 +658,4 @@ Default TTL: 60 seconds
 - [Patterns](./03-patterns.md) - Implementation patterns
 - [Testing](./04-testing.md) - Testing guidelines
 - [Direction](./11-direction.md) - Strategic direction for read-first context query
+- [Research & Evaluation](./12-research-and-evaluation.md) - Thesis, benchmark suite, prior art

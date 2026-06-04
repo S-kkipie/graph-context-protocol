@@ -4,7 +4,7 @@
 
 ## Overview
 
-Graph Context Protocol (GCP) should not be centered on direct agent-to-agent chat. Direct messaging can remain as an optional capability, but the primary purpose of GCP is **role-gated context access across independently owned graphs**. An AI Native App, autonomous agent, human-facing app, company system, or any other participant can own a local graph or subgraph. Other participants do not inherently talk to that owner; they request access to context exposed by nodes in that graph.
+Graph Context Protocol (GCP) should not be centered on direct agent-to-agent chat. The primary purpose of GCP is **role-gated context access across independently owned graphs**. **Task delegation** — asking a peer to perform an action and return a result — is a supported but gated capability layered on the same query/response path, requiring a stricter capability than read access; direct messaging and the "ask the agent when a read is denied" fallback are special cases of it, not the main model. An AI Native App, autonomous agent, human-facing app, company system, or any other participant can own a local graph or subgraph. Other participants do not inherently talk to that owner; they request access to context exposed by nodes in that graph.
 
 The protocol direction is: **entities expose typed knowledge/context nodes, enforce their own authentication and authorization locally, and allow external principals to query permitted context without copying the source of truth**. Context may represent RAG indexes, logs, events, decisions, issues, user stories, documents, metrics, or any other readable knowledge. For now, treat those as typed `knowledge` nodes. RAG internals can be designed later.
 
@@ -513,6 +513,8 @@ if fallback enabled: optionally ask agent:pm directly
 
 MCP reinforces the idea of resource-specific authorization and least-privilege scopes. ActivityPub reinforces decentralized actors and federation, but GCP should avoid processing anything before authentication. Verifiable Credentials are useful for claims, but they are not authorization by themselves. Zanzibar-style systems show why relation-based authorization and consistency matter, but GCP should not assume global infrastructure like Spanner or TrueTime. Knowledge graph RAG patterns are useful, but graph errors can amplify across hops, so typed knowledge and strict source ownership matter.
 
+MCP and A2A are not only lesson sources but **bridge targets**: a GCP node can expose its knowledge as an MCP server, and can consume MCP resources or A2A agents as knowledge nodes through adapters. A2A's point-to-point message-passing is also the empirical baseline GCP is measured against — see [Research & Evaluation](./12-research-and-evaluation.md).
+
 Use these lessons cautiously. GCP should remain smaller: graph-owned context, local auth, role-gated query, federated discovery, optional transport/runtime.
 
 ## Success Criteria for the New Direction
@@ -530,9 +532,20 @@ This direction is successful when a developer can install the GCP SDK in an AI N
 9. Preserve optional provenance metadata.
 10. Optionally fallback to direct agent query only when policy allows.
 
+## Interoperability and Evaluation
+
+GCP is positioned as a semantic layer that interoperates with the incumbents, not a from-scratch island:
+
+- **Expose as MCP** — a GCP knowledge node can be surfaced as an MCP resource/server so existing MCP clients can read permitted context.
+- **Consume MCP / A2A** — remote MCP resources and A2A agents can be wrapped as GCP knowledge nodes via adapters, so a GCP graph can federate over them.
+- **A2A as baseline** — the research thesis (read-first context-federation beats message-passing) requires an A2A-style baseline to compare against.
+
+The full research framing, falsifiable thesis, benchmark suite, metrics, and prior-art positioning live in [Research & Evaluation](./12-research-and-evaluation.md).
+
 ## See Also
 
 - [Architecture](./01-architecture.md)
 - [Protocol Specific](./06-protocol-specific.md)
 - [Quick Reference](./10-quick-reference.md)
+- [Research & Evaluation](./12-research-and-evaluation.md)
 - [Project README](../README.md)

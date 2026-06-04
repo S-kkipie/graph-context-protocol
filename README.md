@@ -24,7 +24,9 @@ The primary flow is **read-first**: peers expose queryable knowledge surfaces, a
 - **Federation is optional** — Discovery works through nearby peers, registries, or local config — no global graph required
 - **Auditability** — Full provenance tracking of context changes
 
-Direct messages can exist as a policy-controlled fallback, but they are not the primary protocol model. Think of each participant as a semi-autonomous entity in an agentic ecosystem — it owns memory, context, tools, and policies, and decides what others can read.
+Context access is the primary model, but not the only one. **Task delegation** — asking a peer's agent to *do* something and return a result — is supported as a gated capability on the same query/response path, requiring a stricter capability than read access. The older "ask the agent directly when a read is denied" fallback is one special case of it. Think of each participant as a semi-autonomous entity in an agentic ecosystem — it owns memory, context, tools, and policies, and decides what others can read or invoke.
+
+GCP does not ignore the incumbents. It **interoperates** with MCP (Model Context Protocol) and A2A (Agent-to-Agent): a GCP node can expose its knowledge as an MCP server, and can consume MCP resources or A2A agents as knowledge nodes through adapters. A2A-style message-passing is also the baseline GCP is measured against — see [Research & Evaluation](context/12-research-and-evaluation.md).
 
 ### What Can GCP Model?
 
@@ -283,7 +285,8 @@ pnpm nx build <project-name>
 │   ├── 08-ci-cd.md             # CI/CD guide
 │   ├── 09-dependencies.md      # Dependency management
 │   ├── 10-quick-reference.md   # Quick reference
-│   └── 11-direction.md         # Strategic direction
+│   ├── 11-direction.md         # Engineering / protocol direction
+│   └── 12-research-and-evaluation.md # Research thesis, benchmark suite, prior art
 ├── packages/
 │   ├── core/                   # Core protocol library
 │   │   ├── src/
@@ -351,7 +354,8 @@ Key points:
 - [Testing](context/04-testing.md) - Testing guidelines
 - [AI Agent Rules](context/07-ai-agent-rules.md) - DO and DON'T
 - [Quick Reference](context/10-quick-reference.md) - Command cheat sheet
-- [Direction](context/11-direction.md) - Strategic direction for read-first context query
+- [Direction](context/11-direction.md) - Engineering / protocol direction for read-first context query
+- [Research & Evaluation](context/12-research-and-evaluation.md) - Thesis, benchmark suite, metrics, prior art
 
 ## Resources
 

@@ -26,13 +26,13 @@
 
 # Graph Context Protocol (GCP) - Agent Guidelines
 
-> **Purpose**: A graph-based, role-based context protocol for communication between AI Native Apps and Autonomous Agents. Not A2A-style direct messaging, but structured context sharing through graph relationships.
+> **Purpose**: A graph-based, role-based context protocol for context sharing between AI Native Apps and Autonomous Agents. Context access is read-first and primary; **task delegation** is a stricter-capability layer on the same path. GCP is not built on A2A-style point-to-point messaging — but it interoperates with MCP and A2A (bridge adapters) and uses A2A message-passing as its evaluation baseline.
 
 ---
 
 ## Project Context
 
-**Graph Context Protocol (GCP)** is a TypeScript library for building graph-based, role-based context sharing systems between AI Native Apps and Autonomous Agents. Unlike traditional A2A (Agent-to-Agent) direct messaging, GCP enables structured context propagation through graph relationships.
+**Graph Context Protocol (GCP)** is a TypeScript library for building graph-based, role-based context sharing systems between AI Native Apps and Autonomous Agents. Where A2A (Agent-to-Agent) centers on point-to-point task messaging, GCP centers on **read-first, role-gated context access across independently owned graphs**, with task delegation as a gated capability on top. GCP bridges to MCP and A2A rather than replacing them.
 
 ### What We're Building
 

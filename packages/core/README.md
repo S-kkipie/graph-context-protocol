@@ -6,7 +6,7 @@
 
 This package provides the foundational data structures and operations for the Graph Context Protocol, enabling:
 
-- **Graph-based context flow** - Context propagates through graph relationships, not direct messaging
+- **Graph-based context flow** - Context propagates through graph relationships; read-first context access is primary, with task delegation as a gated capability rather than point-to-point messaging
 - **Role-based access control** - Capabilities and context rules define what nodes can access
 - **Immutable data structures** - All operations return new objects, never mutate
 - **Runtime validation** - Zod schemas ensure data integrity
