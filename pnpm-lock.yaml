@@ -126,6 +126,9 @@ importers:
       '@graph-context-protocol/langgraph':
         specifier: workspace:*
         version: link:../../packages/langgraph
+      '@graph-context-protocol/scenario':
+        specifier: workspace:*
+        version: link:../../packages/scenario
       '@graph-context-protocol/server':
         specifier: workspace:*
         version: link:../../packages/server
