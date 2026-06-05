@@ -15,6 +15,16 @@ import {
 import { type GcpNodeConfigInput, GcpNodeConfigSchema } from "./config";
 
 /**
+ * Resolves a node's graph id: the explicit `graphId` when given, otherwise
+ * `graph:<suffix>` where `<suffix>` is the node id with any leading `node:`
+ * stripped (so `node:researcher` → `graph:researcher`, not
+ * `graph:node:researcher`).
+ */
+export function resolveGraphId(nodeId: string, graphId?: string): string {
+    return graphId ?? `graph:${nodeId.replace(/^node:/, "")}`;
+}
+
+/**
  * Builds and starts a single GCP server node from declarative config.
  *
  * Parameterized extraction of the (previously duplicated) researcher/executor
@@ -44,7 +54,7 @@ export async function createGcpNode(
         }),
     );
 
-    const graph = createGraph(cfg.graphId ?? `graph:${cfg.nodeId}`)
+    const graph = createGraph(resolveGraphId(cfg.nodeId, cfg.graphId))
         .addNode(createAgentNode(cfg.nodeId, role))
         .addNode(knowledgeNode);
 

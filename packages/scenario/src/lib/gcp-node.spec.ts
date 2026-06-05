@@ -6,7 +6,7 @@ import {
     parseAccessPolicyFromMetadata,
 } from "@graph-context-protocol/core";
 import { describe, expect, it } from "vitest";
-import { createGcpNode } from "./gcp-node";
+import { createGcpNode, resolveGraphId } from "./gcp-node";
 
 const FIXTURE = fileURLToPath(
     new URL("./__fixtures__/context.md", import.meta.url),
@@ -77,5 +77,17 @@ describe("createGcpNode", () => {
         expect(metadata[GCP_ACCESS_POLICY_METADATA_KEY]).toBeDefined();
         const parsed = parseAccessPolicyFromMetadata(metadata);
         expect(parsed.success).toBe(true);
+    });
+});
+
+describe("resolveGraphId", () => {
+    it("uses the explicit graphId when provided", () => {
+        expect(resolveGraphId("node:x", "graph:custom")).toBe("graph:custom");
+    });
+    it("derives graph:<suffix> stripping a leading node: prefix", () => {
+        expect(resolveGraphId("node:researcher")).toBe("graph:researcher");
+    });
+    it("derives graph:<id> for an id without a node: prefix", () => {
+        expect(resolveGraphId("researcher")).toBe("graph:researcher");
     });
 });
