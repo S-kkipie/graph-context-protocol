@@ -30,9 +30,7 @@ function createMessage(target: string): ProtocolMessage {
     return createProtocolMessage(header, ctx, { value: "test" });
 }
 
-function makeContext(
-    overrides: Partial<RoutingContext> = {},
-): RoutingContext {
+function makeContext(overrides: Partial<RoutingContext> = {}): RoutingContext {
     const externalAgents = {
         getByNodeId: (nodeId: string) =>
             nodeId === "node:ext"

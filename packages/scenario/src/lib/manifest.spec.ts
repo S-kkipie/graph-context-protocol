@@ -20,7 +20,10 @@ function nodeConfig(n: number) {
         nodeId: `node:n${n}`,
         knowledgeId: `knowledge:n${n}`,
         role: { id: `role:n${n}`, name: `Node ${n}`, description: "test node" },
-        accessPolicy: { fallbackAllowed: true, denialMode: "empty-result" as const },
+        accessPolicy: {
+            fallbackAllowed: true,
+            denialMode: "empty-result" as const,
+        },
         knowledge: { filePath: FIXTURE, tags: ["test"] },
     };
 }
@@ -78,7 +81,9 @@ describe("runManifest", () => {
     });
 
     it("each launched node answers a context-query with status ok", async () => {
-        const launched = await runManifest({ nodes: [nodeConfig(1), nodeConfig(2)] });
+        const launched = await runManifest({
+            nodes: [nodeConfig(1), nodeConfig(2)],
+        });
         for (const { config, server } of launched) {
             const result = await server.receive(
                 contextQueryEnvelope(config.knowledgeId),
@@ -86,7 +91,9 @@ describe("runManifest", () => {
             expect(result.success).toBe(true);
             if (result.success) {
                 const response = (
-                    result.data as { response?: { payload: ContextQueryResult } }
+                    result.data as {
+                        response?: { payload: ContextQueryResult };
+                    }
                 ).response;
                 expect(response?.payload.status).toBe("ok");
             }

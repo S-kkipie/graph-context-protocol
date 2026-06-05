@@ -4,7 +4,10 @@ import { env } from "@/env";
 export const graph = createNodeAgent({
     llm: { model: env.OPENROUTER_MODEL, temperature: 0.7 },
     peers: [
-        { peerUrl: env.PEER_GCP_URL, targetNodeId: "knowledge:executor-context" },
+        {
+            peerUrl: env.PEER_GCP_URL,
+            targetNodeId: "knowledge:executor-context",
+        },
     ],
     systemPrompt: `You are the RESEARCHER node in a Graph Context Protocol network.
 You own a list of pending tasks and research notes.

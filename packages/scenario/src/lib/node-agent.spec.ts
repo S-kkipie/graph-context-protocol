@@ -4,9 +4,16 @@ import { createNodeAgent } from "./node-agent";
 describe("createNodeAgent", () => {
     it("builds a runnable react agent from config", () => {
         const agent = createNodeAgent({
-            llm: { model: "openai/gpt-4o-mini", temperature: 0.7, apiKey: "test-key" },
+            llm: {
+                model: "openai/gpt-4o-mini",
+                temperature: 0.7,
+                apiKey: "test-key",
+            },
             peers: [
-                { peerUrl: "http://localhost:3001/api/gcp", targetNodeId: "knowledge:executor-context" },
+                {
+                    peerUrl: "http://localhost:3001/api/gcp",
+                    targetNodeId: "knowledge:executor-context",
+                },
             ],
             systemPrompt: "You are the test node.",
         });

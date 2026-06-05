@@ -19,7 +19,11 @@ import {
 import { DiscoveryError } from "./discovery-types";
 
 const discoverAll = [
-    createCapability(SystemCapabilities.DISCOVER_AGENTS, "DA", "discover agents"),
+    createCapability(
+        SystemCapabilities.DISCOVER_AGENTS,
+        "DA",
+        "discover agents",
+    ),
     createCapability(
         SystemCapabilities.DISCOVER_KNOWLEDGE,
         "DK",
@@ -61,12 +65,16 @@ function buildGraph(requesterRole = fullRole) {
 describe("discoverNodes", () => {
     it("throws when the requester node is missing", () => {
         const graph = buildGraph();
-        expect(() => discoverNodes(graph, "node:missing")).toThrow(DiscoveryError);
+        expect(() => discoverNodes(graph, "node:missing")).toThrow(
+            DiscoveryError,
+        );
     });
 
     it("throws when the requester is not an agent node", () => {
         const graph = buildGraph();
-        expect(() => discoverNodes(graph, "knowledge:k")).toThrow(DiscoveryError);
+        expect(() => discoverNodes(graph, "knowledge:k")).toThrow(
+            DiscoveryError,
+        );
     });
 
     it("discovers reachable nodes with path + distance for a capable requester", () => {
@@ -109,7 +117,9 @@ describe("discoverAgents / discoverKnowledge", () => {
 
     it("excludes nodes that fail a tag filter", () => {
         const graph = buildGraph();
-        const result = discoverKnowledge(graph, "node:req", { tags: ["other"] });
+        const result = discoverKnowledge(graph, "node:req", {
+            tags: ["other"],
+        });
         expect(result.nodes).toEqual([]);
     });
 });
