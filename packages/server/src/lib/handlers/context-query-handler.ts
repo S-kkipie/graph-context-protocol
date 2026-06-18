@@ -14,9 +14,11 @@ import {
     type ContextQuery,
     ContextQueryRequestSchema,
     type ContextQueryResult,
+    type ContextReadProvenance,
     createContextQueryResult,
     createMessageHeader,
     createProtocolMessage,
+    createReadProvenance,
     type Graph,
     type GraphNode,
     type ProtocolMessage,
@@ -110,6 +112,7 @@ function buildDeniedResponse(
     requestMessage: ProtocolMessage,
     localNodeId: string,
     reason: string,
+    provenance?: ContextReadProvenance,
 ): ProtocolMessage {
     const deniedResult = createContextQueryResult(
         queryId,
@@ -118,6 +121,7 @@ function buildDeniedResponse(
         { reason },
         undefined,
         reason,
+        provenance,
     );
 
     return buildResponseMessage(deniedResult, requestMessage, localNodeId);
@@ -201,10 +205,30 @@ export function createContextQueryHandler(): ProtocolHandler {
 
             const query: ContextQuery = validationResult.data;
 
+            const recordDeny = async (
+                principalId: string,
+                reason: string,
+            ): Promise<ContextReadProvenance> => {
+                const provenance = createReadProvenance(
+                    principalId,
+                    query.targetNodeId,
+                    query.queryId,
+                    new Date().toISOString(),
+                    "deny",
+                    { reason },
+                );
+                await context.audit?.record(provenance);
+                return provenance as ContextReadProvenance;
+            };
+
             // 2. Authenticate caller
             const authProvider = context.auth;
 
             if (authProvider === undefined) {
+                const provenance = await recordDeny(
+                    query.requester.principalId,
+                    "No auth provider configured",
+                );
                 return succeed({
                     handled: true,
                     response: buildDeniedResponse(
@@ -212,6 +236,7 @@ export function createContextQueryHandler(): ProtocolHandler {
                         message,
                         localNodeId,
                         "No auth provider configured",
+                        provenance,
                     ),
                     metadata: { denied: true },
                 });
@@ -220,6 +245,10 @@ export function createContextQueryHandler(): ProtocolHandler {
             const credentials = extractCredentials(context, message);
 
             if (credentials === undefined) {
+                const provenance = await recordDeny(
+                    query.requester.principalId,
+                    "No credentials provided",
+                );
                 return succeed({
                     handled: true,
                     response: buildDeniedResponse(
@@ -227,6 +256,7 @@ export function createContextQueryHandler(): ProtocolHandler {
                         message,
                         localNodeId,
                         "No credentials provided",
+                        provenance,
                     ),
                     metadata: { denied: true },
                 });
@@ -235,13 +265,19 @@ export function createContextQueryHandler(): ProtocolHandler {
             const authResult = await authProvider.authenticate(credentials);
 
             if (!authResult.success) {
+                const reason = `Authentication failed: ${authResult.error.message}`;
+                const provenance = await recordDeny(
+                    query.requester.principalId,
+                    reason,
+                );
                 return succeed({
                     handled: true,
                     response: buildDeniedResponse(
                         query.queryId,
                         message,
                         localNodeId,
-                        `Authentication failed: ${authResult.error.message}`,
+                        reason,
+                        provenance,
                     ),
                     metadata: { denied: true },
                 });
@@ -282,13 +318,24 @@ export function createContextQueryHandler(): ProtocolHandler {
             );
 
             if (!authzResult.success) {
+                const reason = `Authorization denied: ${authzResult.error.message}`;
+                const provenance = createReadProvenance(
+                    principal.id,
+                    query.targetNodeId,
+                    query.queryId,
+                    new Date().toISOString(),
+                    "deny",
+                    { reason: authzResult.error.message },
+                );
+                await context.audit?.record(provenance);
                 return succeed({
                     handled: true,
                     response: buildDeniedResponse(
                         query.queryId,
                         message,
                         localNodeId,
-                        `Authorization denied: ${authzResult.error.message}`,
+                        reason,
+                        provenance as ContextReadProvenance,
                     ),
                     metadata: {
                         denied: true,
@@ -296,6 +343,8 @@ export function createContextQueryHandler(): ProtocolHandler {
                     },
                 });
             }
+
+            const grant = authzResult.data;
 
             // 5. Execute targeted context query
             // Lazy-load to avoid import cycles
@@ -314,8 +363,29 @@ export function createContextQueryHandler(): ProtocolHandler {
                 },
             );
 
+            const allowProvenance = createReadProvenance(
+                principal.id,
+                query.targetNodeId,
+                query.queryId,
+                new Date().toISOString(),
+                "allow",
+                {
+                    matchedRoles: grant.matchedRoles,
+                    matchedCapabilities: grant.matchedCapabilities,
+                },
+            );
+            await context.audit?.record(allowProvenance);
+
+            const enrichedResult: ContextQueryResult = {
+                ...queryResult,
+                provenance: {
+                    ...(queryResult.provenance ?? {}),
+                    ...allowProvenance,
+                },
+            };
+
             const responseMessage = buildResponseMessage(
-                queryResult,
+                enrichedResult,
                 message,
                 localNodeId,
             );

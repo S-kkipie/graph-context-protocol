@@ -3,7 +3,10 @@ export {
     createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
 } from "./implementation";
-export type { NodeAuthorizationOptions } from "./node-authorization";
+export type {
+    NodeAuthorizationGrant,
+    NodeAuthorizationOptions,
+} from "./node-authorization";
 export { authorizeKnowledgeNodeAccess } from "./node-authorization";
 
 export type {

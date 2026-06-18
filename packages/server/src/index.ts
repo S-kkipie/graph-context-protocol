@@ -18,6 +18,7 @@ export type {
     AuthorizationRequest,
     AuthProvider,
     Credentials,
+    NodeAuthorizationGrant,
     NodeAuthorizationOptions,
     Principal,
 } from "./lib/auth/index";

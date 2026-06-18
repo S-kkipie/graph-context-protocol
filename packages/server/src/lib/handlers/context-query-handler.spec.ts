@@ -18,6 +18,8 @@ import {
     succeed,
 } from "@graph-context-protocol/core";
 import { describe, expect, it, vi } from "vitest";
+import { createInMemoryAuditSink } from "../audit/implementation";
+import type { AuditSink } from "../audit/types";
 import type { AuthProvider, Credentials, Principal } from "../auth/types";
 import { createServerError } from "../errors";
 import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
@@ -576,5 +578,129 @@ describe("context-query-handler", () => {
                 expect(queryFn).not.toHaveBeenCalled();
             }
         });
+    });
+});
+
+describe("context-query-handler — M1 audit + provenance", () => {
+    const handler = createContextQueryHandler();
+
+    function gatedContext(
+        auth: AuthProvider,
+        audit: AuditSink,
+        readableByRoles: readonly string[],
+    ): HandlerContext {
+        const policy = createAccessPolicyDescriptor(
+            readableByRoles,
+            [],
+            false,
+            "error",
+        );
+        const metadata = createMetadataWithAccessPolicy(policy);
+        const ownerRole = createRole("role:owner", "Owner", "Owner");
+        const node = createKnowledgeNode("knowledge:1", ownerRole, {
+            tags: ["test"],
+            contentType: "text/plain",
+            ...metadata,
+        });
+        const graph = createGraph("graph:1").addNode(node);
+        const { registry } = createMockAdapter("knowledge:1");
+        return {
+            serverId: "server:1",
+            localNodeId: "node:local",
+            graph,
+            connections: {} as unknown as HandlerContext["connections"],
+            externalAgents: {} as unknown as HandlerContext["externalAgents"],
+            knowledgeSources: registry,
+            auth,
+            audit,
+            inboundMetadata: { "gcp.credentials": creds },
+            metadata: {},
+        };
+    }
+
+    it("records an allow decision and stamps response provenance", async () => {
+        const audit = createInMemoryAuditSink();
+        const context = gatedContext(
+            createAllowAllForPrincipal(viewerPrincipal),
+            audit,
+            ["role:viewer"],
+        );
+        const query = createContextQuery(
+            "query:allow",
+            createRequesterDescriptor("p:req"),
+            "knowledge:1",
+            "text",
+            "hello",
+        );
+        const message = createContextQueryMessage(query);
+
+        const result = await handler.handle(message, context);
+
+        expect(result.success).toBe(true);
+        const records = audit.list();
+        expect(records).toHaveLength(1);
+        expect(records[0]?.decision).toBe("allow");
+        expect(records[0]?.principalId).toBe("principal:viewer");
+        expect(records[0]?.matchedRoles).toEqual(["role:viewer"]);
+        if (result.success && result.data.response) {
+            const payload = result.data.response.payload as ContextQueryResult;
+            expect(payload.status).toBe("ok");
+            expect(payload.provenance?.decision).toBe("allow");
+            expect(payload.provenance?.principalId).toBe("principal:viewer");
+        }
+    });
+
+    it("records a deny decision when the policy blocks the role", async () => {
+        const audit = createInMemoryAuditSink();
+        const context = gatedContext(
+            createAllowAllForPrincipal(viewerPrincipal),
+            audit,
+            ["role:ceo"],
+        );
+        const query = createContextQuery(
+            "query:deny",
+            createRequesterDescriptor("p:req"),
+            "knowledge:1",
+            "text",
+            "hello",
+        );
+        const message = createContextQueryMessage(query);
+
+        const result = await handler.handle(message, context);
+
+        const records = audit.list();
+        expect(records).toHaveLength(1);
+        expect(records[0]?.decision).toBe("deny");
+        expect(records[0]?.principalId).toBe("principal:viewer");
+        expect(records[0]?.reason).toBeDefined();
+        if (result.success && result.data.response) {
+            const payload = result.data.response.payload as ContextQueryResult;
+            expect(payload.status).toBe("denied");
+            expect(payload.provenance?.decision).toBe("deny");
+        }
+    });
+
+    it("records a deny when authentication fails (anonymous principal)", async () => {
+        const audit = createInMemoryAuditSink();
+        const context = gatedContext(
+            createFailingAuthProvider("bad token"),
+            audit,
+            ["role:viewer"],
+        );
+        const query = createContextQuery(
+            "query:anon",
+            createRequesterDescriptor("principal:anon"),
+            "knowledge:1",
+            "text",
+            "hello",
+        );
+        const message = createContextQueryMessage(query);
+
+        await handler.handle(message, context);
+
+        const records = audit.list();
+        expect(records).toHaveLength(1);
+        expect(records[0]?.decision).toBe("deny");
+        expect(records[0]?.principalId).toBe("principal:anon");
     });
 });

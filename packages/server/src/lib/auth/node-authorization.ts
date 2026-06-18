@@ -11,11 +11,13 @@
  */
 
 import {
+    type CapabilityId,
     fail,
     GCP_ACCESS_POLICY_METADATA_KEY,
     type GraphNode,
     parseAccessPolicyFromMetadata,
     type Result,
+    type RoleId,
     succeed,
 } from "@graph-context-protocol/core";
 import type { ServerError } from "../errors";
@@ -37,6 +39,12 @@ export interface NodeAuthorizationOptions {
     readonly metadata?: Record<string, unknown>;
 }
 
+/** Matched policy detail returned on a successful node authorization. */
+export interface NodeAuthorizationGrant {
+    readonly matchedRoles: readonly RoleId[];
+    readonly matchedCapabilities: readonly CapabilityId[];
+}
+
 /**
  * Authorizes a principal for a knowledge node by checking the node's
  * access policy and delegating to the auth provider.
@@ -45,7 +53,7 @@ export interface NodeAuthorizationOptions {
  * @param targetNode - The target graph node to authorize against
  * @param authProvider - The auth provider for baseline authorization
  * @param options - Optional action override and metadata
- * @returns Result<void, ServerError> - success if authorized, failure with denial details
+ * @returns Result<NodeAuthorizationGrant, ServerError> - success with grant if authorized, failure with denial details
  *
  * @example
  * ```typescript
@@ -54,7 +62,7 @@ export interface NodeAuthorizationOptions {
  *     // Access denied — result.error contains denial details
  *     return createContextQueryResult(queryId, "denied", localNodeId);
  * }
- * // Access granted — proceed with query
+ * // Access granted — proceed with query, grant has matchedRoles/matchedCapabilities
  * ```
  */
 export function authorizeKnowledgeNodeAccess(
@@ -62,7 +70,7 @@ export function authorizeKnowledgeNodeAccess(
     targetNode: GraphNode,
     authProvider: AuthProvider,
     options: NodeAuthorizationOptions = {},
-): Result<void, ServerError> {
+): Result<NodeAuthorizationGrant, ServerError> {
     // 1. Verify target is a knowledge node
     if (targetNode.kind !== "knowledge") {
         return fail(
@@ -140,7 +148,9 @@ export function authorizeKnowledgeNodeAccess(
     if (policy.requiredCapabilities.length > 0) {
         const principalDirectCaps = new Set(principal.capabilities);
         const principalRoleCaps = principal.role
-            ? new Set(principal.role.capabilities.map((c) => c.id))
+            ? new Set(
+                  principal.role.getEffectiveCapabilities().map((c) => c.id),
+              )
             : new Set<string>();
 
         const missingCapabilities = policy.requiredCapabilities.filter(
@@ -198,5 +208,13 @@ export function authorizeKnowledgeNodeAccess(
         );
     }
 
-    return succeed(undefined);
+    const matchedRoles: readonly RoleId[] =
+        policy.readableByRoles.length > 0 && principalRoleId !== undefined
+            ? [principalRoleId]
+            : [];
+
+    return succeed({
+        matchedRoles,
+        matchedCapabilities: policy.requiredCapabilities,
+    });
 }
