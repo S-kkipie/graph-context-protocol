@@ -8,9 +8,12 @@ import {
     createRole,
 } from "@graph-context-protocol/core";
 import {
+    type AuditSink,
+    type AuthProvider,
     createGraphContextServer,
     createKnowledgeSourceRegistry,
     type GraphContextServer,
+    type ServerDependencies,
 } from "@graph-context-protocol/server";
 import { type GcpNodeConfigInput, GcpNodeConfigSchema } from "./config";
 
@@ -24,6 +27,20 @@ export function resolveGraphId(nodeId: string, graphId?: string): string {
     return graphId ?? `graph:${nodeId.replace(/^node:/, "")}`;
 }
 
+/** Optional runtime dependencies for a GCP node. */
+export interface GcpNodeDependencies {
+    /**
+     * Auth provider for the node. When omitted, the server's allow-all
+     * provider is used (suitable for an ungated demo).
+     */
+    readonly authProvider?: AuthProvider;
+    /**
+     * Audit sink for read-provenance. When omitted, the server's default
+     * in-memory sink is used.
+     */
+    readonly auditSink?: AuditSink;
+}
+
 /**
  * Builds and starts a single GCP server node from declarative config.
  *
@@ -33,6 +50,7 @@ export function resolveGraphId(nodeId: string, graphId?: string): string {
  */
 export async function createGcpNode(
     config: GcpNodeConfigInput,
+    deps: GcpNodeDependencies = {},
 ): Promise<GraphContextServer> {
     const cfg = GcpNodeConfigSchema.parse(config);
 
@@ -69,13 +87,23 @@ export async function createGcpNode(
         );
     }
 
+    const baseDeps: Pick<ServerDependencies, "graph" | "knowledgeSources"> = {
+        graph,
+        knowledgeSources: registered.data,
+    };
+    const dependencies: Partial<ServerDependencies> = {
+        ...baseDeps,
+        ...(deps.authProvider !== undefined ? { auth: deps.authProvider } : {}),
+        ...(deps.auditSink !== undefined ? { audit: deps.auditSink } : {}),
+    };
+
     const server = createGraphContextServer(
         {
             id: cfg.serverId,
             localNodeId: cfg.nodeId,
             shutdownTimeoutMs: cfg.shutdownTimeoutMs,
         },
-        { graph, knowledgeSources: registered.data },
+        dependencies,
     );
 
     const started = await server.start();
