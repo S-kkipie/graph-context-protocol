@@ -1,3 +1,4 @@
+import type { AccessDecision } from "../provenance/provenance-types";
 import type { CapabilityId, Metadata, NodeId } from "../types";
 
 /**
@@ -58,6 +59,28 @@ export interface ContextQueryRequest {
 export type ContextQuery = ContextQueryRequest;
 
 /**
+ * Structured provenance attached to a context-query response.
+ *
+ * Every field is optional and the type is open (string index signature) to
+ * preserve back-compat with the v1 contract, which carried an untyped
+ * `Record<string, unknown>` here. Adding named optional fields is additive —
+ * it does NOT change the wire schema or the contract version.
+ */
+export interface ContextReadProvenance {
+    readonly principalId?: string;
+    readonly targetNodeId?: NodeId;
+    readonly queryId?: string;
+    readonly timestamp?: string;
+    readonly decision?: AccessDecision;
+    readonly matchedRoles?: readonly string[];
+    readonly matchedCapabilities?: readonly CapabilityId[];
+    readonly sourceId?: string;
+    readonly sourceOfTruth?: unknown;
+    readonly reason?: string;
+    readonly [key: string]: unknown;
+}
+
+/**
  * A context query response returned from a remote node.
  */
 export interface ContextQueryResponse {
@@ -67,7 +90,7 @@ export interface ContextQueryResponse {
     readonly sourceNodeId: NodeId;
     readonly result?: unknown;
     readonly error?: string;
-    readonly provenance?: Record<string, unknown>;
+    readonly provenance?: ContextReadProvenance;
     readonly metadata: Metadata;
 }
 

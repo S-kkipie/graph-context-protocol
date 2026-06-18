@@ -6,6 +6,7 @@ import type {
     ContextQueryRequest,
     ContextQueryResponse,
     ContextQueryStatus,
+    ContextReadProvenance,
     QueryMode,
     RequesterDescriptor,
 } from "./context-query-types";
@@ -180,7 +181,7 @@ export function createContextQueryResult(
     metadata: Metadata = {},
     result?: unknown,
     error?: string,
-    provenance?: Record<string, unknown>,
+    provenance?: ContextReadProvenance,
 ): ContextQueryResponse {
     const input = ContextQueryResponseSchema.parse({
         contractVersion:
@@ -202,6 +203,6 @@ export function createContextQueryResult(
         metadata: input.metadata,
         result: input.result,
         error: input.error,
-        provenance: input.provenance,
+        provenance: provenance,
     };
 }

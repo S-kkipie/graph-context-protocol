@@ -36,6 +36,7 @@ export type {
     ContextQueryResponse,
     ContextQueryResult,
     ContextQueryStatus,
+    ContextReadProvenance,
     QueryMode,
     RequesterDescriptor,
 } from "./lib/context/context-query-types";
@@ -167,6 +168,18 @@ export type {
     MessageType,
     ProtocolMessage,
 } from "./lib/protocol/protocol-types";
+// Provenance / audit
+export type {
+    AccessDecision,
+    AuditRecord,
+    ReadProvenance,
+    ReadProvenanceOptions,
+} from "./lib/provenance";
+export {
+    AccessDecisionSchema,
+    createReadProvenance,
+    ReadProvenanceSchema,
+} from "./lib/provenance";
 // Result type helpers
 export type { Result } from "./lib/result";
 export { fail, ResultSchema, succeed, validateWithSchema } from "./lib/result";
