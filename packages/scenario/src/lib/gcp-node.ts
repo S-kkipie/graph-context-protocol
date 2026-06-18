@@ -2,16 +2,24 @@ import { createMarkdownKnowledgeAdapter } from "@graph-context-protocol/adapters
 import {
     createAccessPolicyDescriptor,
     createAgentNode,
+    createAuthContract,
+    createContextPeerDescriptor,
+    createExposedKnowledgeDescriptor,
     createGraph,
     createKnowledgeNode,
+    createKnowledgeQueryContract,
     createMetadataWithAccessPolicy,
     createRole,
 } from "@graph-context-protocol/core";
 import {
     type AuditSink,
     type AuthProvider,
+    createCouplingMetrics,
     createGraphContextServer,
+    createHttpTransport,
     createKnowledgeSourceRegistry,
+    createPeerRegistry,
+    createTransportRegistry,
     type GraphContextServer,
     type ServerDependencies,
 } from "@graph-context-protocol/server";
@@ -87,12 +95,48 @@ export async function createGcpNode(
         );
     }
 
+    const peerDescriptors = cfg.peers.map((peerRef) =>
+        createContextPeerDescriptor(
+            `peer-desc:${peerRef.peerId}`,
+            peerRef.peerId,
+            peerRef.endpoint,
+            createAuthContract(["bearer-token"], false),
+            [
+                createExposedKnowledgeDescriptor(
+                    peerRef.knowledgeNodeId,
+                    "text",
+                    true,
+                    createKnowledgeQueryContract(["text"], false),
+                    createAccessPolicyDescriptor([], [], true, "empty-result"),
+                    peerRef.tags,
+                ),
+            ],
+            [],
+        ),
+    );
+    const peers = createPeerRegistry(peerDescriptors);
+    const metrics = createCouplingMetrics();
+    const httpTransport = createHttpTransport({
+        resolveEndpoint: (envelope) =>
+            envelope.metadata["gcp.peerEndpoint"] as string | undefined,
+    });
+    const transportResult = createTransportRegistry().register(httpTransport);
+    if (!transportResult.success) {
+        throw new Error(
+            `Failed to register HTTP transport: ${transportResult.error.message}`,
+        );
+    }
+    const transports = transportResult.data;
+
     const baseDeps: Pick<ServerDependencies, "graph" | "knowledgeSources"> = {
         graph,
         knowledgeSources: registered.data,
     };
     const dependencies: Partial<ServerDependencies> = {
         ...baseDeps,
+        peers,
+        transports,
+        metrics,
         ...(deps.authProvider !== undefined ? { auth: deps.authProvider } : {}),
         ...(deps.auditSink !== undefined ? { audit: deps.auditSink } : {}),
     };

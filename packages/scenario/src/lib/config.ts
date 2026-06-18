@@ -8,6 +8,18 @@ export const DenialModeSchema = z.enum([
     "fallback-if-allowed",
 ]);
 
+/** A peer this node knows about, used to seed the federated PeerRegistry. */
+export const GcpPeerRefSchema = z.object({
+    peerId: z.string().min(1),
+    endpoint: z.string().min(1),
+    knowledgeNodeId: z.string().min(1),
+    tags: z.array(z.string()).default([]),
+});
+
+/** Input / output types for a peer ref. */
+export type GcpPeerRefInput = z.input<typeof GcpPeerRefSchema>;
+export type GcpPeerRef = z.infer<typeof GcpPeerRefSchema>;
+
 /** Declarative description of one GCP server node. */
 export const GcpNodeConfigSchema = z.object({
     serverId: z.string().min(1),
@@ -37,6 +49,7 @@ export const GcpNodeConfigSchema = z.object({
         tags: z.array(z.string()).default([]),
         contentType: z.string().default("text/markdown"),
     }),
+    peers: z.array(GcpPeerRefSchema).default([]),
     shutdownTimeoutMs: z.number().int().positive().default(30000),
 });
 
