@@ -1,3 +1,5 @@
+export type { HttpTransportOptions } from "./http-transport";
+export { createHttpTransport } from "./http-transport";
 export {
     createMemoryTransport,
     createTransportRegistry,

@@ -116,8 +116,10 @@ export type {
     SyncScheduler,
     SyncStatus,
 } from "./lib/sync/types";
+export type { HttpTransportOptions } from "./lib/transport/index";
 // Transport abstraction
 export {
+    createHttpTransport,
     createMemoryTransport,
     createTransportRegistry,
 } from "./lib/transport/index";
