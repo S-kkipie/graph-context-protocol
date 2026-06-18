@@ -13,6 +13,7 @@ import {
     type GraphContext,
 } from "@graph-context-protocol/core";
 import type { Credentials } from "../auth/types";
+import { postProtocolMessage } from "./post-message";
 
 const ANONYMOUS_CREDENTIALS: Credentials = {
     type: "anonymous",
@@ -42,9 +43,8 @@ export interface QueryRemoteContextOptions {
 export async function queryRemoteContext(
     options: QueryRemoteContextOptions,
 ): Promise<ContextQueryResult> {
-    const { url, query } = options;
+    const { query } = options;
     const credentials = options.credentials ?? ANONYMOUS_CREDENTIALS;
-    const doFetch = options.fetchImpl ?? fetch;
 
     const header = createMessageHeader(
         `msg:${query.queryId}`,
@@ -67,18 +67,11 @@ export async function queryRemoteContext(
 
     const message = createProtocolMessage(header, context, query);
 
-    const response = await doFetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(message),
-    });
+    const responseMessage = await postProtocolMessage(
+        options.url,
+        message,
+        options.fetchImpl,
+    );
 
-    if (!response.ok) {
-        throw new Error(
-            `Remote context query failed: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const responseMessage = (await response.json()) as { payload?: unknown };
     return responseMessage.payload as ContextQueryResult;
 }

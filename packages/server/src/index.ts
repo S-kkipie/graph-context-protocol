@@ -65,6 +65,7 @@ export { queryRemoteContext } from "./lib/http/fetch-client";
 export type { FetchHandlerOptions } from "./lib/http/fetch-handler";
 // HTTP helpers
 export { createFetchHandler } from "./lib/http/fetch-handler";
+export { postProtocolMessage } from "./lib/http/post-message";
 export type {
     KnowledgeCapability,
     KnowledgeQueryRequest,
