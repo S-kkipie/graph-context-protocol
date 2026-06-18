@@ -7,6 +7,7 @@ export const graph = createNodeAgent({
         {
             peerUrl: env.PEER_GCP_URL,
             targetNodeId: "knowledge:executor-context",
+            credentials: { type: "token", value: "tok:researcher" },
         },
     ],
     systemPrompt: `You are the RESEARCHER node in a Graph Context Protocol network.
