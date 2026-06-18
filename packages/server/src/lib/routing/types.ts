@@ -7,6 +7,7 @@ import type { ExternalAgentRegistry } from "../agents/types";
 import type { ConnectionManager } from "../connection/types";
 import type { ServerError } from "../errors";
 import type { KnowledgeSourceRegistry } from "../knowledge/types";
+import type { PeerRegistry } from "../peers/types";
 
 export type RouteKind =
     | "local-handler"
@@ -31,6 +32,7 @@ export interface RoutingContext {
     readonly connections: ConnectionManager;
     readonly externalAgents: ExternalAgentRegistry;
     readonly knowledgeSources: KnowledgeSourceRegistry;
+    readonly peers?: PeerRegistry;
 }
 
 export interface MessageRouter {

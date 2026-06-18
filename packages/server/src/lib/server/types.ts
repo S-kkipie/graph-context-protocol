@@ -23,6 +23,7 @@ import type { ServerError } from "../errors";
 import type { HandlerRegistry } from "../handlers/types";
 import type { KnowledgeSourceRegistry } from "../knowledge/types";
 import type { LifecycleManager } from "../lifecycle/types";
+import type { PeerRegistry } from "../peers/types";
 import type { MessageRouter } from "../routing/types";
 import type { SyncScheduler } from "../sync/types";
 import type { TransportRegistry } from "../transport/types";
@@ -36,6 +37,7 @@ export interface ServerDependencies {
     readonly handlers: HandlerRegistry;
     readonly externalAgents: ExternalAgentRegistry;
     readonly knowledgeSources: KnowledgeSourceRegistry;
+    readonly peers?: PeerRegistry;
     readonly cache?: CacheStore;
     readonly sync?: SyncScheduler;
     readonly graph?: Graph;

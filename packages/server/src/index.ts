@@ -92,6 +92,9 @@ export type {
     LifecycleSnapshot,
     ShutdownOptions,
 } from "./lib/lifecycle/types";
+export type { PeerRegistry, PeerRegistrySnapshot } from "./lib/peers/index";
+// Peers
+export { createPeerRegistry } from "./lib/peers/index";
 // Message routing
 export { createMessageRouter } from "./lib/routing/index";
 export type {

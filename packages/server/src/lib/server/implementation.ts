@@ -17,6 +17,7 @@ import { createHandlerRegistry } from "../handlers/implementation";
 import type { HandlerRegistry } from "../handlers/types";
 import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
 import { createLifecycleManager } from "../lifecycle/implementation";
+import { createPeerRegistry } from "../peers/implementation";
 import { createMessageRouter } from "../routing/implementation";
 import { createSyncScheduler } from "../sync/implementation";
 import { createTransportRegistry } from "../transport/implementation";
@@ -157,6 +158,7 @@ class GraphContextServerImpl implements GraphContextServer {
             connections: this.state.dependencies.connections,
             externalAgents: this.state.dependencies.externalAgents,
             knowledgeSources: this.state.dependencies.knowledgeSources,
+            peers: this.state.dependencies.peers,
         });
 
         if (!routeResult.success) {
@@ -267,6 +269,7 @@ export function createGraphContextServer(
         handlers: defaultHandlers,
         externalAgents: createExternalAgentRegistry(),
         knowledgeSources: createKnowledgeSourceRegistry(),
+        peers: createPeerRegistry(),
         cache: createMemoryCacheStore(),
         sync: createSyncScheduler(),
         audit: createInMemoryAuditSink(),
