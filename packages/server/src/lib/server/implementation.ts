@@ -6,6 +6,7 @@ import {
     succeed,
 } from "@graph-context-protocol/core";
 import { createExternalAgentRegistry } from "../agents/implementation";
+import { createInMemoryAuditSink } from "../audit/implementation";
 import { createAllowAllAuthProvider } from "../auth/implementation";
 import { createMemoryCacheStore } from "../cache/implementation";
 import { createConnectionManager } from "../connection/implementation";
@@ -225,6 +226,7 @@ class GraphContextServerImpl implements GraphContextServer {
                 knowledgeSources: this.state.dependencies.knowledgeSources,
                 cache: this.state.dependencies.cache,
                 auth: this.state.dependencies.auth,
+                audit: this.state.dependencies.audit,
                 inboundMetadata: envelope.metadata ?? {},
                 metadata: {},
             },
@@ -267,6 +269,7 @@ export function createGraphContextServer(
         knowledgeSources: createKnowledgeSourceRegistry(),
         cache: createMemoryCacheStore(),
         sync: createSyncScheduler(),
+        audit: createInMemoryAuditSink(),
     };
 
     return new GraphContextServerImpl({

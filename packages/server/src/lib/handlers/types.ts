@@ -5,6 +5,7 @@ import type {
     Result,
 } from "@graph-context-protocol/core";
 import type { ExternalAgentRegistry } from "../agents/types";
+import type { AuditSink } from "../audit/types";
 import type { AuthProvider } from "../auth/types";
 import type { CacheStore } from "../cache/types";
 import type { ConnectionManager } from "../connection/types";
@@ -22,6 +23,8 @@ export interface HandlerContext {
     readonly cache?: CacheStore;
     /** Auth provider for per-handler authentication and authorization. */
     readonly auth?: AuthProvider;
+    /** Audit sink for recording context-read decisions. */
+    readonly audit?: AuditSink;
     /** Inbound envelope metadata propagated to handlers. */
     readonly inboundMetadata: Metadata;
     readonly metadata: Record<string, unknown>;

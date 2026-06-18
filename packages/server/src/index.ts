@@ -9,6 +9,9 @@ export type {
     ExternalAgentSnapshot,
     ExternalAgentStatus,
 } from "./lib/agents/types";
+export type { AuditSink } from "./lib/audit/index";
+// Audit
+export { createInMemoryAuditSink } from "./lib/audit/index";
 export type {
     AuthAction,
     AuthorizationDecision,

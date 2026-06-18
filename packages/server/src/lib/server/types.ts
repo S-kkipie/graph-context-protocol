@@ -15,6 +15,7 @@ import type {
 export type { ServerConfig } from "../types";
 
 import type { ExternalAgentRegistry } from "../agents/types";
+import type { AuditSink } from "../audit/types";
 import type { AuthProvider } from "../auth/types";
 import type { CacheStore } from "../cache/types";
 import type { ConnectionManager } from "../connection/types";
@@ -38,6 +39,7 @@ export interface ServerDependencies {
     readonly cache?: CacheStore;
     readonly sync?: SyncScheduler;
     readonly graph?: Graph;
+    readonly audit?: AuditSink;
 }
 
 export interface ServerSnapshot {
