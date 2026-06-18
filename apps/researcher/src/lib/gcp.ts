@@ -6,6 +6,7 @@ import {
     type GraphContextServer,
     type Principal,
 } from "@graph-context-protocol/server";
+import { env } from "@/env";
 
 /** Demo credential the executor presents when reading researcher context. */
 const EXECUTOR_TOKEN = "tok:executor";
@@ -52,6 +53,14 @@ export function getGcpServer(): Promise<GraphContextServer> {
                     tags: ["tasks", "notes"],
                     contentType: "text/markdown",
                 },
+                peers: [
+                    {
+                        peerId: "peer:executor",
+                        endpoint: env.PEER_GCP_URL,
+                        knowledgeNodeId: "knowledge:executor-context",
+                        tags: ["results", "log"],
+                    },
+                ],
             },
             { authProvider },
         );
