@@ -17,6 +17,7 @@ import { createHandlerRegistry } from "../handlers/implementation";
 import type { HandlerRegistry } from "../handlers/types";
 import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
 import { createLifecycleManager } from "../lifecycle/implementation";
+import { createCouplingMetrics } from "../metrics/implementation";
 import { createPeerRegistry } from "../peers/implementation";
 import { createMessageRouter } from "../routing/implementation";
 import { createSyncScheduler } from "../sync/implementation";
@@ -279,6 +280,7 @@ export function createGraphContextServer(
         cache: createMemoryCacheStore(),
         sync: createSyncScheduler(),
         audit: createInMemoryAuditSink(),
+        metrics: createCouplingMetrics(),
     };
 
     return new GraphContextServerImpl({

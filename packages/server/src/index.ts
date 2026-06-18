@@ -49,6 +49,8 @@ export type {
 } from "./lib/connection/types";
 export type { ServerError, ServerErrorCode } from "./lib/errors";
 export { createServerError, ServerErrorClass } from "./lib/errors";
+export type { ResolveContextQueryOptions } from "./lib/federation/index";
+export { resolveContextQuery } from "./lib/federation/index";
 // Protocol handlers
 export {
     createContextQueryHandler,
@@ -92,6 +94,12 @@ export type {
     LifecycleSnapshot,
     ShutdownOptions,
 } from "./lib/lifecycle/types";
+export type {
+    CouplingMetrics,
+    CouplingMetricsSnapshot,
+} from "./lib/metrics/index";
+// Metrics + federation
+export { createCouplingMetrics } from "./lib/metrics/index";
 export type { PeerRegistry, PeerRegistrySnapshot } from "./lib/peers/index";
 // Peers
 export { createPeerRegistry } from "./lib/peers/index";
