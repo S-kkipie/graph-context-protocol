@@ -183,4 +183,133 @@ describe("role module", () => {
             );
         });
     });
+
+    describe("parentRole inheritance", () => {
+        it("getEffectiveCapabilities unions own + inherited (own first)", () => {
+            const base = createRole("role:base", "Base", "", [
+                createCapability("cap:read", "Read", ""),
+            ]);
+            const child = createRole(
+                "role:child",
+                "Child",
+                "",
+                [createCapability("cap:write", "Write", "")],
+                [],
+                base,
+            );
+
+            expect(child.getEffectiveCapabilities().map((c) => c.id)).toEqual([
+                "cap:write",
+                "cap:read",
+            ]);
+        });
+
+        it("hasCapability sees inherited capabilities", () => {
+            const base = createRole("role:base", "Base", "", [
+                createCapability("cap:read", "Read", ""),
+            ]);
+            const child = createRole("role:child", "Child", "", [], [], base);
+
+            expect(child.hasCapability("cap:read")).toBe(true);
+            expect(child.hasCapability("cap:missing")).toBe(false);
+        });
+
+        it("own capability overrides an inherited one with the same id", () => {
+            const base = createRole("role:base", "Base", "", [
+                createCapability("cap:x", "Base X", "from base"),
+            ]);
+            const child = createRole(
+                "role:child",
+                "Child",
+                "",
+                [createCapability("cap:x", "Child X", "from child")],
+                [],
+                base,
+            );
+
+            const effective = child.getEffectiveCapabilities();
+            expect(effective).toHaveLength(1);
+            expect(effective[0]?.description).toBe("from child");
+        });
+
+        it("resolves capabilities across multiple levels", () => {
+            const grandparent = createRole("role:gp", "GP", "", [
+                createCapability("cap:a", "A", ""),
+            ]);
+            const parent = createRole(
+                "role:p",
+                "P",
+                "",
+                [createCapability("cap:b", "B", "")],
+                [],
+                grandparent,
+            );
+            const child = createRole(
+                "role:c",
+                "C",
+                "",
+                [createCapability("cap:c", "C", "")],
+                [],
+                parent,
+            );
+
+            expect(child.getEffectiveCapabilities().map((c) => c.id)).toEqual([
+                "cap:c",
+                "cap:b",
+                "cap:a",
+            ]);
+        });
+
+        it("merges context rules with own rules overriding by path", () => {
+            const base = createRole(
+                "role:base",
+                "Base",
+                "",
+                [],
+                [
+                    createContextRule("a", "read"),
+                    createContextRule("b", "read"),
+                ],
+            );
+            const child = createRole(
+                "role:child",
+                "Child",
+                "",
+                [],
+                [createContextRule("b", "none")],
+                base,
+            );
+
+            const rules = child.getEffectiveContextRules();
+            const byPath = Object.fromEntries(
+                rules.map((r) => [r.path, r.access]),
+            );
+            expect(byPath.a).toBe("read");
+            expect(byPath.b).toBe("none");
+        });
+
+        it("stores parentRole id when a RoleDefinition parent is passed", () => {
+            const base = createRole("role:base", "Base", "");
+            const child = createRole("role:child", "Child", "", [], [], base);
+            expect(child.parentRole).toBe("role:base");
+        });
+
+        it("does not infinitely recurse on a self-referential parent", () => {
+            const role = createRole("role:self", "Self", "", [
+                createCapability("cap:own", "Own", ""),
+            ]);
+            // Force a degenerate self-parent through the union helper path.
+            const selfParented = createRole(
+                "role:self",
+                "Self",
+                "",
+                [createCapability("cap:own", "Own", "")],
+                [],
+                role,
+            );
+            expect(
+                selfParented.getEffectiveCapabilities().map((c) => c.id),
+            ).toEqual(["cap:own"]);
+        });
+    });
 });

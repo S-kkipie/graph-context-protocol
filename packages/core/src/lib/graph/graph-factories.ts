@@ -610,6 +610,7 @@ export function createGraph(
             contextRules: [],
             metadata: {},
             hasCapability: () => false,
+            getEffectiveCapabilities: () => [],
             getEffectiveContextRules: () => [],
         },
     };

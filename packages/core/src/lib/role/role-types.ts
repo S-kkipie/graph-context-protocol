@@ -81,6 +81,15 @@ export interface RoleDefinition {
     hasCapability(capabilityId: CapabilityId): boolean;
 
     /**
+     * Gets the effective capabilities including those inherited from ancestor
+     * roles via `parentRole`. Own capabilities take precedence over inherited
+     * ones with the same id.
+     *
+     * @returns Own + inherited capabilities, own-first, deduped by id
+     */
+    getEffectiveCapabilities(): readonly Capability[];
+
+    /**
      * Gets the effective context rules including inherited ones.
      *
      * @returns Array of all applicable context rules

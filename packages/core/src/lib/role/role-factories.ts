@@ -95,7 +95,7 @@ export function createContextRule(
  * @param description - Description of the role
  * @param capabilities - Capabilities granted to this role
  * @param contextRules - Rules for context access
- * @param parentRole - Optional parent role to inherit from
+ * @param parentRole - Optional parent role to inherit from (RoleId or RoleDefinition)
  * @param metadata - Optional metadata
  * @returns A new RoleDefinition instance
  * @throws {z.ZodError} If inputs are invalid
@@ -106,18 +106,30 @@ export function createRole(
     description: string,
     capabilities: readonly Capability[] = [],
     contextRules: readonly ContextRule[] = [],
-    parentRole?: RoleId,
+    parentRole?: RoleId | RoleDefinition,
     metadata: Metadata = {},
 ): RoleDefinition {
+    const parentDefinition: RoleDefinition | undefined =
+        typeof parentRole === "object" ? parentRole : undefined;
+    const parentRoleId: RoleId | undefined =
+        typeof parentRole === "object" ? parentRole.id : parentRole;
+
     const input = RoleDefinitionSchema.parse({
         id,
         name,
         description,
         capabilities,
         contextRules,
-        parentRole,
+        parentRole: parentRoleId,
         metadata,
     });
+
+    // Guard against a degenerate self-parent (id === own id); deeper cycles are
+    // structurally impossible because a parent must be constructed first.
+    const safeParent =
+        parentDefinition && parentDefinition.id !== input.id
+            ? parentDefinition
+            : undefined;
 
     return {
         id: input.id,
@@ -128,10 +140,53 @@ export function createRole(
         contextRules: input.contextRules,
         metadata: input.metadata,
         hasCapability(capabilityId: CapabilityId): boolean {
-            return input.capabilities.some((cap) => cap.id === capabilityId);
+            return this.getEffectiveCapabilities().some(
+                (cap) => cap.id === capabilityId,
+            );
+        },
+        getEffectiveCapabilities(): readonly Capability[] {
+            return mergeCapabilitiesById(
+                input.capabilities,
+                safeParent ? safeParent.getEffectiveCapabilities() : [],
+            );
         },
         getEffectiveContextRules(): readonly ContextRule[] {
-            return input.contextRules;
+            return mergeContextRulesByPath(
+                input.contextRules,
+                safeParent ? safeParent.getEffectiveContextRules() : [],
+            );
         },
     };
+}
+
+/** Unions own + inherited capabilities, own-first, deduped by id. */
+function mergeCapabilitiesById(
+    own: readonly Capability[],
+    inherited: readonly Capability[],
+): readonly Capability[] {
+    const result: Capability[] = [];
+    const seen = new Set<CapabilityId>();
+    for (const cap of [...own, ...inherited]) {
+        if (!seen.has(cap.id)) {
+            seen.add(cap.id);
+            result.push(cap);
+        }
+    }
+    return result;
+}
+
+/** Unions own + inherited context rules, own-first, deduped by path. */
+function mergeContextRulesByPath(
+    own: readonly ContextRule[],
+    inherited: readonly ContextRule[],
+): readonly ContextRule[] {
+    const result: ContextRule[] = [];
+    const seen = new Set<string>();
+    for (const rule of [...own, ...inherited]) {
+        if (!seen.has(rule.path)) {
+            seen.add(rule.path);
+            result.push(rule);
+        }
+    }
+    return result;
 }

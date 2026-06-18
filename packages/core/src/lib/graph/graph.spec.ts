@@ -19,6 +19,7 @@ const mockRole: RoleDefinition = {
     contextRules: [],
     metadata: {},
     hasCapability: () => false,
+    getEffectiveCapabilities: () => [],
     getEffectiveContextRules: () => [],
 };
 

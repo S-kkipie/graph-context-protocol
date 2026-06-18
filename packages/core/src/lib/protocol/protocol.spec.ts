@@ -24,6 +24,7 @@ const createMockContext = (): GraphContext => ({
         contextRules: [],
         metadata: {},
         hasCapability: () => false,
+        getEffectiveCapabilities: () => [],
         getEffectiveContextRules: () => [],
     } as RoleDefinition,
     metadata: {},

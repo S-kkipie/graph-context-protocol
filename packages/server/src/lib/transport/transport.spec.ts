@@ -34,6 +34,7 @@ const createProtocolMessage = () => ({
             contextRules: [],
             metadata: {},
             hasCapability: () => false,
+            getEffectiveCapabilities: () => [],
             getEffectiveContextRules: () => [],
         },
         metadata: {},
