@@ -67,3 +67,35 @@ describe("createContextQueryTool", () => {
         expect(output).toContain("policy says no");
     });
 });
+
+describe("createContextQueryTool — credential forwarding", () => {
+    it("forwards configured credentials to the query function", async () => {
+        const calls: Array<{ credentials?: unknown }> = [];
+        const queryFn = (async (options: { credentials?: unknown }) => {
+            calls.push({ credentials: options.credentials });
+            return {
+                contractVersion: "gcp-context-contract/v1" as const,
+                queryId: "q",
+                status: "ok" as const,
+                sourceNodeId: "knowledge:peer",
+                result: "answer",
+                metadata: {},
+            };
+        }) as unknown as typeof import("@graph-context-protocol/server").queryRemoteContext;
+
+        const tool = createContextQueryTool({
+            peerUrl: "http://peer/gcp",
+            targetNodeId: "knowledge:peer",
+            credentials: { type: "token", value: "tok:abc" },
+            queryFn,
+        });
+
+        await tool.invoke({ question: "status?" });
+
+        expect(calls).toHaveLength(1);
+        expect(calls[0]?.credentials).toEqual({
+            type: "token",
+            value: "tok:abc",
+        });
+    });
+});

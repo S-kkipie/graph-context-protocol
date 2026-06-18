@@ -23,6 +23,7 @@ export function createNodeAgent(config: NodeAgentConfig) {
         createContextQueryTool({
             peerUrl: peer.peerUrl,
             targetNodeId: peer.targetNodeId,
+            credentials: peer.credentials,
         }),
     );
 

@@ -8,7 +8,10 @@ import {
     createContextQuery,
     createRequesterDescriptor,
 } from "@graph-context-protocol/core";
-import { queryRemoteContext } from "@graph-context-protocol/server";
+import {
+    type Credentials,
+    queryRemoteContext,
+} from "@graph-context-protocol/server";
 import { type StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
 
@@ -26,6 +29,8 @@ export interface ContextQueryToolConfig {
     readonly description?: string;
     /** Principal id placed in the (audit-only) requester descriptor. */
     readonly requesterId?: string;
+    /** Credentials sent to the peer under `gcp.credentials`. Defaults to anonymous. */
+    readonly credentials?: Credentials;
     /** Injectable client for testing. Defaults to `queryRemoteContext`. */
     readonly queryFn?: typeof queryRemoteContext;
 }
@@ -50,6 +55,7 @@ export function createContextQueryTool(
         targetNodeId,
         toolName = "query_peer_context",
         requesterId = "principal:peer-agent",
+        credentials,
         queryFn = queryRemoteContext,
     } = config;
 
@@ -70,7 +76,11 @@ export function createContextQueryTool(
             );
 
             try {
-                const result = await queryFn({ url: peerUrl, query });
+                const result = await queryFn({
+                    url: peerUrl,
+                    query,
+                    credentials,
+                });
                 if (result.status !== "ok") {
                     return `Peer context query ${result.status}: ${result.error ?? "no detail"}`;
                 }

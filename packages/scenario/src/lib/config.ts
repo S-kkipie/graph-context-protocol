@@ -1,3 +1,4 @@
+import type { Credentials } from "@graph-context-protocol/server";
 import { z } from "zod";
 
 /** Denial behavior for an access policy (mirrors core AccessPolicyDescriptor). */
@@ -54,6 +55,7 @@ export interface NodeAgentConfig {
     readonly peers: ReadonlyArray<{
         readonly peerUrl: string;
         readonly targetNodeId: string;
+        readonly credentials?: Credentials;
     }>;
     readonly systemPrompt: string;
 }
