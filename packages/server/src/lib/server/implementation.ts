@@ -167,7 +167,11 @@ class GraphContextServerImpl implements GraphContextServer {
 
         const route = routeResult.data;
 
-        if (route.kind === "external-agent" && route.transportId) {
+        if (
+            (route.kind === "external-agent" ||
+                route.kind === "knowledge-source") &&
+            route.transportId
+        ) {
             const transport = this.state.dependencies.transports.get(
                 route.transportId,
             );
@@ -185,7 +189,9 @@ class GraphContextServerImpl implements GraphContextServer {
                 connectionId: route.connectionId,
                 payload: message,
                 createdAt: new Date().toISOString(),
-                metadata: {},
+                metadata: {
+                    "gcp.peerEndpoint": route.metadata["gcp.peerEndpoint"],
+                },
             });
         }
 

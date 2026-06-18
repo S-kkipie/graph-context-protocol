@@ -47,9 +47,20 @@ class MessageRouterImpl implements MessageRouter {
             });
         }
 
-        // Check if it's a knowledge query target
-        // For now, knowledge sources don't have node IDs, so this is a placeholder
-        // In practice, knowledge discovery would happen before routing
+        // Check peer registry for knowledge nodes owned by known peers
+        const peer = context.peers?.getByKnowledgeNodeId(targetId);
+        if (peer) {
+            return succeed({
+                kind: "knowledge-source",
+                message,
+                targetNodeId: targetId,
+                transportId: "transport:http",
+                knowledgeSourceId: peer.peerId,
+                metadata: {
+                    "gcp.peerEndpoint": peer.queryEndpoint ?? peer.endpoint,
+                },
+            });
+        }
 
         return succeed({
             kind: "undeliverable",
