@@ -6,6 +6,14 @@ export type {
     Credentials,
 } from "./lib/metrics";
 export { createCouplingMetrics } from "./lib/metrics";
+export {
+    type AgentNodeDef,
+    type KnowledgeNodeDef,
+    PROVIDE_CONTEXT_SKILL,
+    SCENARIOS,
+    type ScenarioDef,
+    type ScenarioId,
+} from "./lib/scenarios/index";
 export { createTaskAgent, runTaskAgent } from "./lib/task-agent";
 export type {
     PeerContextToolFactory,
