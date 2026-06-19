@@ -1,8 +1,9 @@
+import { AIMessage } from "@langchain/core/messages";
 import { type StructuredTool, tool } from "@langchain/core/tools";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { createCouplingMetrics } from "./metrics";
-import { createTaskAgent } from "./task-agent";
+import { createTaskAgent, runTaskAgent } from "./task-agent";
 import type { PeerContextToolFactory, PeerRef } from "./types";
 
 const InputSchema = z.object({ question: z.string() });
@@ -45,5 +46,25 @@ describe("createTaskAgent", () => {
         expect(calls).toHaveLength(2);
         expect(calls.map((c) => c.peerId)).toEqual(["p:1", "p:2"]);
         expect(setPeersKnown).toHaveBeenCalledWith(2);
+    });
+});
+
+describe("runTaskAgent", () => {
+    it("returns the last message's string content", async () => {
+        const agent = {
+            invoke: async () => ({ messages: [new AIMessage("final answer")] }),
+        } as unknown as Parameters<typeof runTaskAgent>[0];
+        expect(await runTaskAgent(agent, "go")).toBe("final answer");
+    });
+
+    it("stringifies non-string message content", async () => {
+        const agent = {
+            invoke: async () => ({
+                messages: [
+                    new AIMessage({ content: [{ type: "text", text: "x" }] }),
+                ],
+            }),
+        } as unknown as Parameters<typeof runTaskAgent>[0];
+        expect(await runTaskAgent(agent, "go")).toContain("text");
     });
 });
