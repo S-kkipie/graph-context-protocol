@@ -46,4 +46,21 @@ describe("createGcpPeerContextToolFactory", () => {
         expect(out).toContain("Failed to reach peer node");
         expect(out).toContain("boom");
     });
+
+    it("returns a fail-soft string on a non-ok status", async () => {
+        const fakeQuery: typeof queryRemoteContext = async () =>
+            ({
+                queryId: "q:1",
+                status: "not-found",
+                sourceNodeId: "node:exec",
+                error: "no such node",
+            }) as Awaited<ReturnType<typeof queryRemoteContext>>;
+        const metrics = createCouplingMetrics();
+        const factory = createGcpPeerContextToolFactory({ queryFn: fakeQuery });
+        const tool = factory(peer, metrics);
+
+        const out = await tool.invoke({ question: "status?" });
+
+        expect(out).toContain("Peer context query not-found");
+    });
 });
