@@ -371,6 +371,9 @@ importers:
       '@graph-context-protocol/adapters':
         specifier: workspace:*
         version: link:../adapters
+      '@graph-context-protocol/agent-core':
+        specifier: workspace:*
+        version: link:../agent-core
       '@graph-context-protocol/core':
         specifier: workspace:*
         version: link:../core

@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@graph-context-protocol/adapters": "workspace:*",
+        "@graph-context-protocol/agent-core": "workspace:*",
         "@graph-context-protocol/core": "workspace:*",
         "@graph-context-protocol/langgraph": "workspace:*",
         "@graph-context-protocol/server": "workspace:*",
