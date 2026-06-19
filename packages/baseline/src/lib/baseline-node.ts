@@ -14,14 +14,17 @@ import {
     jsonRpcHandler,
     UserBuilder,
 } from "@a2a-js/sdk/server/express";
-import type {
-    AgentNodeDef,
-    CouplingMetrics,
-    KnowledgeNodeDef,
-    TaskAgentConfig,
+import {
+    type AgentNodeDef,
+    type CouplingMetrics,
+    createCouplingMetrics,
+    type KnowledgeNodeDef,
+    type PeerRef,
+    type TaskAgentConfig,
 } from "@graph-context-protocol/agent-core";
 import express from "express";
 import { buildAgentCard } from "./agent-card";
+import { BrainExecutor } from "./agent-executor";
 import { KnowledgeExecutor } from "./knowledge-executor";
 
 export interface BaselineNodeHandle {
@@ -63,21 +66,23 @@ export function createBaselineNode(
             const url = `http://127.0.0.1:${address.port}`;
             const card = buildAgentCard(node, url);
 
-            if (!isKnowledge(node)) {
-                // Agent-node path is implemented in Task 5.
-                server.close();
-                reject(
-                    new Error(
-                        "createBaselineNode: agent nodes require Task 5 (BrainExecutor)",
-                    ),
-                );
-                return;
-            }
+            const executor = isKnowledge(node)
+                ? new KnowledgeExecutor(node)
+                : new BrainExecutor(
+                      node,
+                      node.peers.map<PeerRef>((targetNodeId) => ({
+                          peerId: targetNodeId,
+                          targetNodeId,
+                          endpoint: opts.peerEndpoints?.[targetNodeId] ?? "",
+                      })),
+                      opts.metrics ?? createCouplingMetrics(),
+                      opts.llm ?? {},
+                  );
 
             const requestHandler = new DefaultRequestHandler(
                 card,
                 new InMemoryTaskStore(),
-                new KnowledgeExecutor(node),
+                executor,
             );
             // AGENT_CARD_PATH has no leading slash in SDK 0.3.x; prepend "/" for express mount
             app.use(

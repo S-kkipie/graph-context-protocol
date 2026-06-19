@@ -347,6 +347,9 @@ importers:
       '@graph-context-protocol/agent-core':
         specifier: workspace:*
         version: link:../agent-core
+      '@langchain/core':
+        specifier: ^0.3.0
+        version: 0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))
       express:
         specifier: ^5.1.0
         version: 5.2.1
