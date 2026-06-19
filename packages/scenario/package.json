@@ -23,5 +23,8 @@
         "@langchain/core": "^0.3.0",
         "@langchain/langgraph": "^0.2.0",
         "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "@graph-context-protocol/baseline": "workspace:*"
     }
 }

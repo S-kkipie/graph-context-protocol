@@ -25,6 +25,8 @@
     "references": [
         {
             "path": "./tsconfig.lib.json"
-        }
+        },
+        { "path": "../baseline/tsconfig.lib.json" },
+        { "path": "../agent-core/tsconfig.lib.json" }
     ]
 }

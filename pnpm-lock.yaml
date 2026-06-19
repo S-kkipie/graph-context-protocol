@@ -414,6 +414,10 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+    devDependencies:
+      '@graph-context-protocol/baseline':
+        specifier: workspace:*
+        version: link:../baseline
 
   packages/server:
     dependencies:
