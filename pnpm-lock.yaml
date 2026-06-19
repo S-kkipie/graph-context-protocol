@@ -324,6 +324,21 @@ importers:
         specifier: workspace:*
         version: link:../server
 
+  packages/agent-core:
+    dependencies:
+      '@langchain/core':
+        specifier: ^0.3.0
+        version: 0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))
+      '@langchain/langgraph':
+        specifier: ^0.2.0
+        version: 0.2.74(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3)))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(zod-to-json-schema@3.25.2(zod@4.4.3))
+      '@langchain/openai':
+        specifier: ^0.5.0
+        version: 0.5.18(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3)))(ws@8.20.0)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+
   packages/core:
     dependencies:
       zod:

@@ -23,6 +23,9 @@
       },
       {
         "path": "./packages/scenario"
+      },
+      {
+        "path": "./packages/agent-core"
       }
     ]
 }
