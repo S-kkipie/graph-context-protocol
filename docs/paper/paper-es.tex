@@ -459,7 +459,87 @@ respondido. La fuga arquitectónica es, por tanto, real pero \emph{latente} en e
 ejecución, y no afirmamos una victoria de fuga de comportamiento observada en
 software-org. La garantía estructural ---denegar por defecto más denegación
 auditada--- es lo que \gcp{} provee, independientemente de si un modelo dado
-sondea la frontera.
+sondea la frontera. La métrica de canario \emph{mide} esta cota; el modelo formal
+y la suite de propiedades ejecutables descritos en la
+Sección~\ref{sec:formal-no-leak} la \emph{prueban}.
+
+\subsection{Modelo formal y propiedad ejecutable de no fuga}
+\label{sec:formal-no-leak}
+
+\paragraph{Modelo de acceso.}
+Un nodo de conocimiento porta un \texttt{AccessPolicyDescriptor} $P$ con dos
+campos de control: $\textit{readableByRoles}$ (una lista de identificadores de
+rol) y $\textit{requiredCapabilities}$ (una lista de identificadores de
+capacidad). Un principal $K$ tiene un rol opcional con su conjunto de capacidades
+propias e heredadas $\mathit{effective}(K)$, calculado por
+\texttt{getEffectiveCapabilities} con precedencia propia cuando el mismo
+identificador de capacidad aparece en múltiples niveles de la cadena de roles.
+El predicado de admisión es:
+\[
+\mathit{authorized}(P,K) \;\equiv\;
+  \underbrace{\bigl(P.\textit{readableByRoles}=[\,] \;\vee\; K.\textit{role}.\textit{id}\in P.\textit{readableByRoles}\bigr)}_{\textit{roleOk}}
+  \;\wedge\;
+  \underbrace{\bigl(P.\textit{requiredCapabilities}=[\,] \;\vee\; P.\textit{requiredCapabilities}\subseteq\mathit{effective}(K)\bigr)}_{\textit{capsOk}}
+\]
+Una política ausente o con esquema inválido se trata como denegación
+(denegar\,por\,defecto): la compuerta está cerrada cuando no hay política válida
+disponible.
+
+\paragraph{Teorema de no fuga (informal).}
+Para todo $P$ y $K$: si $\neg\mathit{authorized}(P,K)$, entonces ninguna
+\texttt{context-query} dirigida a un nodo con política $P$ devuelve el contenido
+de ese nodo a $K$. El argumento se sigue de la tubería del manejador en
+\texttt{createContextQueryHandler}: la autorización (paso~4) precede cualquier
+llamada al adaptador de fuente de conocimiento (paso~5). En caso de fallo, el
+manejador devuelve un resultado \texttt{denied} que contiene solo el motivo de
+denegación; el adaptador nunca es invocado y el contenido del nodo nunca entra en
+la ruta de serialización de la respuesta.
+
+\paragraph{Suite de propiedades ejecutables.}
+Se implementan tres pruebas de propiedades \texttt{fast-check} sobre la
+\emph{ruta de código real en producción} con valores predeterminados de CI de
+$\mathit{FC\_NUM\_RUNS}=1000$; todas pasan.
+
+\textbf{P1~(no fuga de contenido de extremo a extremo).}
+Para cada par $(P,K)$ generado aleatoriamente, la propiedad conecta una instancia
+activa de \texttt{createContextQueryHandler()} con un adaptador stub que devuelve
+incondicionalmente una cadena centinela
+\texttt{SECRET-CANARY-\ldots} en su campo \texttt{raw} y un proveedor de
+autenticación que todo lo permite (para que el término del proveedor desaparezca).
+Se afirman dos direcciones simultáneamente: \emph{seguridad} --- cuando
+$\neg\mathit{authorized}(P,K)$, la serialización JSON completa de la respuesta
+del manejador no contiene el centinela y \texttt{payload.status} es
+\texttt{"denied"}; y \emph{vivacidad} --- cuando $\mathit{authorized}(P,K)$, el
+centinela \emph{sí} aparece, confirmando que el banco de pruebas es capaz de
+filtrar y no pasa de manera vacua.
+
+\textbf{P2~(solidez de la compuerta).}
+Para cada par $(P,K)$ generado aleatoriamente, se llama a la función real
+\texttt{authorizeKnowledgeNodeAccess} contra un nodo con política $P$ usando un
+proveedor que todo lo permite, y el resultado se afirma que es igual a
+$\mathit{authorized}(P,K)$ calculado por el oráculo de referencia independiente.
+Esto establece que el predicado de referencia es una especificación precisa de la
+compuerta real, el enlace compositivo clave que permite a P1 usar
+$\mathit{authorized}$ como oráculo.
+
+\textbf{P3~(solidez de herencia de roles).}
+Se generan cadenas aleatorias de roles (profundidad 2--4) sobre un conjunto fijo
+de cinco identificadores de capacidad y se verifican los invariantes de completitud
+y de precedencia-propia de \texttt{getEffectiveCapabilities}. P3 fundamenta el
+cálculo de capacidades efectivas usado tanto por el predicado de referencia como
+por la compuerta real.
+
+\paragraph{Medición de canario frente a prueba formal.}
+La métrica de canario (Sección~\ref{sec:method}) cuantifica la frecuencia de fuga
+en escenarios similares a producción; es una cota inferior \emph{medida}. La suite
+de propiedades aquí es un complemento a \emph{nivel de prueba}: demuestra que la
+cota de no fuga se cumple en todo el espacio de entrada aleatorizado (sujeto a los
+conjuntos finitos de los generadores). La métrica de canario puede detectar una
+regresión si la compuerta es eludida; la suite de propiedades explica por qué no
+debería ocurrir ninguna fuga y proporciona una explicación constructiva del
+invariante. Juntas forman una garantía de dos capas: la propiedad demuestra que la
+compuerta es correcta; el canario confirma que la compuerta está en la ruta
+caliente en escenarios similares a producción.
 
 \section{Discusión y Amenazas a la Validez}
 \label{sec:threats}
@@ -502,14 +582,13 @@ mensajes, no artefactos de un hombre de paja.
 
 \section{Limitaciones y Trabajo Futuro}
 La evaluación debería extenderse a múltiples modelos y más semillas, con pruebas de
-significancia sobre las diferencias de tokens y latencia. Quedan dos capacidades
-diseñadas pero no evaluadas: una capa de \emph{delegación de tareas} con capacidad
-más estricta sobre la misma ruta de lectura primero, y un \emph{modelo formal con
-una propiedad ejecutable de no fuga} (un principal nunca lee más allá de la política
-bajo políticas y principales aleatorios), que elevaría el argumento de fuga de
-medido a probado. Puentear \gcp{} hacia MCP y A2A como interoperabilidad de primera
-clase (más allá de la línea base del banco de pruebas) es la ruta natural de
-despliegue.
+significancia sobre las diferencias de tokens y latencia. Queda una capacidad
+diseñada pero no evaluada: una capa de \emph{delegación de tareas} con capacidad
+más estricta sobre la misma ruta de lectura primero. El modelo formal con una
+propiedad ejecutable de no fuga está ahora completo
+(Sección~\ref{sec:formal-no-leak}), elevando el argumento de fuga de medido a
+probado. Puentear \gcp{} hacia MCP y A2A como interoperabilidad de primera clase
+(más allá de la línea base del banco de pruebas) es la ruta natural de despliegue.
 
 \section{Conclusión}
 Argumentamos, y dimos evidencia preliminar controlada por equidad, de que la

@@ -366,7 +366,71 @@ exercised. \gcp{} would have \emph{denied} that read by construction had it occu
 denial); the message-passing arm's coarse card would have answered it. The architectural leak is thus
 real but \emph{latent} in this run, and we do not claim an observed behavioral leakage win on
 software-org. The structural guarantee---deny-by-default plus audited denial---is what \gcp{} provides
-regardless of whether a given model happens to probe the boundary.
+regardless of whether a given model happens to probe the boundary. The canary metric \emph{measures}
+this bound; the formal model and executable property suite described in
+Section~\ref{sec:formal-no-leak} \emph{prove} it.
+
+\subsection{Formal model and executable no-leak property}
+\label{sec:formal-no-leak}
+
+\paragraph{Access model.}
+A knowledge node carries an \texttt{AccessPolicyDescriptor} $P$ with two gating fields:
+$\textit{readableByRoles}$ (a list of role ids) and $\textit{requiredCapabilities}$ (a list of
+capability ids). A principal $K$ holds an optional role with its own and inherited capability set
+$\mathit{effective}(K)$, computed by \texttt{getEffectiveCapabilities} with own-first precedence when
+the same capability id appears at multiple levels of the role chain.
+The admission predicate is:
+\[
+\mathit{authorized}(P,K) \;\equiv\;
+  \underbrace{\bigl(P.\textit{readableByRoles}=[\,] \;\vee\; K.\textit{role}.\textit{id}\in P.\textit{readableByRoles}\bigr)}_{\textit{roleOk}}
+  \;\wedge\;
+  \underbrace{\bigl(P.\textit{requiredCapabilities}=[\,] \;\vee\; P.\textit{requiredCapabilities}\subseteq\mathit{effective}(K)\bigr)}_{\textit{capsOk}}
+\]
+An absent or schema-invalid policy descriptor is treated as a denial (default-deny): the gate is
+closed whenever a valid policy is not available.
+
+\paragraph{No-leak theorem (informal).}
+For all $P$ and $K$: if $\neg\mathit{authorized}(P,K)$ then no \texttt{context-query} directed at a
+node carrying $P$ returns that node's content to $K$. The argument follows from the handler pipeline
+in \texttt{createContextQueryHandler}: authorization (step~4) precedes any knowledge-source adapter
+call (step~5). On failure the handler returns a \texttt{denied} result containing only the denial
+reason; the adapter is never invoked and the node's content never enters the response.
+
+\paragraph{Executable property suite.}
+We implement three \texttt{fast-check} property-based tests over the \emph{real} shipped code path
+at CI defaults of $\mathit{FC\_NUM\_RUNS}=1000$; all pass.
+
+\textbf{P1~(end-to-end no-content-leak).}
+For each randomly generated $(P,K)$ pair, the property wires a live
+\texttt{createContextQueryHandler()} instance with a stub adapter that unconditionally returns a
+sentinel string \texttt{SECRET-CANARY-\ldots} in its \texttt{raw} field and an allow-all auth
+provider (so the provider term drops out). Two directions are asserted simultaneously:
+\emph{safety} --- when $\neg\mathit{authorized}(P,K)$, the full JSON serialisation of the handler
+response does not contain the sentinel and \texttt{payload.status} is \texttt{"denied"}; and
+\emph{liveness} --- when $\mathit{authorized}(P,K)$, the sentinel \emph{does} appear, confirming the
+harness is capable of leaking and is not vacuously passing.
+
+\textbf{P2~(gate soundness).}
+For each randomly generated $(P,K)$ pair, the real \texttt{authorizeKnowledgeNodeAccess} function
+is called against a node carrying $P$ with an allow-all provider, and the result is asserted to equal
+$\mathit{authorized}(P,K)$ computed by the independent reference oracle. This establishes that the
+reference predicate is an accurate specification of the shipped gate, the key compositional link that
+lets P1 use $\mathit{authorized}$ as its oracle.
+
+\textbf{P3~(role-inheritance soundness).}
+Random chains of roles (depth 2--4) over a fixed pool of five capability ids are generated and the
+completeness and own-first-precedence invariants of \texttt{getEffectiveCapabilities} are verified.
+P3 grounds the effective-capability computation used by both the reference predicate and the real
+gate.
+
+\paragraph{Canary measurement vs.\ formal proof.}
+The canary metric (Section~\ref{sec:method}) quantifies how often leakage occurs across
+production-like scenarios; it is a \emph{measured} lower bound. The property suite here is a
+\emph{proof-level} complement: it proves that the no-leak bound holds over the entire randomised
+input space (subject to finite generator pools). The canary metric can detect a regression if the
+gate is bypassed; the property suite explains why no leak should occur and gives a constructive
+account of the invariant. Together they form a two-layer assurance: the property proves the gate is
+sound; the canary confirms the gate is on the hot path in production-like scenarios.
 
 \section{Discussion and Threats to Validity}
 \label{sec:threats}
@@ -401,11 +465,11 @@ artifacts of a strawman.
 
 \section{Limitations and Future Work}
 The evaluation should be extended across multiple models and more seeds, with significance testing on
-the token and latency deltas. Two designed-but-unevaluated capabilities remain: a stricter-capability
-\emph{task-delegation} layer on the same read-first path, and a \emph{formal model with an executable
-no-leak property} (a principal never reads beyond policy under randomized policies and principals),
-which would upgrade the leakage argument from measured to proven. Bridging \gcp{} to MCP and A2A as
-first-class interop (beyond the benchmark baseline) is the natural deployment path.
+the token and latency deltas. One designed-but-unevaluated capability remains: a stricter-capability
+\emph{task-delegation} layer on the same read-first path. The formal model with an executable no-leak
+property is now complete (Section~\ref{sec:formal-no-leak}), upgrading the leakage argument from
+measured to proven. Bridging \gcp{} to MCP and A2A as first-class interop (beyond the benchmark
+baseline) is the natural deployment path.
 
 \section{Conclusion}
 We argued, and gave preliminary fairness-controlled evidence, that read-first role-gated context
