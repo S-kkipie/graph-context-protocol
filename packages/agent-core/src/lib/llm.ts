@@ -14,6 +14,9 @@ export interface OpenRouterLLMConfig {
     readonly maxTokens?: number;
     readonly apiKey?: string;
     readonly baseURL?: string;
+    /** Client-side retries with exponential backoff (handles 429 rate limits,
+     * common on free-tier models). Defaults to 6. */
+    readonly maxRetries?: number;
 }
 
 const OpenRouterLLMConfigSchema = z.object({
@@ -22,6 +25,7 @@ const OpenRouterLLMConfigSchema = z.object({
     maxTokens: z.number().positive().optional(),
     apiKey: z.string().optional(),
     baseURL: z.string().url().optional(),
+    maxRetries: z.number().int().min(0).max(20).optional(),
 });
 
 /**
@@ -44,6 +48,7 @@ export function createOpenRouterLLM(
         model: validated.model ?? "openai/gpt-4o-mini",
         temperature: validated.temperature ?? 0.7,
         maxTokens: validated.maxTokens ?? 2048,
+        maxRetries: validated.maxRetries ?? 6,
         apiKey,
         configuration: {
             baseURL: validated.baseURL ?? "https://openrouter.ai/api/v1",

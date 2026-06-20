@@ -8,6 +8,7 @@
  */
 
 import {
+    createOpenRouterLLM,
     marketplaceScenario,
     SCENARIOS,
     type ScenarioDef,
@@ -26,16 +27,20 @@ export interface CollectOptions {
     readonly n: number;
     readonly seed: number;
     readonly model?: BaseChatModel;
-    readonly llm?: { apiKey?: string };
+    readonly llm?: { apiKey?: string; model?: string };
 }
 
 /** Runs one scenario+arm and assembles the full MetricsResult. */
 export async function collectResult(
     opts: CollectOptions,
 ): Promise<MetricsResult> {
-    const counter = opts.model
-        ? createTokenCountingModel(opts.model)
-        : undefined;
+    // Token counting needs a model instance to wrap. When the caller injects a
+    // model (mock/wrapped) use it; otherwise, for real-LLM runs, build the
+    // OpenRouter model here so its usage is counted too (createTaskAgent would
+    // otherwise build it internally and the counter would never attach).
+    const base =
+        opts.model ?? (opts.llm ? createOpenRouterLLM(opts.llm) : undefined);
+    const counter = base ? createTokenCountingModel(base) : undefined;
     const started = performance.now();
     const artifacts = await runScenario({
         arm: opts.arm,
@@ -72,6 +77,7 @@ export async function runFullEval(opts?: {
     seeds?: number;
     sweep?: number[];
     anchors?: number[];
+    model?: string;
 }): Promise<string> {
     const key = process.env.OPENROUTER_API_KEY;
     if (process.env.RUN_EVAL !== "1" || !key) {
@@ -81,7 +87,34 @@ export async function runFullEval(opts?: {
     }
     const seeds = opts?.seeds ?? 5;
     const anchors = opts?.anchors ?? [2, 5, 10];
-    const llm = { apiKey: key };
+    // Free OpenRouter models support tool-calling (react agent needs it);
+    // overridable via opts.model or EVAL_MODEL. Default is a free tier model.
+    const model =
+        opts?.model ??
+        process.env.EVAL_MODEL ??
+        "meta-llama/llama-3.3-70b-instruct:free";
+    const llm = { apiKey: key, model };
+    // Throttle between runs to stay under free-tier per-minute rate limits.
+    const throttleMs = Number(process.env.EVAL_THROTTLE_MS ?? "4000");
+    const sleep = (ms: number) =>
+        new Promise<void>((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    // Retry a whole run if it fails (e.g. free-tier 429 that outlasts the
+    // per-call backoff), with a growing pause between attempts.
+    const runRetries = Number(process.env.EVAL_RUN_RETRIES ?? "3");
+    const runOne = async (o: CollectOptions): Promise<MetricsResult> => {
+        let lastErr: unknown;
+        for (let attempt = 1; attempt <= runRetries; attempt++) {
+            if (throttleMs > 0) await sleep(throttleMs * attempt);
+            try {
+                return await collectResult(o);
+            } catch (err) {
+                lastErr = err;
+            }
+        }
+        throw lastErr;
+    };
     const scenarios: ScenarioDef[] = [
         SCENARIOS["software-org"],
         SCENARIOS["supply-chain"],
@@ -94,7 +127,7 @@ export async function runFullEval(opts?: {
         for (const arm of ["gcp", "a2a"] as const) {
             for (let seed = 1; seed <= seeds; seed++) {
                 results.push(
-                    await collectResult({
+                    await runOne({
                         scenario,
                         arm,
                         n: scenario.knowledgeNodes.length,
@@ -113,7 +146,7 @@ export async function runFullEval(opts?: {
         for (const arm of ["gcp", "a2a"] as const) {
             for (let seed = 1; seed <= seeds; seed++) {
                 mkt.push(
-                    await collectResult({
+                    await runOne({
                         scenario: marketplaceScenario(n),
                         arm,
                         n,
