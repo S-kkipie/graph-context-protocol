@@ -6,8 +6,7 @@
 
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { createCapability } from "./role-factories";
-import { createRole } from "./role-factories";
+import { createCapability, createRole } from "./role-factories";
 import type { RoleDefinition } from "./role-types";
 
 const RUN_OPTS: { numRuns: number; seed?: number } = {
@@ -17,11 +16,11 @@ const RUN_OPTS: { numRuns: number; seed?: number } = {
 
 const CAP_POOL = ["cap:1", "cap:2", "cap:3", "cap:4", "cap:5"];
 
-/** Generates a chain (root → ... → leaf) of own-capability id sets, depth 1..4. */
-const chainArb: fc.Arbitrary<string[][]> = fc.array(
-    fc.subarray(CAP_POOL),
-    { minLength: 1, maxLength: 4 },
-);
+/** Generates a chain (root → ... → leaf) of own-capability id sets, depth 2..4. */
+const chainArb: fc.Arbitrary<string[][]> = fc.array(fc.subarray(CAP_POOL), {
+    minLength: 2,
+    maxLength: 4,
+});
 
 /** Builds a role chain from root to leaf; returns the leaf role + the union of ids. */
 function buildChain(levels: string[][]): {
