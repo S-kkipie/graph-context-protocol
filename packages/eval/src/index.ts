@@ -2,6 +2,7 @@ export type { TokenCounter } from "./lib/behavioral";
 export { createTokenCountingModel, taskSuccess } from "./lib/behavioral";
 export type { LeakageMetrics } from "./lib/canary";
 export { detectLeaks } from "./lib/canary";
+export { createMockChatModel } from "./lib/mock-model";
 export { provenanceCompleteness } from "./lib/provenance";
 export type {
     Aggregate,
