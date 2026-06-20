@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PROVIDE_CONTEXT_SKILL, SCENARIOS } from "./index";
+import { marketplaceScenario } from "./marketplace";
 
 describe("SCENARIOS", () => {
     it("defines all three scenarios keyed by id", () => {
@@ -17,7 +18,8 @@ describe("SCENARIOS", () => {
 
     it("marketplace succeeds only when the cheapest seller is named", () => {
         const s = SCENARIOS.marketplace;
-        expect(s.succeeded("The cheapest is seller-gamma at $12.")).toBe(true);
+        // marketplaceScenario(3): sellers s0($12), s1($11), s2($10); cheapest is s2 at $10
+        expect(s.succeeded("The cheapest is s2 at $10.")).toBe(true);
         expect(s.succeeded("I could not determine a seller.")).toBe(false);
     });
 
@@ -43,5 +45,24 @@ describe("SCENARIOS", () => {
             true,
         );
         expect(s.succeeded("unknown")).toBe(false);
+    });
+});
+
+describe("marketplaceScenario(n)", () => {
+    it("builds n sellers and a buyer that peers with all of them", () => {
+        const s = marketplaceScenario(5);
+        expect(s.knowledgeNodes).toHaveLength(5);
+        expect(s.agent.peers).toHaveLength(5);
+        expect(s.id).toBe("marketplace");
+    });
+
+    it("has a satisfiable cheapest-seller success predicate", () => {
+        const s = marketplaceScenario(4);
+        // cheapest seller id + its price both appear in a correct answer
+        const cheapest = s.knowledgeNodes[s.knowledgeNodes.length - 1];
+        const price = cheapest.content.match(/\$(\d+)/)?.[1];
+        const id = cheapest.nodeId.split("-").pop();
+        expect(s.succeeded(`cheapest is ${id} at $${price}`)).toBe(true);
+        expect(s.succeeded("no idea")).toBe(false);
     });
 });

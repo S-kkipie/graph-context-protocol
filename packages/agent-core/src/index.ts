@@ -9,6 +9,7 @@ export { createCouplingMetrics } from "./lib/metrics";
 export {
     type AgentNodeDef,
     type KnowledgeNodeDef,
+    marketplaceScenario,
     PROVIDE_CONTEXT_SKILL,
     SCENARIOS,
     type ScenarioDef,

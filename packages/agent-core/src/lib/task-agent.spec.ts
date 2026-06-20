@@ -1,5 +1,6 @@
 import { AIMessage } from "@langchain/core/messages";
 import { type StructuredTool, tool } from "@langchain/core/tools";
+import { ChatOpenAI } from "@langchain/openai";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { createCouplingMetrics } from "./metrics";
@@ -46,6 +47,25 @@ describe("createTaskAgent", () => {
         expect(calls).toHaveLength(2);
         expect(calls.map((c) => c.peerId)).toEqual(["p:1", "p:2"]);
         expect(setPeersKnown).toHaveBeenCalledWith(2);
+    });
+});
+
+describe("createTaskAgent injected model", () => {
+    it("uses an injected model and ignores missing llm.apiKey", () => {
+        const { factory } = fakeToolFactory();
+        const metrics = createCouplingMetrics();
+        const injected = new ChatOpenAI({ apiKey: "test-key", model: "x" });
+        // llm:{} has no apiKey: if createTaskAgent built its own LLM it would
+        // throw. Succeeding proves the injected model was used.
+        const agent = createTaskAgent({
+            model: injected,
+            llm: {},
+            systemPrompt: "t",
+            peers: [{ peerId: "p", targetNodeId: "k", endpoint: "http://a" }],
+            toolFactory: factory,
+            metrics,
+        });
+        expect(agent).toBeTruthy();
     });
 });
 

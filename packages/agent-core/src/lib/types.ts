@@ -6,6 +6,7 @@
  * @module types
  */
 
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { StructuredTool } from "@langchain/core/tools";
 import type { CouplingMetrics, Credentials } from "./metrics";
 
@@ -32,6 +33,10 @@ export interface TaskAgentConfig {
         readonly temperature?: number;
         readonly apiKey?: string;
     };
+    /** Optional pre-built chat model. When set, used instead of building one
+     * from `llm` — lets a harness inject a deterministic mock or a
+     * token-counting wrapper while keeping the SAME brain. */
+    readonly model?: BaseChatModel;
     readonly systemPrompt: string;
     readonly peers: ReadonlyArray<PeerRef>;
     readonly toolFactory: PeerContextToolFactory;

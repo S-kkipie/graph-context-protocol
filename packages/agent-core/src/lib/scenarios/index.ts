@@ -9,6 +9,7 @@ export const SCENARIOS: Record<ScenarioId, ScenarioDef> = {
     "supply-chain": supplyChain,
 };
 
+export { marketplaceScenario } from "./marketplace";
 export {
     type AgentNodeDef,
     type KnowledgeNodeDef,

@@ -16,11 +16,13 @@ import type { TaskAgentConfig } from "./types";
  * builds one tool per peer (the per-call coupling metrics live inside it).
  */
 export function createTaskAgent(config: TaskAgentConfig) {
-    const llm = createOpenRouterLLM({
-        apiKey: config.llm.apiKey,
-        model: config.llm.model,
-        temperature: config.llm.temperature,
-    });
+    const llm =
+        config.model ??
+        createOpenRouterLLM({
+            apiKey: config.llm.apiKey,
+            model: config.llm.model,
+            temperature: config.llm.temperature,
+        });
     config.metrics.setPeersKnown(config.peers.length);
     const tools = config.peers.map((peer) =>
         config.toolFactory(peer, config.metrics),
