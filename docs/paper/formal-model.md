@@ -187,6 +187,18 @@ principal. This establishes that the reference predicate in `arbitraries.ts` is
 an accurate specification of the real gate, which is the key compositional link
 that allows P1 to use `authorized()` as its oracle.
 
+This is **not** a circular dependency between P1 and P2. P1 does not derive its
+conclusion from `authorized()`; it observes the *actual content flow* — whether
+the secret sentinel physically appears in the serialized response — and uses
+`authorized()` only to choose which assertion (presence vs. absence) applies. If
+the predicate disagreed with the gate in any direction that produced a real leak
+or a real over-denial, P1 would fail on the observed content regardless of what
+P2 reports. P2 then independently pins the predicate to the gate structurally.
+The two properties therefore cross-check the oracle rather than assume it; the
+only blind spot they share — a bug identical in both `authorized()` and the gate
+that never changes observable content flow — is by construction unobservable and
+leak-free.
+
 ### P3 — Role-Inheritance Soundness
 
 **Source:** `packages/core/src/lib/role/inheritance.property.spec.ts`

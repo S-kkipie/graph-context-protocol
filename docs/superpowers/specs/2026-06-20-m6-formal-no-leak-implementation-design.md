@@ -147,11 +147,18 @@ pool). Assert:
 - `packages/server/src/lib/formal/arbitraries.ts` — generators + pools + the
   `authorized` reference predicate.
 - `packages/server/src/lib/formal/no-leak.property.spec.ts` — P1 (both
-  directions) + HTTP smoke + P2.
+  directions).
+- `packages/server/src/lib/formal/authorize-soundness.property.spec.ts` — P2.
+- `packages/eval/src/lib/formal/no-leak-http.smoke.spec.ts` — the single HTTP
+  transport smoke (in `eval` to avoid a `server`→`scenario` package cycle).
 - `packages/core/src/lib/role/inheritance.property.spec.ts` — P3.
 - `docs/paper/formal-model.md` — model + theorem + symbol map + results table.
 - `paper.tex`, `paper-es.tex` — new subsection; rebuilt PDFs.
-- `fast-check` devDep (workspace root + the two consuming packages as needed).
+- `fast-check` devDep (workspace ROOT only; hoisted to consuming packages).
+
+> Note: as implemented, P2 and the HTTP smoke are separate files (not folded
+> into `no-leak.property.spec.ts`) — a cleaner split that the §6 work breakdown
+> already reflects.
 
 ## 6. Work Breakdown (→ TDD tasks)
 
