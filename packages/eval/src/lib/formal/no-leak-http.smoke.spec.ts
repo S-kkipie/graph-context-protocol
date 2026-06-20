@@ -26,7 +26,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const SECRET = "SECRET-HTTP-9d41b7-DO-NOT-LEAK";
 const KNOWLEDGE_ID = "knowledge:http";
-const URL = "http://gcp/http-smoke";
+const SERVER_URL = "http://gcp/http-smoke";
 
 let dir: string;
 let fetchImpl: typeof fetch;
@@ -95,7 +95,7 @@ describe("no-leak HTTP smoke", () => {
         const result = await queryRemoteContext({
             query: makeQuery(),
             credentials: { type: "token", value: "tok:allowed", metadata: {} },
-            url: URL,
+            url: SERVER_URL,
             fetchImpl,
         });
         expect(JSON.stringify(result)).toContain(SECRET);
@@ -105,7 +105,7 @@ describe("no-leak HTTP smoke", () => {
         const result = await queryRemoteContext({
             query: makeQuery(),
             credentials: { type: "token", value: "tok:denied", metadata: {} },
-            url: URL,
+            url: SERVER_URL,
             fetchImpl,
         });
         expect(result.status).toBe("denied");

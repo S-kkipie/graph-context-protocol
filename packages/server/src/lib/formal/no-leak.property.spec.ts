@@ -9,6 +9,7 @@
 import {
     type AccessPolicyDescriptor,
     type ContextQuery,
+    type ContextQueryResult,
     createContextQuery,
     createGraph,
     createKnowledgeNode,
@@ -26,7 +27,12 @@ import type { AuthProvider, Credentials, Principal } from "../auth/types";
 import { createContextQueryHandler } from "../handlers/context-query-handler";
 import type { HandlerContext } from "../handlers/types";
 import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
-import { accessPolicyArb, authorized, principalArb, RUN_OPTS } from "./arbitraries";
+import {
+    accessPolicyArb,
+    authorized,
+    principalArb,
+    RUN_OPTS,
+} from "./arbitraries";
 
 const SECRET = "SECRET-CANARY-7f3a9c2e-DO-NOT-LEAK";
 const NODE_ID = "knowledge:p1";
@@ -131,10 +137,16 @@ describe("P1 — no-content-leak (end-to-end, real handler)", () => {
                         context,
                     );
                     const json = JSON.stringify(result);
+                    const payload = result.success
+                        ? (result.data.response?.payload as
+                              | ContextQueryResult
+                              | undefined)
+                        : undefined;
                     if (authorized(policy, principal)) {
                         expect(json).toContain(SECRET); // liveness
                     } else {
                         expect(json).not.toContain(SECRET); // no leak
+                        expect(payload?.status).toBe("denied"); // denied status
                     }
                 },
             ),
