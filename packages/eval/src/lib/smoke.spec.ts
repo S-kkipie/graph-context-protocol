@@ -8,23 +8,23 @@ import { collectResult } from "./run-eval";
 
 describe("hermetic eval smoke (mock LLM)", () => {
     it("marketplace: both arms complete and produce metrics", async () => {
-        const scenario = marketplaceScenario(2);
-        // cheapest is the last seller (s1) at $10 per marketplaceScenario rules
+        const scenario = marketplaceScenario(3);
+        // s0=$12, s1=$11, s2=$10 → cheapest is the last seller s2 at $10
         const model = createMockChatModel({
-            finalAnswer: "cheapest is s1 at $10",
+            finalAnswer: "cheapest is s2 at $10",
         });
         for (const arm of ["gcp", "a2a"] as const) {
             const r = await collectResult({
                 scenario,
                 arm,
-                n: 2,
+                n: 3,
                 seed: 1,
                 model,
             });
-            expect(r.behavioral.messages).toBe(2);
+            expect(r.behavioral.messages).toBe(3);
             expect(r.behavioral.taskSuccess).toBe(true);
             expect(r.structural.pairwiseConnections).toBe(
-                arm === "a2a" ? 2 : 2,
+                arm === "a2a" ? 6 : 3,
             );
         }
     });

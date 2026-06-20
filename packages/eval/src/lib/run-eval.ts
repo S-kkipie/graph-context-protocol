@@ -74,7 +74,7 @@ export async function runFullEval(opts?: {
     anchors?: number[];
 }): Promise<string> {
     const key = process.env.OPENROUTER_API_KEY;
-    if (process.env.RUN_EVAL !== "1" || key === undefined) {
+    if (process.env.RUN_EVAL !== "1" || !key) {
         throw new Error(
             "runFullEval requires RUN_EVAL=1 and OPENROUTER_API_KEY",
         );
