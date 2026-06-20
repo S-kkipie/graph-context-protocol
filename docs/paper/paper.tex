@@ -376,9 +376,10 @@ Section~\ref{sec:formal-no-leak} \emph{prove} it.
 \paragraph{Access model.}
 A knowledge node carries an \texttt{AccessPolicyDescriptor} $P$ with two gating fields:
 $\textit{readableByRoles}$ (a list of role ids) and $\textit{requiredCapabilities}$ (a list of
-capability ids). A principal $K$ holds an optional role with its own and inherited capability set
-$\mathit{effective}(K)$, computed by \texttt{getEffectiveCapabilities} with own-first precedence when
-the same capability id appears at multiple levels of the role chain.
+capability ids). A principal $K$ holds an optional role; its effective capability set
+$\mathit{effective}(K)$ is the union of $K$'s own flat capabilities ($K.\textit{capabilities}$) and
+those inherited transitively through the role chain (own-first precedence on duplicate capability
+ids), the role part computed by \texttt{getEffectiveCapabilities}.
 The admission predicate is:
 \[
 \mathit{authorized}(P,K) \;\equiv\;
@@ -410,7 +411,7 @@ response does not contain the sentinel and \texttt{payload.status} is \texttt{"d
 \emph{liveness} --- when $\mathit{authorized}(P,K)$, the sentinel \emph{does} appear, confirming the
 harness is capable of leaking and is not vacuously passing.
 
-\textbf{P2~(gate soundness).}
+\textbf{P2~(authorize soundness).}
 For each randomly generated $(P,K)$ pair, the real \texttt{authorizeKnowledgeNodeAccess} function
 is called against a node carrying $P$ with an allow-all provider, and the result is asserted to equal
 $\mathit{authorized}(P,K)$ computed by the independent reference oracle. This establishes that the

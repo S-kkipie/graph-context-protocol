@@ -470,10 +470,11 @@ Sección~\ref{sec:formal-no-leak} la \emph{prueban}.
 Un nodo de conocimiento porta un \texttt{AccessPolicyDescriptor} $P$ con dos
 campos de control: $\textit{readableByRoles}$ (una lista de identificadores de
 rol) y $\textit{requiredCapabilities}$ (una lista de identificadores de
-capacidad). Un principal $K$ tiene un rol opcional con su conjunto de capacidades
-propias e heredadas $\mathit{effective}(K)$, calculado por
-\texttt{getEffectiveCapabilities} con precedencia propia cuando el mismo
-identificador de capacidad aparece en múltiples niveles de la cadena de roles.
+capacidad). Un principal $K$ tiene un rol opcional; su conjunto de capacidades
+efectivas $\mathit{effective}(K)$ es la unión de las capacidades planas propias de
+$K$ ($K.\textit{capabilities}$) y las heredadas transitivamente a través de la
+cadena de roles (precedencia propia ante identificadores de capacidad duplicados),
+calculándose la parte del rol con \texttt{getEffectiveCapabilities}.
 El predicado de admisión es:
 \[
 \mathit{authorized}(P,K) \;\equiv\;
@@ -513,7 +514,7 @@ del manejador no contiene el centinela y \texttt{payload.status} es
 centinela \emph{sí} aparece, confirmando que el banco de pruebas es capaz de
 filtrar y no pasa de manera vacua.
 
-\textbf{P2~(solidez de la compuerta).}
+\textbf{P2~(solidez de autorización).}
 Para cada par $(P,K)$ generado aleatoriamente, se llama a la función real
 \texttt{authorizeKnowledgeNodeAccess} contra un nodo con política $P$ usando un
 proveedor que todo lo permite, y el resultado se afirma que es igual a
