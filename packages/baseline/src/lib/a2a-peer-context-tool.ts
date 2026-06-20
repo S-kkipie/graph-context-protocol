@@ -82,7 +82,7 @@ export function createA2aPeerContextToolFactory(
                 }
             },
             {
-                name: "query_peer_context",
+                name: `query_peer_context__${peer.targetNodeId.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
                 description: `Ask the peer node "${peer.targetNodeId}" for its context via an A2A message. Use this to learn what the other node knows or has done.`,
                 schema: InputSchema,
             },

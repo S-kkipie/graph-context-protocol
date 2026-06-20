@@ -71,7 +71,15 @@ function recordingFactory(
         // biome-ignore lint/suspicious/noExplicitAny: LangChain tool invoke is loosely typed
         tool.invoke = (async (input: any, config?: any) => {
             const output = await originalInvoke(input, config);
-            transcript.push({ peerId: peer.peerId, output: String(output) });
+            const text =
+                typeof output === "string"
+                    ? output
+                    : output != null &&
+                        typeof output === "object" &&
+                        "content" in output
+                      ? String((output as { content: unknown }).content)
+                      : String(output);
+            transcript.push({ peerId: peer.peerId, output: text });
             return output;
         }) as typeof tool.invoke;
         return tool;

@@ -84,7 +84,7 @@ export function createGcpPeerContextToolFactory(
                 }
             },
             {
-                name: "query_peer_context",
+                name: `query_peer_context__${peer.targetNodeId.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
                 description: `Read the shared context owned by the peer node "${peer.targetNodeId}" over the Graph Context Protocol. Use this to learn what the other node knows or has done.`,
                 schema: InputSchema,
             },
