@@ -16,8 +16,15 @@ P = ( readableByRoles      : RoleId[]
     , requiredCapabilities : CapabilityId[]
     , fallbackAllowed      : boolean
     , denialMode           : "error" | "empty-result" | "fallback-if-allowed"
+    , metadata             : Metadata
     )
 ```
+
+The descriptor has five fields (see the `AccessPolicyDescriptor` interface,
+`packages/core/src/lib/discovery/context-contract-types.ts`). The fifth field,
+`metadata`, carries free-form descriptor metadata and plays **no role** in the
+authorization predicate (§2) — the gate consults only `readableByRoles` and
+`requiredCapabilities`.
 
 A **principal** `K` is:
 
@@ -56,6 +63,14 @@ capsOk(P, K) ≡
 effective(K) ≡ K.capabilities ∪ K.role?.getEffectiveCapabilities().map(c → c.id)
 ```
 
+(The union `effective(K)` is logically a single set, but the real gate does not
+materialize it: `authorizeKnowledgeNodeAccess`
+(`packages/server/src/lib/auth/node-authorization.ts`) keeps two separate sets —
+the principal's flat `capabilities : CapabilityId[]` and the role's
+`getEffectiveCapabilities().map(c → c.id)` — and admits a required capability if
+it is present in *either*, via two separate membership checks. The set-union
+formulation above is equivalent.)
+
 This predicate is implemented verbatim as the `authorized` reference oracle in
 `packages/server/src/lib/formal/arbitraries.ts` and is stated to mirror
 `authorizeKnowledgeNodeAccess` under an allow-all auth provider (i.e., the
@@ -63,11 +78,14 @@ provider term drops out).
 
 **Default-deny subtleties:**
 
-- A *missing* policy (no `gcp.accessPolicy` key in node metadata) causes
-  `parseAccessPolicyFromMetadata` to return a parse failure
-  (`packages/core/src/lib/discovery/context-contract-types.ts`,
-  `parseAccessPolicyFromMetadata`). `authorizeKnowledgeNodeAccess` interprets
-  that failure as a denial — the gate is *closed* when policy is absent.
+- An *unparseable* policy denies. `parseAccessPolicyFromMetadata`
+  (`packages/core/src/lib/discovery/context-contract-types.ts`) fails in two
+  distinct ways, both of which `authorizeKnowledgeNodeAccess`
+  (`packages/server/src/lib/auth/node-authorization.ts`) treats as a denial:
+  (a) the `gcp.accessPolicy` metadata key is *absent* — returns a not-found
+  error; and (b) the key is *present but schema-invalid* — returns a Zod
+  validation failure. In either case the gate is *closed* when a valid policy
+  is not available.
 - An *empty* policy (`readableByRoles = []` and `requiredCapabilities = []`)
   satisfies both `roleOk` and `capsOk`, so the predicate returns `true` and
   the principal is admitted — provided the auth provider is also permissive.
@@ -90,8 +108,11 @@ A `context-query` request follows this pipeline in
    Return `not-found` if absent.
 4. **Authorize** — call `authorizeKnowledgeNodeAccess(principal, targetNode,
    authProvider, { action: "query-knowledge" })`
-   (`packages/server/src/lib/auth/node-authorization.ts`).
-   On failure return `denied`; **the knowledge-source adapter is never called**.
+   (`packages/server/src/lib/auth/node-authorization.ts`). The handler passes
+   `"query-knowledge"` explicitly; the gate itself defaults the action via
+   `options.action ?? "query-knowledge"`, so the action is configurable rather
+   than hardcoded. On failure return `denied`; **the knowledge-source adapter
+   is never called**.
 5. **Execute query** — call `executeTargetedContextQuery(query, principal,
    context.knowledgeSources, ...)` (`packages/server/src/lib/knowledge/context-query.ts`).
    The adapter result lands in `result.result` (the `raw` field of the adapter
