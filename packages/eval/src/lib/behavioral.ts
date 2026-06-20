@@ -46,13 +46,15 @@ export function usageTokens(message: BaseMessage): number {
  * Wraps a chat model so every generated message's token usage is accumulated.
  * Hooks the model's callbacks so it works regardless of how the brain invokes
  * it. The returned `model` is passed to createTaskAgent as the injected model.
+ *
+ * NOTE: replaces any existing callbacks on `inner`.
  */
 export function createTokenCountingModel(inner: BaseChatModel): TokenCounter {
     let total = 0;
     inner.callbacks = [
         {
             handleLLMEnd: (output: LLMResult) => {
-                for (const row of output.generations ?? []) {
+                for (const row of output.generations) {
                     for (const gen of row) {
                         // ChatGeneration extends Generation and adds `message`
                         // biome-ignore lint/suspicious/noExplicitAny: narrowing ChatGeneration at runtime

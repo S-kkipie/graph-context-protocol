@@ -55,4 +55,23 @@ describe("createTokenCountingModel", () => {
         expect(counter.model).toBe(inner);
         expect(counter.total()).toBe(0);
     });
+
+    it("accumulates tokens via handleLLMEnd", () => {
+        const inner = new ChatOpenAI({ apiKey: "test-key", model: "x" });
+        const counter = createTokenCountingModel(inner);
+        // biome-ignore lint/suspicious/noExplicitAny: reaching installed callback
+        const handler = (inner.callbacks as any[])[0];
+
+        const msg1 = new AIMessage({ content: "y" });
+        // biome-ignore lint/suspicious/noExplicitAny: attaching provider metadata
+        (msg1 as any).usage_metadata = { total_tokens: 10 };
+        handler.handleLLMEnd({ generations: [[{ message: msg1 }]] });
+        expect(counter.total()).toBe(10);
+
+        const msg2 = new AIMessage({ content: "z" });
+        // biome-ignore lint/suspicious/noExplicitAny: attaching provider metadata
+        (msg2 as any).usage_metadata = { total_tokens: 5 };
+        handler.handleLLMEnd({ generations: [[{ message: msg2 }]] });
+        expect(counter.total()).toBe(15);
+    });
 });
