@@ -1,0 +1,534 @@
+% Versión en español. Formato de dos columnas estilo SAI/IEEE (IEEEtran.cls no
+% está instalado localmente, así que emulamos la plantilla SAI_PAPER_FORMAT en
+% la clase article: dos columnas, tamaño carta, encabezados con numeración
+% romana, "Resumen--"/"Palabras clave--" en línea y referencias numéricas en
+% orden de cita).
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern} % fuentes escalables, requeridas por la expansión de microtype
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[letterpaper,top=0.75in,bottom=1in,left=0.625in,right=0.625in,columnsep=0.25in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xurl} % permite cortar URLs largas de las referencias
+\usepackage[hidelinks]{hyperref}
+
+% Numeración estilo IEEE/SAI: secciones romanas (I, II, ...), subsecciones con letra.
+\renewcommand{\thesection}{\Roman{section}}
+\renewcommand{\thesubsection}{\Alph{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{subsubsection}}
+\renewcommand{\tablename}{Tabla}
+\captionsetup{font=small,labelsep=period}
+
+\newcommand{\gcp}{\textsc{gcp}}
+\newcommand{\ata}{\textsc{a2a}}
+\newcommand{\bigoh}{\mathcal{O}}
+
+\title{\textbf{La Federación de Contexto con Lectura Primero y Control por Rol\\
+Supera al Paso de Mensajes Punto a Punto en\\
+Sistemas Multiagente Basados en LLM:\\
+Una Evaluación Controlada por Equidad}}
+
+\author{%
+Adrian Issac Mamani Quispe\\
+\textit{Universidad Nacional de San Agust\'in de Arequipa}\\
+Arequipa, Per\'u\\
+admamaniq@unsa.edu.pe
+\and
+Ryan Fabian Valdivia Segovia\\
+\textit{Universidad Nacional de San Agust\'in de Arequipa}\\
+Arequipa, Per\'u\\
+rvaldiviase@unsa.edu.pe
+}
+
+\date{Junio de 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Los sistemas multiagente construidos sobre grandes modelos de lenguaje (LLM)
+coordinan, en su inmensa mayoría, mediante \emph{paso de mensajes}: cada agente
+envía la tarea y el contexto directamente a pares con nombre, como en el
+protocolo Agent2Agent (A2A) de Google y en los lenguajes clásicos de
+comunicación entre agentes de los que desciende. Sostenemos que un sustrato
+alternativo ---\emph{federación de contexto con lectura primero y control por
+rol} (el Graph Context Protocol, \gcp{})--- es estructuralmente superior en tres
+ejes con igual éxito de tarea: \textbf{acoplamiento}, \textbf{fuga de
+información} y \textbf{costo}. En \gcp{}, un agente no empuja contexto hacia sus
+pares; lo \emph{lee} desde nodos de conocimiento de propiedad independiente a
+través de una compuerta de política que autoriza la lectura por rol y registra
+una entrada de procedencia por cada decisión. Hacemos la comparación
+\emph{justa} manteniendo todo constante salvo la capa de interoperabilidad: ambos
+brazos ejecutan el mismo cerebro de agente, el mismo modelo y la misma tarea;
+solo difieren la fábrica de herramientas por par y el alojamiento de nodos (un
+manejador de \texttt{fetch} de \gcp{} en proceso frente a servidores A2A reales
+en \texttt{localhost}). En tres escenarios ---un mercado (acoplamiento), una
+organización de software (fuga) y una cadena de suministro entre propietarios
+(entre dueños)--- encontramos: (i) el número de aristas de integración por pares
+crece como $\bigoh(n^2)$ para \ata{} frente a $\bigoh(n)$ para \gcp{} ($2450$
+frente a $50$ en $n{=}50$), con esfuerzo de integración marginal constante para
+\gcp{}; (ii) la completitud de procedencia es $1{,}0$ para \gcp{} y $0{,}0$ para
+\ata{} en todos los escenarios y semillas, porque las decisiones de lectura se
+auditan por construcción mientras que los mensajes punto a punto no dejan rastro
+de acceso; y (iii) \gcp{} nunca cuesta más y, en la tarea entre propietarios,
+cuesta menos tokens con mucha menor varianza ($707{,}6{\pm}3{,}5$ frente a
+$901{,}4{\pm}229{,}2$). El éxito de tarea es igual en ambos brazos. Posicionamos
+\gcp{} frente a cinco décadas de teoría del acoplamiento e investigación en
+control de acceso, y frente a trabajo reciente sobre seguridad de agentes LLM, y
+liberamos el banco de pruebas, los escenarios y las semillas. La evaluación es
+preliminar ---un modelo de capa gratuita, cinco semillas--- y somos explícitos
+sobre qué autoriza y qué no.
+\end{abstract}
+
+\smallskip
+\noindent\textbf{\textit{Palabras clave---}}\textit{federación de contexto;
+sistemas multiagente; grandes modelos de lenguaje; control de acceso; mínimo
+privilegio; procedencia; acoplamiento de software; protocolos de comunicación
+entre agentes}
+\smallskip
+
+\section{Introducción}
+
+El patrón de coordinación dominante para los sistemas multiagente basados en LLM
+es el paso directo de mensajes. Marcos como AutoGen~\citep{wu2023autogen},
+ChatDev~\citep{qian2024chatdev} y MetaGPT~\citep{hong2024metagpt} componen
+aplicaciones a partir de agentes que envían y reciben mensajes, y el emergente
+protocolo Agent2Agent (A2A)~\citep{a2a2025} estandariza exactamente esto: un
+agente cliente anuncia y delega tareas a agentes remotos con nombre sobre
+JSON-RPC. Este paradigma desciende directamente de los lenguajes clásicos de
+comunicación entre agentes KQML~\citep{finin1994} y FIPA-ACL~\citep{fipa2002},
+que ya asumían conexiones por pares y protocolos compartidos, prenegociados,
+entre cada par que interactúa.
+
+El paso de mensajes tiene un costo estructural que la literatura de ingeniería de
+software comprende desde hace cincuenta años. Conectar $n$ componentes por pares
+requiere del orden de $n^2$ enlaces; introducir un intermediario compartido al
+que cada componente se conecta una sola vez reduce esto a $n$ enlaces. Este es el
+``espagueti de integración'' que el catálogo de Patrones de Integración
+Empresarial~\citep{hohpe2003} aborda con corredores de mensajes y concentradores,
+y es el mismo fenómeno que la teoría del
+acoplamiento~\citep{parnas1972,stevens1974,briand1999} formaliza: la
+modificabilidad de un sistema está gobernada por el número y la fuerza de sus
+dependencias entre componentes.
+
+Estudiamos un sustrato alternativo para la coordinación multiagente, el Graph
+Context Protocol (\gcp{}). \gcp{} es de \emph{lectura primero}: un agente obtiene
+lo que necesita leyendo contexto desde nodos de conocimiento de propiedad
+independiente, en lugar de recibir mensajes empujados. Tiene \emph{control por
+rol}: cada lectura pasa por una compuerta de política que autoriza la solicitud
+según el rol del solicitante y sus capacidades requeridas, denegando por
+defecto~\citep{saltzer1975,sandhu1996}. Y es \emph{auditado}: cada decisión de
+lectura ---concesión o denegación--- produce un registro de procedencia
+estructurado que nombra al principal, el nodo objetivo, la decisión y la política
+coincidente.
+
+\paragraph{Tesis.} Con igual éxito de tarea, la federación de contexto con
+lectura primero y control por rol supera al paso de mensajes punto a punto en
+acoplamiento, fuga y costo.
+
+\paragraph{Contribuciones.}
+\begin{enumerate}
+  \item \textbf{Arquitectura.} Describimos \gcp{}: federación de contexto con
+  lectura primero y control por rol, con procedencia por lectura de primera clase
+  (Sección~\ref{sec:arch}), y la contrastamos con el paso de mensajes basado en
+  empuje.
+  \item \textbf{Un método de evaluación controlado por equidad.} El defecto más
+  común en las comparaciones de arquitecturas es que los brazos difieren en más
+  que la arquitectura. Nuestro banco de pruebas construye ambos brazos a partir de
+  una sola definición de escenario y un solo modelo inyectado, intercambiando
+  \emph{únicamente} la capa de interoperabilidad (Sección~\ref{sec:method}).
+  \item \textbf{Un enfrentamiento empírico} sobre tres escenarios con un LLM real
+  y cinco semillas, reportando conteos (conexiones, mensajes, tokens) y no solo
+  tiempo de reloj (Sección~\ref{sec:results}).
+  \item \textbf{Definiciones de métricas} para el acoplamiento estructural, la
+  fuga por coincidencia exacta de canario (una cota inferior) y la completitud de
+  procedencia (Sección~\ref{sec:metrics}).
+\end{enumerate}
+
+Somos deliberadamente conservadores con las afirmaciones empíricas: los
+resultados de comportamiento provienen de un único modelo de capa gratuita sobre
+cinco semillas y deben leerse como un \emph{piloto}. La
+Sección~\ref{sec:threats} expone las amenazas a la validez en su totalidad,
+incluido un caso en el que la fuga arquitectónica a favor de \gcp{} es
+\emph{latente y no observada} porque el modelo nunca ejercitó la ruta de fuga.
+
+\section{Antecedentes y Trabajo Relacionado}
+\label{sec:related}
+
+\subsection{El paso de mensajes como línea base multiagente}
+Los lenguajes de comunicación entre agentes establecieron el paradigma del paso
+de mensajes: KQML~\citep{finin1994} envolvía cargas de conocimiento en
+performativos tipados intercambiados sobre conexiones por pares, y
+FIPA-ACL~\citep{fipa2002} estandarizó un mensaje de 12 campos en el que el emisor
+y el receptor deben compartir lenguaje de contenido y ontología antes de que
+cualquier intercambio tenga éxito. Los marcos modernos de LLM reinventaron esto
+en lenguaje natural. AutoGen~\citep{wu2023autogen} programa aplicaciones como
+conversaciones entre agentes; ChatDev~\citep{qian2024chatdev} dispone pares de
+roles en una ``cadena de chat'' fija; y los estudios del
+campo~\citep{guo2024survey} taxonomizan la estructura de comunicación en
+variantes punto a punto, centralizada, por capas y de fondo compartido. El Model
+Context Protocol~\citep{mcp2024} estandariza el acceso a contexto de
+agente a herramienta (una forma temprana de lectura primero), mientras que
+A2A~\citep{a2a2025} estandariza la delegación de tareas de agente a agente ---la
+línea base con la que comparamos. Trabajo reciente ha comenzado a cuantificar la
+sobrecarga del paso de mensajes: \citet{zhang2024agentprune} reportan un exceso
+de tokens del 28--73\% en los grafos de comunicación entre agentes y recuperan la
+mayor parte podando la topología de mensajes. De manera muy relacionada,
+\citet{mao2026delm} reemplazan tanto la orquestación centralizada como el
+enrutamiento punto a punto por un contexto compartido verificado y reportan
+resultados de vanguardia con aproximadamente la mitad del costo ---evidencia de
+que un sustrato de lectura desde contexto compartido puede dominar al paso de
+mensajes. A esa línea añadimos autorización por rol, procedencia auditada por
+lectura y un enfrentamiento controlado por equidad.
+
+\subsection{Acoplamiento y el problema $n^2$}
+Que menos enlaces entre componentes producen sistemas más mantenibles es de los
+resultados más antiguos de la ingeniería de software. \citet{parnas1972} mostró
+que la descomposición por ocultamiento de información ---exponer solo una interfaz
+mínima--- produce un acoplamiento drásticamente menor que la partición por
+diagrama de flujo. \citet{stevens1974} introdujeron el acoplamiento y la cohesión
+como propiedades medibles y ordinales de la dependencia entre módulos.
+\citet{briand1999} dieron un marco teórico de medición y de teoría de grafos en
+el que el acoplamiento es una función monótona del conteo de aristas de
+dependencia, por lo que una topología de $\bigoh(n)$ aristas está demostrablemente
+menos acoplada que una de $\bigoh(n^2)$. \citet{hohpe2003} lo trasladaron a la
+integración distribuida: una malla punto a punto completa de $n$ sistemas necesita
+$n(n{-}1)/2$ canales, que un corredor de tipo concentrador reduce a $n$. La
+investigación en microservicios~\citep{panichella2021} lleva el mismo argumento de
+conteo de aristas a los sistemas nativos de la nube, y en el ámbito de los LLM
+\citet{shen2025topology} muestran empíricamente que las topologías de agentes
+densas y completamente conectadas amplifican la propagación de errores mientras
+que las topologías más dispersas la suprimen. Aplicamos esto directamente: \ata{}
+crea aristas agente$\leftrightarrow$agente por pares; \gcp{} crea aristas
+agente$\rightarrow$almacén.
+
+\subsection{Mínimo privilegio, RBAC y contexto con compuerta}
+La compuerta de lectura de \gcp{} operacionaliza el principio de mínimo
+privilegio, articulado por \citet{saltzer1975} y equiparado allí con la necesidad
+de conocer (need-to-know) militar. El control de acceso basado en
+roles~\citep{sandhu1996} desacopla los permisos de los individuos asignándolos a
+roles, y el control de acceso basado en atributos~\citep{nist800162} generaliza la
+política a atributos arbitrarios; la protección basada en
+capacidades~\citep{dennis1966} liga la autoridad a fichas infalsificables y
+explícitamente pasadas ---el modelo que siguen las credenciales de rol de \gcp{}.
+Las obligaciones de minimización de datos y limitación de
+finalidad~\citep{gdpr2016} convierten ``leer solo lo que tu rol requiere'' en una
+restricción legal, no en una mera preferencia de diseño. La línea base punto a
+punto no tiene una compuerta análoga: la prevención de fugas recae enteramente en
+la discreción del emisor.
+
+\subsection{Fuga, procedencia y gobernanza en sistemas de agentes}
+La literatura de seguridad establece que la confidencialidad en los sistemas de
+agentes es una propiedad del sistema, no solo del modelo~\citep{evertz2024whispers},
+que los canales de mensajes entre agentes son el vector de fuga dominante
+---filtrando mucho más que las salidas finales y siendo en gran medida invisibles a
+la auditoría solo de salidas~\citep{elyagoubi2026agentleak}--- y que restringir lo
+que un agente puede \emph{ver} ---en lugar de filtrar lo que puede \emph{decir}---
+es la intervención más robusta~\citep{bagdasarian2024airgap}. El Top 10 de OWASP
+para aplicaciones LLM~\citep{owasp2025} nombra la Divulgación de Información
+Sensible y la Agencia Excesiva como riesgos primarios, con ``adoptar el mínimo
+privilegio'' como mitigación normativa. Del lado de la rendición de cuentas, el
+control de privilegios determinista en la frontera de herramientas~\citep{shi2025progent},
+la delegación de autoridad autenticada y auditable a los
+agentes~\citep{south2025delegation} y los registros de auditoría para
+LLM~\citep{ojewale2025audit} abogan por registros a prueba de manipulación y
+consultables de lo que hizo un sistema. La contribución de \gcp{} a esta línea es
+hacer de la \emph{decisión por lectura} el primitivo de procedencia: cada lectura
+de contexto autorizada o denegada se registra, algo que el paso de mensajes no
+hace.
+
+\paragraph{Diferencia (delta).} El trabajo previo aporta las piezas ---acceso de
+lectura primero (MCP), control por rol/atributo (RBAC/ABAC, RAG con compuerta) y
+registros de auditoría--- pero no su conjunción, y no un enfrentamiento controlado
+por equidad contra una línea base real de paso de mensajes. \gcp{} combina acceso
+de lectura primero, control por rol y procedencia auditada por lectura, y medimos
+la combinación contra \ata{}.
+
+\section{El Graph Context Protocol}
+\label{sec:arch}
+
+\gcp{} modela un ecosistema multiagente como \emph{nodos de conocimiento} y
+\emph{nodos de agente} de propiedad independiente. La coordinación es de lectura
+primero: un agente adquiere contexto emitiendo una \emph{consulta de contexto} a
+un nodo par, que devuelve el contexto que el solicitante está autorizado a leer.
+Tres propiedades distinguen al sustrato.
+
+\paragraph{Lectura primero.} Los productores no empujan hacia los consumidores. Un
+nodo de conocimiento expone contexto; los consumidores lo extraen bajo demanda.
+Ningún agente necesita conocer la identidad de los \emph{consumidores} de sus
+productores, y añadir un consumidor no requiere ningún cambio en el productor.
+Estructuralmente, cada agente se conecta a los nodos que lee, no a todos los demás
+agentes.
+
+\paragraph{Control por rol.} Cada nodo de conocimiento porta una política de
+acceso (\texttt{readableByRoles}, \texttt{requiredCapabilities},
+\texttt{fallbackAllowed}, \texttt{denialMode}) y el servidor autoriza cada
+consulta contra el principal del solicitante, denegando por defecto cuando ninguna
+política concede el acceso. La autorización ocurre \emph{antes} de que cualquier
+contenido llegue a la ventana de contexto del agente ---el análogo de lectura
+primero de la mediación completa~\citep{saltzer1975}.
+
+\paragraph{Auditado.} Cada decisión de lectura emite un registro de procedencia
+estructurado (\texttt{principalId}, \texttt{targetNodeId}, \texttt{timestamp},
+\texttt{decision}, \texttt{matchedPolicy}) a un sumidero de auditoría enchufable.
+Esto produce un libro mayor completo de quién-leyó-qué-cuándo para la federación,
+incluidas las denegaciones.
+
+La línea base de paso de mensajes (\ata{}) implementa las mismas tareas de
+escenario haciendo que los agentes mantengan referencias a pares mediante tarjetas
+e intercambien contexto a través de mensajes directos, con permitir/denegar grueso
+declarado en la tarjeta y sin sumidero de auditoría por lectura ---un control fiel
+y de buena fe, construido con el mismo cuidado que el brazo \gcp{}.
+
+\section{Modelo de Amenazas y Costo, y Definición de Métricas}
+\label{sec:metrics}
+
+Reportamos métricas en tres familias.
+
+\paragraph{Acoplamiento estructural (determinista).} Para $n$ nodos pares, las
+\emph{conexiones por pares} son el número de aristas de integración que la
+topología requiere. El brazo punto a punto necesita $C_{\ata{}}(n)=n(n{-}1)$
+aristas dirigidas (cada par agente$\leftrightarrow$par); el brazo federado necesita
+$C_{\gcp{}}(n)=n$ (cada agente$\rightarrow$almacén). El \emph{esfuerzo de
+integración} es el costo marginal de añadir un nodo, $C(n{+}1)-C(n)$: constante $1$
+para \gcp{} y $2n$ para \ata{}. Estas son propiedades de la topología, no de una
+ejecución, así que se calculan exactamente.
+
+\paragraph{Fuga (una cota inferior).} Cada nodo confidencial incrusta una cadena
+\emph{canario} única. Tras una ejecución, escaneamos la respuesta final \emph{y}
+la transcripción completa de herramientas en busca de coincidencias exactas del
+canario; la \emph{tasa de fuga} es la fracción de canarios del escenario que
+aparecen donde no deberían. El escaneo por coincidencia exacta es una cota
+inferior: la divulgación parafraseada no se cuenta.
+
+\paragraph{Completitud de procedencia.} La fracción de decisiones de lectura para
+las que existe un registro de procedencia estructurado, acotada a $[0,1]$. \gcp{}
+registra cada decisión; el brazo de paso de mensajes no tiene sumidero de
+auditoría, así que su completitud es $0$ por construcción.
+
+\paragraph{Costo de comportamiento y éxito.} Contamos mensajes, conexiones
+abiertas, viajes de ida y vuelta y tokens totales (sumados desde los metadatos de
+uso del proveedor), medimos la latencia de reloj y evaluamos el éxito de tarea con
+un oráculo por escenario. Los conteos ---no solo el tiempo de reloj--- son la señal
+primaria de costo, ya que el tiempo de reloj en un punto final gratuito compartido
+es ruidoso.
+
+\section{Metodología}
+\label{sec:method}
+
+\paragraph{La invariante de equidad.} El compromiso metodológico central es que
+los dos brazos difieren \emph{únicamente} en la capa de interoperabilidad. Un
+único ejecutor de escenarios construye ambos brazos a partir de un
+\texttt{ScenarioDef} y un modelo de chat inyectado. Ambos brazos ejecutan el mismo
+cerebro de agente (un agente ReAct con una herramienta por par), el mismo prompt
+de sistema, objetivo y oráculo de éxito. El brazo \gcp{} aloja los nodos de
+conocimiento en proceso detrás del manejador de \texttt{fetch} del servidor real
+con un proveedor de autenticación por token estático y un sumidero de auditoría en
+memoria; el brazo \ata{} aloja los mismos nodos como servidores A2A reales en
+\texttt{localhost}. Solo cambian la fábrica de herramientas por par y el
+alojamiento de nodos. Esto elimina el factor de confusión que hace ininterpretables
+a la mayoría de las comparaciones de arquitecturas.
+
+\paragraph{Escenarios.} \emph{software-org} (fuga): un agente con rol de
+contratista debe resumir información pública sobre un proyecto; un nodo de
+ingeniería confidencial que porta un canario es legible solo por el rol de
+ingeniería. \emph{supply-chain} (entre propietarios): un agente de logística debe
+enunciar la relación de envío compartible entre dos nodos de propiedad
+independiente (un proveedor y un fabricante), cada uno con un canario de alcance
+del propietario. \emph{marketplace} (acoplamiento): $n$ nodos vendedores con
+precios descendentes; el agente debe identificar el más barato. El mercado está
+parametrizado por $n$ y genera la curva de acoplamiento estructural.
+
+\paragraph{Modelo, semillas, banco de pruebas.} Todas las ejecuciones de
+comportamiento usan \texttt{openai/gpt-oss-120b:free} vía OpenRouter a temperatura
+$0{,}7$, con cinco repeticiones (semillas) por brazo por escenario. El banco de
+pruebas está protegido tras una variable de entorno y una clave de API para que
+nunca se ejecute en CI; aplica regulación (throttling) entre ejecuciones y
+reintenta ante errores transitorios de límite de tasa, ambos comunes en puntos
+finales gratuitos. Reportamos media $\pm$ desviación estándar poblacional. La curva
+de acoplamiento estructural se calcula de forma determinista para $n=2,\dots,50$.
+
+\section{Resultados}
+\label{sec:results}
+
+\subsection{El acoplamiento escala como $\bigoh(n)$ frente a $\bigoh(n^2)$}
+La Tabla~\ref{tab:struct} muestra la curva de acoplamiento estructural. Las
+conexiones por pares de \gcp{} crecen linealmente ($n$) mientras que las de \ata{}
+crecen cuadráticamente ($n(n{-}1)$): idénticas en $n{=}2$, $3\times$ en $n{=}3$,
+$9\times$ en $n{=}10$ y $49\times$ en $n{=}50$ ($50$ frente a $2450$). El costo
+marginal de añadir un nodo ---el esfuerzo de integración--- es constante $1$ para
+\gcp{} y $2n$ para \ata{}, por lo que la brecha \emph{se ensancha} con cada nodo
+añadido.
+
+\begin{table}[t]
+\centering
+\caption{Acoplamiento estructural (aristas de integración por pares) según el
+tamaño del ecosistema $n$. Determinista.}
+\label{tab:struct}
+\begin{tabular}{rrrr}
+\toprule
+$n$ & \gcp{} $(n)$ & \ata{} $(n(n{-}1))$ & razón \ata{}/\gcp{} \\
+\midrule
+2  & 2  & 2    & 1{,}0$\times$ \\
+3  & 3  & 6    & 2{,}0$\times$ \\
+5  & 5  & 20   & 4{,}0$\times$ \\
+10 & 10 & 90   & 9{,}0$\times$ \\
+20 & 20 & 380  & 19{,}0$\times$ \\
+50 & 50 & 2450 & 49{,}0$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{La procedencia es completa para \gcp{} y ausente para \ata{}}
+En los tres escenarios y las cinco semillas, la completitud de procedencia es
+$1{,}0$ para \gcp{} y $0{,}0$ para \ata{} (Tabla~\ref{tab:behav}). Esto es
+arquitectónico, no estadístico: \gcp{} registra una decisión por cada lectura; el
+brazo de paso de mensajes no tiene sumidero de auditoría, así que no existe rastro
+de acceso que consultar. Para cualquier régimen de gobernanza que requiera
+trazabilidad~\citep{ojewale2025audit,owasp2025}, esta es la diferencia cualitativa
+más nítida entre los sustratos.
+
+\subsection{\gcp{} nunca cuesta más, y cuesta menos en la tarea entre
+propietarios}
+La Tabla~\ref{tab:behav} reporta las métricas de comportamiento. En
+\emph{software-org} los dos brazos están dentro del ruido en tokens
+($678{,}4{\pm}5{,}8$ frente a $685{,}4{\pm}3{,}4$). En \emph{supply-chain} \gcp{}
+usa menos tokens con mucha menor varianza ($707{,}6{\pm}3{,}5$ frente a
+$901{,}4{\pm}229{,}2$) y menos mensajes/viajes de ida y vuelta ($1{,}0{\pm}0{,}0$
+frente a $1{,}4{\pm}0{,}5$): el brazo de paso de mensajes a veces abrió conexiones
+extra para ensamblar la respuesta entre propietarios, mientras que el brazo federado
+leyó lo que necesitaba en una sola pasada. El éxito de tarea es $1{,}0$ en ambos
+brazos para estos dos escenarios ---se cumple la precondición de igual éxito de la
+tesis.
+
+\begin{table*}[t]
+\centering
+\caption{Métricas de comportamiento, media $\pm$ desv.\ est.\ poblacional sobre 5
+semillas, \texttt{gpt-oss-120b:free}. Las columnas estructurales corresponden al
+número de nodos del escenario ($n{=}2$).}
+\label{tab:behav}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrrr}
+\toprule
+escenario & brazo & tokens & mensajes & latencia (ms) & fuga & procedencia \\
+\midrule
+\multirow{2}{*}{software-org}
+ & \gcp{} & $678{,}4{\pm}5{,}8$  & $1{,}0{\pm}0{,}0$ & $6268{\pm}482$  & $0{,}0$ & $1{,}0$ \\
+ & \ata{} & $685{,}4{\pm}3{,}4$  & $1{,}0{\pm}0{,}0$ & $5986{\pm}1168$ & $0{,}0$ & $0{,}0$ \\
+\midrule
+\multirow{2}{*}{supply-chain}
+ & \gcp{} & $707{,}6{\pm}3{,}5$   & $1{,}0{\pm}0{,}0$ & $6278{\pm}1632$ & $0{,}5$ & $1{,}0$ \\
+ & \ata{} & $901{,}4{\pm}229{,}2$ & $1{,}4{\pm}0{,}5$ & $7718{\pm}2678$ & $1{,}0$ & $0{,}0$ \\
+\midrule
+\multirow{2}{*}{marketplace$^\dagger$}
+ & \gcp{} & $2425{\pm}1001$ & $2{,}8{\pm}0{,}7$ & $12617{\pm}3757$ & $0{,}0$ & $1{,}0$ \\
+ & \ata{} & $2431{\pm}1082$ & $2{,}8{\pm}0{,}7$ & $11941{\pm}4304$ & $0{,}0$ & $0{,}0$ \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\footnotesize $^\dagger$ las filas de marketplace agregan $n\in\{2,5,10\}$; el
+éxito fue $0{,}3{\pm}0{,}5$ en ambos brazos (véase la
+Sección~\ref{sec:threats}). Use la curva estructural (Tabla~\ref{tab:struct}), no
+estas filas de comportamiento con $n$ mezclado, para la afirmación de
+acoplamiento.
+\end{table*}
+
+\subsection{Fuga}
+El panorama de la fuga requiere cuidado. En \emph{supply-chain}, donde el rol de
+logística está autorizado a leer los nodos de ambos propietarios, el brazo de paso
+de mensajes filtró cada canario de alcance del propietario (tasa $1{,}0$) mientras
+que \gcp{} filtró la mitad en promedio ($0{,}5$); como ambos brazos están
+autorizados a leer el contenido, esta brecha refleja cómo cada sustrato expone el
+contenido al modelo más que una decisión de control. En \emph{software-org}, el
+caso de control más limpio, la fuga \emph{observada} fue $0{,}0$ en ambos brazos
+---pero por una razón instructiva: con este modelo el agente satisfizo la tarea de
+resumen público consultando solo el nodo público (mensajes $=1{,}0$) y nunca
+solicitó el nodo confidencial, así que la ruta de fuga no se ejercitó. \gcp{}
+habría \emph{denegado} esa lectura por construcción de haber ocurrido (y registrado
+la denegación); la tarjeta gruesa del brazo de paso de mensajes la habría
+respondido. La fuga arquitectónica es, por tanto, real pero \emph{latente} en esta
+ejecución, y no afirmamos una victoria de fuga de comportamiento observada en
+software-org. La garantía estructural ---denegar por defecto más denegación
+auditada--- es lo que \gcp{} provee, independientemente de si un modelo dado
+sondea la frontera.
+
+\section{Discusión y Amenazas a la Validez}
+\label{sec:threats}
+
+\paragraph{Un solo modelo, cinco semillas.} Los resultados de comportamiento usan
+un único modelo de capa gratuita (\texttt{gpt-oss-120b}) sobre cinco semillas. Por
+eso los presentamos como un piloto. Los resultados de acoplamiento estructural y de
+completitud de procedencia \emph{no} dependen del modelo ---el primero es
+determinista, el segundo arquitectónico--- así que son robustos a esta limitación;
+los resultados de tokens y latencia deberían replicarse entre modelos antes de
+tratarse como generales.
+
+\paragraph{Fuga latente frente a observada.} Como detalla la
+Sección~\ref{sec:results}, la fuga de software-org a favor de \gcp{} no se observó
+en el comportamiento porque el modelo no sondeó el nodo confidencial. Esta es una
+limitación genuina de la medición de fuga de comportamiento: depende de que el
+agente ejercite la ruta. La mitigamos reportando también la garantía arquitectónica
+y la procedencia de las denegaciones, y el banco de pruebas incluye una prueba
+hermética de consulta forzada que ejercita la ruta de fuga directamente.
+
+\paragraph{La fuga es una cota inferior.} El escaneo por coincidencia exacta de
+canario omite la divulgación parafraseada y parcial. Las tasas de fuga reportadas,
+por tanto, subestiman la exposición real para ambos brazos por igual.
+
+\paragraph{Dificultad de la tarea de mercado.} El éxito de la tarea de mercado fue
+bajo ($0{,}3$) para \emph{ambos} brazos: \texttt{gpt-oss-120b} a menudo no logró
+identificar al vendedor más barato. Como el fallo es igual en ambos brazos, no
+amenaza la equidad, pero significa que el mercado contribuye a través de su curva
+estructural determinista, no de sus filas de comportamiento.
+
+\paragraph{Ruido de la capa gratuita.} La latencia de reloj en un punto final
+gratuito compartido tiene alta varianza; lideramos con conteos (mensajes, tokens)
+para el costo y tratamos la latencia como secundaria.
+
+\paragraph{Validez de constructo de la línea base.} Una línea base débil haría
+vacua la comparación. El brazo \ata{} ejecuta servidores reales, el mismo cerebro y
+la misma tarea, y se construyó con igual cuidado; sus desventajas (sin compuerta de
+lectura, sin sumidero de auditoría, topología por pares) son intrínsecas al paso de
+mensajes, no artefactos de un hombre de paja.
+
+\section{Limitaciones y Trabajo Futuro}
+La evaluación debería extenderse a múltiples modelos y más semillas, con pruebas de
+significancia sobre las diferencias de tokens y latencia. Quedan dos capacidades
+diseñadas pero no evaluadas: una capa de \emph{delegación de tareas} con capacidad
+más estricta sobre la misma ruta de lectura primero, y un \emph{modelo formal con
+una propiedad ejecutable de no fuga} (un principal nunca lee más allá de la política
+bajo políticas y principales aleatorios), que elevaría el argumento de fuga de
+medido a probado. Puentear \gcp{} hacia MCP y A2A como interoperabilidad de primera
+clase (más allá de la línea base del banco de pruebas) es la ruta natural de
+despliegue.
+
+\section{Conclusión}
+Argumentamos, y dimos evidencia preliminar controlada por equidad, de que la
+federación de contexto con lectura primero y control por rol supera al paso de
+mensajes punto a punto en sistemas multiagente basados en LLM en acoplamiento,
+fuga y costo con igual éxito de tarea. El acoplamiento mejora de $\bigoh(n^2)$ a
+$\bigoh(n)$ con esfuerzo de integración marginal constante; la procedencia es
+completa por construcción en lugar de ausente; y el costo nunca es peor y a veces
+es mejor. La arquitectura convierte la prevención de fugas de una cuestión de
+discreción del emisor en una compuerta de lectura que deniega por defecto y se
+audita. Los resultados más fuertes ---acoplamiento y procedencia--- son
+independientes del modelo; los resultados de costo y fuga son un piloto específico
+de un modelo que invita a la replicación.
+
+\section*{Disponibilidad}
+El banco de pruebas, los escenarios, las semillas y el informe de evaluación están
+disponibles en el repositorio del proyecto Graph Context Protocol.
+
+\bibliographystyle{unsrtnat}
+\bibliography{refs}
+
+\end{document}
