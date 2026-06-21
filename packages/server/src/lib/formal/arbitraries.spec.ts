@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
     accessPolicyArb,
     authorized,
+    delegationAuthorized,
+    delegationPrincipalArb,
+    hasDelegateCapability,
     principalArb,
     roleChild,
 } from "./arbitraries";
@@ -16,6 +19,30 @@ describe("formal arbitraries", () => {
         const verdicts = samples.map((s) => authorized(s.policy, s.principal));
         expect(verdicts.some((v) => v === true)).toBe(true);
         expect(verdicts.some((v) => v === false)).toBe(true);
+    });
+
+    it("produces both delegation-authorized and -unauthorized draws (non-vacuous)", () => {
+        const samples = fc.sample(
+            fc.record({
+                policy: accessPolicyArb,
+                principal: delegationPrincipalArb,
+            }),
+            300,
+        );
+        const verdicts = samples.map((s) =>
+            delegationAuthorized(s.policy, s.principal),
+        );
+        // both branches of the no-leak property are exercised
+        expect(verdicts.some((v) => v === true)).toBe(true);
+        expect(verdicts.some((v) => v === false)).toBe(true);
+        // and a read-authorized-but-delegate-incapable case exists (strictly stronger)
+        expect(
+            samples.some(
+                (s) =>
+                    authorized(s.policy, s.principal) &&
+                    !hasDelegateCapability(s.principal),
+            ),
+        ).toBe(true);
     });
 
     it("reference predicate honors inherited capabilities", () => {

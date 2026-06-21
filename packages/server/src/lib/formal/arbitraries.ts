@@ -16,6 +16,7 @@ import {
     type DenialMode,
     type RoleDefinition,
     type RoleId,
+    SystemCapabilities,
 } from "@graph-context-protocol/core";
 import fc from "fast-check";
 import type { Principal } from "../auth/types";
@@ -118,6 +119,46 @@ export function authorized(
             : []),
     ]);
     return policy.requiredCapabilities.every((c) => effective.has(c));
+}
+
+/** The capability a principal must additionally hold to delegate a task. */
+export const DELEGATE_CAP: CapabilityId = SystemCapabilities.DELEGATE_TASK;
+
+/**
+ * principalArb, but with cap:delegate-task added to direct capabilities about
+ * half the time — so both delegate-capable and delegate-incapable principals
+ * (including read-authorized ones lacking the delegate cap) occur frequently.
+ */
+export const delegationPrincipalArb: fc.Arbitrary<Principal> = fc
+    .tuple(principalArb, fc.boolean())
+    .map(([p, withDelegate]) =>
+        withDelegate
+            ? ({
+                  ...p,
+                  capabilities: [...p.capabilities, DELEGATE_CAP],
+              } as Principal)
+            : p,
+    );
+
+/** True iff the principal holds cap:delegate-task directly or via its role chain. */
+export function hasDelegateCapability(principal: Principal): boolean {
+    if (principal.capabilities.includes(DELEGATE_CAP)) return true;
+    return principal.role
+        ? principal.role
+              .getEffectiveCapabilities()
+              .some((c) => c.id === DELEGATE_CAP)
+        : false;
+}
+
+/**
+ * Delegation admission oracle. Delegation is strictly stronger than read: the
+ * principal must satisfy the read policy AND hold cap:delegate-task.
+ */
+export function delegationAuthorized(
+    policy: AccessPolicyDescriptor,
+    principal: Principal,
+): boolean {
+    return authorized(policy, principal) && hasDelegateCapability(principal);
 }
 
 /** fast-check run options: bounded in CI, heavier via FC_NUM_RUNS; FC_SEED to repro. */
