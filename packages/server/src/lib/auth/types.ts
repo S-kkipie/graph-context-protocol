@@ -52,7 +52,8 @@ export type AuthAction =
     | "receive-message"
     | "query-knowledge"
     | "sync-knowledge"
-    | "discover-agent";
+    | "discover-agent"
+    | "delegate";
 
 /**
  * Authorization request for a principal action.
