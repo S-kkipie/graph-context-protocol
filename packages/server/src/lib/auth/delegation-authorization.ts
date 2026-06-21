@@ -12,8 +12,8 @@
  */
 
 import {
-    type GraphNode,
     fail,
+    type GraphNode,
     type Result,
     SystemCapabilities,
     succeed,

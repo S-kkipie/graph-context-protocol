@@ -48,6 +48,12 @@ export type {
     PropagationOptions,
     PropagationResult,
 } from "./lib/context/context-types";
+export type {
+    DelegationContractVersion,
+    DelegationRequest,
+    DelegationResult,
+    DelegationStatus,
+} from "./lib/delegation";
 // Delegation domain
 export {
     createDelegationRequest,
@@ -56,12 +62,6 @@ export {
     DelegationRequestSchema,
     DelegationResultSchema,
     DelegationStatusSchema,
-} from "./lib/delegation";
-export type {
-    DelegationContractVersion,
-    DelegationRequest,
-    DelegationResult,
-    DelegationStatus,
 } from "./lib/delegation";
 export {
     discoverAgents,

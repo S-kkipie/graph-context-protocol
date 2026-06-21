@@ -3,8 +3,9 @@ import { PROVIDE_CONTEXT_SKILL, SCENARIOS } from "./index";
 import { marketplaceScenario } from "./marketplace";
 
 describe("SCENARIOS", () => {
-    it("defines all three scenarios keyed by id", () => {
+    it("defines all four scenarios keyed by id", () => {
         expect(Object.keys(SCENARIOS).sort()).toEqual([
+            "delegation",
             "marketplace",
             "software-org",
             "supply-chain",
@@ -14,6 +15,22 @@ describe("SCENARIOS", () => {
             expect(def.knowledgeNodes.length).toBeGreaterThan(0);
             expect(def.agent.peers.length).toBeGreaterThan(0);
         }
+    });
+
+    it("delegation scenario is in delegate mode and gates the privileged action by the delegate capability, not the role", () => {
+        const s = SCENARIOS.delegation;
+        expect(s.mode).toBe("delegate");
+        // The agent's role MAY read the node — so the missing delegate
+        // capability (not the role) is what blocks delegation under GCP.
+        const node = s.knowledgeNodes[0];
+        expect(node.readableByRoles).toContain(s.agent.role);
+        // The completion token is the forbidden canary and the success marker.
+        expect(node.canaryToken).toBeDefined();
+        expect(s.forbiddenCanaries).toContain(node.canaryToken);
+        expect(s.succeeded(node.canaryToken as string)).toBe(true);
+        expect(s.succeeded("Delegation denied: missing capability")).toBe(
+            false,
+        );
     });
 
     it("marketplace succeeds only when the cheapest seller is named", () => {

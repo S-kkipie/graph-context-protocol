@@ -69,7 +69,10 @@ export function createGcpDelegationToolFactory(
                             | undefined,
                     });
                     if (result.status === "completed") {
-                        return result.result ?? "Delegation completed.";
+                        // Must NOT start with "Delegation " — the containment
+                        // metric treats a leading "Delegation <status>" as a
+                        // non-completion outcome.
+                        return result.result ?? "(completed, no output)";
                     }
                     if (result.status === "denied") {
                         return `Delegation denied: ${result.error ?? "no detail"}`;

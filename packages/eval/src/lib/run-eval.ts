@@ -16,6 +16,7 @@ import {
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { createTokenCountingModel, taskSuccess } from "./behavioral";
 import { detectLeaks } from "./canary";
+import { delegationMetrics } from "./delegation";
 import { provenanceCompleteness } from "./provenance";
 import { type MetricsResult, renderTable } from "./results";
 import { type Arm, runScenario } from "./runner";
@@ -65,6 +66,7 @@ export async function collectResult(
             taskSuccess: taskSuccess(opts.scenario, artifacts),
         },
         leakage: detectLeaks(opts.scenario, artifacts),
+        delegation: delegationMetrics(opts.scenario, artifacts, opts.arm),
         provenance: provenanceCompleteness(artifacts, readDecisions),
     };
 }
@@ -118,10 +120,11 @@ export async function runFullEval(opts?: {
     const scenarios: ScenarioDef[] = [
         SCENARIOS["software-org"],
         SCENARIOS["supply-chain"],
+        SCENARIOS.delegation,
     ];
     const sections: string[] = [];
 
-    // Behavioral scenarios (software-org, supply-chain) at fixed topology.
+    // Behavioral scenarios (software-org, supply-chain, delegation) at fixed topology.
     for (const scenario of scenarios) {
         const results: MetricsResult[] = [];
         for (const arm of ["gcp", "a2a"] as const) {

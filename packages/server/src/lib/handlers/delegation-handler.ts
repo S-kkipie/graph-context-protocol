@@ -12,14 +12,14 @@
  */
 
 import {
-    type DelegationRequest,
-    DelegationRequestSchema,
-    type DelegationResult,
-    type DelegationStatus,
     createDelegationResult,
     createMessageHeader,
     createProtocolMessage,
     createReadProvenance,
+    type DelegationRequest,
+    DelegationRequestSchema,
+    type DelegationResult,
+    type DelegationStatus,
     type Graph,
     type GraphNode,
     type ProtocolMessage,

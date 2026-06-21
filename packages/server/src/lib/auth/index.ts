@@ -1,4 +1,8 @@
 export {
+    authorizeTaskDelegation,
+    DELEGATE_TASK_CAPABILITY,
+} from "./delegation-authorization";
+export {
     createAllowAllAuthProvider,
     createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
@@ -8,10 +12,6 @@ export type {
     NodeAuthorizationOptions,
 } from "./node-authorization";
 export { authorizeKnowledgeNodeAccess } from "./node-authorization";
-export {
-    authorizeTaskDelegation,
-    DELEGATE_TASK_CAPABILITY,
-} from "./delegation-authorization";
 
 export type {
     AuthAction,

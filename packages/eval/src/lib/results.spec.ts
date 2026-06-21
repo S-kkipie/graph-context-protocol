@@ -29,6 +29,12 @@ function mk(
             taskSuccess: success,
         },
         leakage: { canariesReached: 0, totalCanaries: 0, leakageRate: 0 },
+        delegation: {
+            attempts: 0,
+            denied: 0,
+            executed: 0,
+            unauthorizedExecuted: 0,
+        },
         provenance: arm === "gcp" ? 1 : 0,
     };
 }

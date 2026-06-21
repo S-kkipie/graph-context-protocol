@@ -10,7 +10,6 @@
 import {
     type AccessPolicyDescriptor,
     createDelegationRequest,
-    type DelegationResult,
     createGraph,
     createKnowledgeNode,
     createMessageHeader,
@@ -18,6 +17,7 @@ import {
     createProtocolMessage,
     createRequesterDescriptor,
     createRole,
+    type DelegationResult,
     type ProtocolMessage,
     succeed,
 } from "@graph-context-protocol/core";

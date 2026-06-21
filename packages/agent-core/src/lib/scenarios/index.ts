@@ -1,3 +1,4 @@
+import { delegation } from "./delegation";
 import { marketplace } from "./marketplace";
 import { softwareOrg } from "./software-org";
 import { supplyChain } from "./supply-chain";
@@ -7,6 +8,7 @@ export const SCENARIOS: Record<ScenarioId, ScenarioDef> = {
     marketplace,
     "software-org": softwareOrg,
     "supply-chain": supplyChain,
+    delegation,
 };
 
 export { marketplaceScenario } from "./marketplace";
@@ -16,4 +18,5 @@ export {
     PROVIDE_CONTEXT_SKILL,
     type ScenarioDef,
     type ScenarioId,
+    type ScenarioMode,
 } from "./types";

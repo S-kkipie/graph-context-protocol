@@ -45,9 +45,15 @@ class MockChatModel extends BaseChatModel {
     ): Promise<ChatResult> {
         const toolsRan = messages.some((m) => m.getType() === "tool");
         if (!toolsRan && this.boundTools.length > 0) {
+            // Provide both keys so every bound tool's schema is satisfied:
+            // read tools take { question }, delegation tools take { task }.
+            // Zod strips the key each schema does not declare.
             const toolCalls = this.boundTools.map((t, i) => ({
                 name: t.name as string,
-                args: { question: "what is your price?" },
+                args: {
+                    question: "what is your price?",
+                    task: "execute the runbook",
+                },
                 id: `call_${i}`,
                 type: "tool_call" as const,
             }));

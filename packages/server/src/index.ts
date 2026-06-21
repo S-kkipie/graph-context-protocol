@@ -53,17 +53,17 @@ export type { ServerError, ServerErrorCode } from "./lib/errors";
 export { createServerError, ServerErrorClass } from "./lib/errors";
 export type { ResolveContextQueryOptions } from "./lib/federation/index";
 export { resolveContextQuery } from "./lib/federation/index";
+export type {
+    DelegationExecutionContext,
+    DelegationExecutor,
+    DelegationHandlerDependencies,
+} from "./lib/handlers/index";
 // Protocol handlers
 export {
     createContextQueryHandler,
     createDelegationHandler,
     createHandlerRegistry,
     extractCredentials,
-} from "./lib/handlers/index";
-export type {
-    DelegationExecutionContext,
-    DelegationExecutor,
-    DelegationHandlerDependencies,
 } from "./lib/handlers/index";
 export type {
     HandlerContext,

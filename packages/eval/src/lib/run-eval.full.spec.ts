@@ -20,31 +20,37 @@ const ENABLED =
     process.env.RUN_EVAL === "1" && !!process.env.OPENROUTER_API_KEY;
 
 describe.skipIf(!ENABLED)("full eval (real LLM)", () => {
-    it("runs every scenario on both arms and writes a report", async () => {
-        const seeds = Number(process.env.EVAL_SEEDS ?? "5");
-        const anchors = process.env.EVAL_ANCHORS
-            ? process.env.EVAL_ANCHORS.split(",").map((s) => Number(s.trim()))
-            : undefined;
-        const report = await runFullEval({ seeds, anchors });
+    it(
+        "runs every scenario on both arms and writes a report",
+        async () => {
+            const seeds = Number(process.env.EVAL_SEEDS ?? "5");
+            const anchors = process.env.EVAL_ANCHORS
+                ? process.env.EVAL_ANCHORS.split(",").map((s) =>
+                      Number(s.trim()),
+                  )
+                : undefined;
+            const report = await runFullEval({ seeds, anchors });
 
-        const dir = join(__dirname, "..", "..", "results");
-        mkdirSync(dir, { recursive: true });
-        const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const model = (process.env.EVAL_MODEL ?? "default").replace(
-            /[^a-zA-Z0-9_-]/g,
-            "_",
-        );
-        const file = join(dir, `eval-report-${stamp}-${model}.md`);
-        const header = [
-            "# GCP vs A2A — empirical evaluation",
-            "",
-            `- model: \`${process.env.EVAL_MODEL ?? "(default)"}\``,
-            `- seeds per arm: ${seeds}`,
-            `- generated: ${stamp}`,
-            "",
-        ].join("\n");
-        writeFileSync(file, header + report, "utf8");
-        // biome-ignore lint/suspicious/noConsole: surface the artifact path
-        console.log(`\n[eval] report written: ${file}\n`);
-    }, 60 * 60 * 1000);
+            const dir = join(__dirname, "..", "..", "results");
+            mkdirSync(dir, { recursive: true });
+            const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+            const model = (process.env.EVAL_MODEL ?? "default").replace(
+                /[^a-zA-Z0-9_-]/g,
+                "_",
+            );
+            const file = join(dir, `eval-report-${stamp}-${model}.md`);
+            const header = [
+                "# GCP vs A2A — empirical evaluation",
+                "",
+                `- model: \`${process.env.EVAL_MODEL ?? "(default)"}\``,
+                `- seeds per arm: ${seeds}`,
+                `- generated: ${stamp}`,
+                "",
+            ].join("\n");
+            writeFileSync(file, header + report, "utf8");
+            // biome-ignore lint/suspicious/noConsole: surface the artifact path
+            console.log(`\n[eval] report written: ${file}\n`);
+        },
+        60 * 60 * 1000,
+    );
 });

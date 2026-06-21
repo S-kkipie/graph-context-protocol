@@ -135,8 +135,7 @@ describe("createDelegationHandler", () => {
             localNodeId: "node:local",
             graph,
             connections: {} as unknown as HandlerContext["connections"],
-            externalAgents:
-                {} as unknown as HandlerContext["externalAgents"],
+            externalAgents: {} as unknown as HandlerContext["externalAgents"],
             knowledgeSources:
                 {} as unknown as HandlerContext["knowledgeSources"],
             auth: allowAuthn(delegator),
@@ -171,8 +170,7 @@ describe("createDelegationHandler", () => {
             localNodeId: "node:local",
             graph,
             connections: {} as unknown as HandlerContext["connections"],
-            externalAgents:
-                {} as unknown as HandlerContext["externalAgents"],
+            externalAgents: {} as unknown as HandlerContext["externalAgents"],
             knowledgeSources:
                 {} as unknown as HandlerContext["knowledgeSources"],
             auth: allowAuthn(readOnly),
@@ -206,8 +204,7 @@ describe("createDelegationHandler", () => {
             localNodeId: "node:local",
             graph,
             connections: {} as unknown as HandlerContext["connections"],
-            externalAgents:
-                {} as unknown as HandlerContext["externalAgents"],
+            externalAgents: {} as unknown as HandlerContext["externalAgents"],
             knowledgeSources:
                 {} as unknown as HandlerContext["knowledgeSources"],
             auth: allowAuthn(delegator),
@@ -252,8 +249,7 @@ describe("createDelegationHandler", () => {
             localNodeId: "node:local",
             graph,
             connections: {} as unknown as HandlerContext["connections"],
-            externalAgents:
-                {} as unknown as HandlerContext["externalAgents"],
+            externalAgents: {} as unknown as HandlerContext["externalAgents"],
             knowledgeSources:
                 {} as unknown as HandlerContext["knowledgeSources"],
             auth: allowAuthn(delegator),

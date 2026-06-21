@@ -7,6 +7,7 @@
  */
 
 import type { LeakageMetrics } from "./canary";
+import type { DelegationMetrics } from "./delegation";
 import type { Arm } from "./runner";
 import type { StructuralMetrics } from "./topology";
 
@@ -27,6 +28,7 @@ export interface MetricsResult {
     readonly structural: StructuralMetrics;
     readonly behavioral: BehavioralSample;
     readonly leakage: LeakageMetrics;
+    readonly delegation: DelegationMetrics;
     readonly provenance: number;
 }
 
@@ -99,6 +101,24 @@ export function renderTable(
     lines.push(`| leakageRate | ${leak("gcp")} | ${leak("a2a")} |`);
     const prov = (arm: Arm) => byArm(arm)[0]?.provenance ?? 0;
     lines.push(`| provenanceCompleteness | ${prov("gcp")} | ${prov("a2a")} |`);
+    // Delegation containment: only meaningful for a delegation-mode scenario
+    // (attempts > 0 on at least one arm); otherwise the rows are all zero.
+    const deleg = (arm: Arm): DelegationMetrics =>
+        byArm(arm)[0]?.delegation ?? {
+            attempts: 0,
+            denied: 0,
+            executed: 0,
+            unauthorizedExecuted: 0,
+        };
+    if (deleg("gcp").attempts + deleg("a2a").attempts > 0) {
+        const row = (label: string, field: keyof DelegationMetrics) =>
+            lines.push(
+                `| ${label} | ${deleg("gcp")[field]} | ${deleg("a2a")[field]} |`,
+            );
+        row("delegationAttempts", "attempts");
+        row("delegationDenied", "denied");
+        row("unauthorizedDelegationsExecuted", "unauthorizedExecuted");
+    }
     lines.push("");
     return lines.join("\n");
 }

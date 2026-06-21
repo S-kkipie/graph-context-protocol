@@ -78,9 +78,7 @@ function request(): DelegationRequest {
     );
 }
 
-function fetchVia(
-    handler: (req: Request) => Promise<Response>,
-): typeof fetch {
+function fetchVia(handler: (req: Request) => Promise<Response>): typeof fetch {
     return (async (url, init) =>
         handler(new Request(String(url), init ?? undefined))) as typeof fetch;
 }

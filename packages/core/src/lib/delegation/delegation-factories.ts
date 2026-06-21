@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { RequesterDescriptorSchema } from "../context";
 import type { CapabilityId, Metadata, NodeId } from "../types";
-import {
-    CapabilityIdSchema,
-    MetadataSchema,
-    NodeIdSchema,
-} from "../types";
+import { CapabilityIdSchema, MetadataSchema, NodeIdSchema } from "../types";
 import type {
     DelegationContractVersion,
     DelegationRequest,

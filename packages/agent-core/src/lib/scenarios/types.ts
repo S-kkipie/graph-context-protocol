@@ -10,7 +10,18 @@
 /** The single A2A skill a consuming agent requests from a provider. */
 export const PROVIDE_CONTEXT_SKILL = "provide-context";
 
-export type ScenarioId = "marketplace" | "software-org" | "supply-chain";
+export type ScenarioId =
+    | "marketplace"
+    | "software-org"
+    | "supply-chain"
+    | "delegation";
+
+/**
+ * How the agent consults its peers:
+ * - "read" (default): read-first context queries.
+ * - "delegate": delegate a task for the peer to perform (stricter capability).
+ */
+export type ScenarioMode = "read" | "delegate";
 
 export interface KnowledgeNodeDef {
     readonly nodeId: string;
@@ -38,6 +49,8 @@ export interface AgentNodeDef {
 
 export interface ScenarioDef {
     readonly id: ScenarioId;
+    /** Peer-consultation mode. Defaults to "read" when omitted. */
+    readonly mode?: ScenarioMode;
     readonly knowledgeNodes: ReadonlyArray<KnowledgeNodeDef>;
     readonly agent: AgentNodeDef;
     /** True iff the agent accomplished the task. */

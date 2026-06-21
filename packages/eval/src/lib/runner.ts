@@ -28,6 +28,7 @@ import {
 import type { ReadProvenance } from "@graph-context-protocol/core";
 import { createRole } from "@graph-context-protocol/core";
 import {
+    createGcpDelegationToolFactory,
     createGcpNode,
     createGcpPeerContextToolFactory,
 } from "@graph-context-protocol/scenario";
@@ -36,6 +37,7 @@ import {
     createFetchHandler,
     createInMemoryAuditSink,
     createStaticTokenAuthProvider,
+    delegateRemoteTask,
     type Principal,
     queryRemoteContext,
 } from "@graph-context-protocol/server";
@@ -88,6 +90,7 @@ function recordingFactory(
 
 async function runGcp(opts: RunOptions): Promise<RunArtifacts> {
     const { scenario } = opts;
+    const delegateMode = scenario.mode === "delegate";
     const dir = mkdtempSync(join(tmpdir(), "eval-gcp-"));
     const auditSink: AuditSink = createInMemoryAuditSink();
     try {
@@ -125,7 +128,19 @@ async function runGcp(opts: RunOptions): Promise<RunArtifacts> {
                         },
                         knowledge: { filePath, tags: [...node.tags] },
                     },
-                    { authProvider, auditSink },
+                    {
+                        authProvider,
+                        auditSink,
+                        // In delegate mode the node accepts delegations; an
+                        // authorized delegation runs this executor (returns the
+                        // node's work product). Under the eval principal this is
+                        // never reached — the gate denies the missing capability.
+                        ...(delegateMode
+                            ? {
+                                  delegationExecutor: async () => node.content,
+                              }
+                            : {}),
+                    },
                 );
                 return {
                     nodeId: node.nodeId,
@@ -149,17 +164,19 @@ async function runGcp(opts: RunOptions): Promise<RunArtifacts> {
         }));
         const metrics = createCouplingMetrics();
         const transcript: { peerId: string; output: string }[] = [];
+        const baseFactory = delegateMode
+            ? createGcpDelegationToolFactory({
+                  delegateFn: (o) => delegateRemoteTask({ ...o, fetchImpl }),
+              })
+            : createGcpPeerContextToolFactory({
+                  queryFn: (o) => queryRemoteContext({ ...o, fetchImpl }),
+              });
         const agent = createTaskAgent({
             model: opts.model,
             llm: opts.llm ?? {},
             systemPrompt: scenario.agent.systemPrompt,
             peers,
-            toolFactory: recordingFactory(
-                createGcpPeerContextToolFactory({
-                    queryFn: (o) => queryRemoteContext({ ...o, fetchImpl }),
-                }),
-                transcript,
-            ),
+            toolFactory: recordingFactory(baseFactory, transcript),
             metrics,
         });
         const answer = await runTaskAgent(agent, scenario.agent.goal);
