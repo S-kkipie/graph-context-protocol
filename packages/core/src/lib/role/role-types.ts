@@ -121,4 +121,5 @@ export const SystemCapabilities = {
     DISCOVER_KNOWLEDGE: "cap:discover-knowledge",
     QUERY_REMOTE_CONTEXT: "cap:query-remote-context",
     DISCOVER_PEERS: "cap:discover-peers",
+    DELEGATE_TASK: "cap:delegate-task",
 } as const;
