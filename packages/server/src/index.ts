@@ -71,6 +71,8 @@ export type {
     HandlerResult,
     ProtocolHandler,
 } from "./lib/handlers/types";
+export type { DelegateRemoteTaskOptions } from "./lib/http/delegation-client";
+export { delegateRemoteTask } from "./lib/http/delegation-client";
 export type { QueryRemoteContextOptions } from "./lib/http/fetch-client";
 export { queryRemoteContext } from "./lib/http/fetch-client";
 export type { FetchHandlerOptions } from "./lib/http/fetch-handler";
