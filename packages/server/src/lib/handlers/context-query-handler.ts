@@ -25,49 +25,10 @@ import {
     type Result,
     succeed,
 } from "@graph-context-protocol/core";
-import type { Credentials, Principal } from "../auth/types";
+import type { Principal } from "../auth/types";
 import type { ServerError } from "../errors";
+import { extractCredentials } from "./extract-credentials";
 import type { HandlerContext, HandlerResult, ProtocolHandler } from "./types";
-
-const METADATA_CREDENTIALS_KEY = "gcp.credentials" as const;
-const METADATA_AUTH_KEY = "auth" as const;
-
-function extractCredentials(
-    context: HandlerContext,
-    message: ProtocolMessage,
-): Credentials | undefined {
-    const raw =
-        context.inboundMetadata[METADATA_CREDENTIALS_KEY] ??
-        context.inboundMetadata[METADATA_AUTH_KEY];
-
-    if (raw !== undefined) {
-        return normalizeCredentials(raw);
-    }
-
-    const headerRaw =
-        message.header.metadata[METADATA_CREDENTIALS_KEY] ??
-        message.header.metadata[METADATA_AUTH_KEY];
-
-    if (headerRaw !== undefined) {
-        return normalizeCredentials(headerRaw);
-    }
-
-    return undefined;
-}
-
-function normalizeCredentials(raw: unknown): Credentials | undefined {
-    if (
-        typeof raw === "object" &&
-        raw !== null &&
-        "type" in raw &&
-        "value" in raw &&
-        typeof (raw as Record<string, unknown>).type === "string"
-    ) {
-        return raw as Credentials;
-    }
-
-    return undefined;
-}
 
 function resolveTargetNode(
     graph: Graph | undefined,

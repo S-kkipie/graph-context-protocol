@@ -25,9 +25,11 @@ export type {
 // Authentication
 export {
     authorizeKnowledgeNodeAccess,
+    authorizeTaskDelegation,
     createAllowAllAuthProvider,
     createCapabilityAuthProvider,
     createStaticTokenAuthProvider,
+    DELEGATE_TASK_CAPABILITY,
 } from "./lib/auth/index";
 // Cache
 export { createMemoryCacheStore } from "./lib/cache/index";
@@ -54,7 +56,14 @@ export { resolveContextQuery } from "./lib/federation/index";
 // Protocol handlers
 export {
     createContextQueryHandler,
+    createDelegationHandler,
     createHandlerRegistry,
+    extractCredentials,
+} from "./lib/handlers/index";
+export type {
+    DelegationExecutionContext,
+    DelegationExecutor,
+    DelegationHandlerDependencies,
 } from "./lib/handlers/index";
 export type {
     HandlerContext,

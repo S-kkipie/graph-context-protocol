@@ -13,6 +13,7 @@ import { createConnectionManager } from "../connection/implementation";
 import type { ServerError } from "../errors";
 import { createServerError } from "../errors";
 import { createContextQueryHandler } from "../handlers/context-query-handler";
+import { createDelegationHandler } from "../handlers/delegation-handler";
 import { createHandlerRegistry } from "../handlers/implementation";
 import type { HandlerRegistry } from "../handlers/types";
 import { createKnowledgeSourceRegistry } from "../knowledge/implementation";
@@ -291,11 +292,20 @@ export function createGraphContextServer(
 }
 
 function createDefaultHandlerRegistry(): HandlerRegistry {
-    const registry = createHandlerRegistry();
-    const registered = registry.register(createContextQueryHandler());
+    let registry = createHandlerRegistry();
 
-    if (registered.success) {
-        return registered.data;
+    // Register context-query, then the delegation handler. The default
+    // delegation handler has no executor wired, so an authorized delegation
+    // returns `error`; nodes that accept delegations pass a custom `handlers`
+    // registry built with an executor (see the scenario node wiring).
+    for (const handler of [
+        createContextQueryHandler(),
+        createDelegationHandler(),
+    ]) {
+        const registered = registry.register(handler);
+        if (registered.success) {
+            registry = registered.data;
+        }
     }
 
     return registry;
