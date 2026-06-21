@@ -10,6 +10,8 @@ export {
     GcpNodeConfigSchema,
     GcpPeerRefSchema,
 } from "./lib/config";
+export type { GcpDelegationToolOptions } from "./lib/gcp-delegation-tool";
+export { createGcpDelegationToolFactory } from "./lib/gcp-delegation-tool";
 export { createGcpNode } from "./lib/gcp-node";
 export type { GcpPeerContextToolOptions } from "./lib/gcp-peer-context-tool";
 export { createGcpPeerContextToolFactory } from "./lib/gcp-peer-context-tool";

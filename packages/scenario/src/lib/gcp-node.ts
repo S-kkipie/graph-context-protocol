@@ -14,13 +14,18 @@ import {
 import {
     type AuditSink,
     type AuthProvider,
+    createContextQueryHandler,
     createCouplingMetrics,
+    createDelegationHandler,
     createGraphContextServer,
+    createHandlerRegistry,
     createHttpTransport,
     createKnowledgeSourceRegistry,
     createPeerRegistry,
     createTransportRegistry,
+    type DelegationExecutor,
     type GraphContextServer,
+    type HandlerRegistry,
     type ServerDependencies,
 } from "@graph-context-protocol/server";
 import { type GcpNodeConfigInput, GcpNodeConfigSchema } from "./config";
@@ -47,6 +52,31 @@ export interface GcpNodeDependencies {
      * in-memory sink is used.
      */
     readonly auditSink?: AuditSink;
+    /**
+     * Executor that performs an authorized delegated task. When provided, the
+     * node accepts delegations (`action-request`) and runs this executor only
+     * after the delegation gate grants. When omitted, an authorized delegation
+     * returns `error` (the default no-executor handler).
+     */
+    readonly delegationExecutor?: DelegationExecutor;
+}
+
+/** Builds a registry with the context-query handler + delegation handler. */
+function buildHandlerRegistry(executor: DelegationExecutor): HandlerRegistry {
+    let registry = createHandlerRegistry();
+    for (const handler of [
+        createContextQueryHandler(),
+        createDelegationHandler({ executor }),
+    ]) {
+        const registered = registry.register(handler);
+        if (!registered.success) {
+            throw new Error(
+                `Failed to register handler: ${registered.error.message}`,
+            );
+        }
+        registry = registered.data;
+    }
+    return registry;
 }
 
 /**
@@ -139,6 +169,9 @@ export async function createGcpNode(
         metrics,
         ...(deps.authProvider !== undefined ? { auth: deps.authProvider } : {}),
         ...(deps.auditSink !== undefined ? { audit: deps.auditSink } : {}),
+        ...(deps.delegationExecutor !== undefined
+            ? { handlers: buildHandlerRegistry(deps.delegationExecutor) }
+            : {}),
     };
 
     const server = createGraphContextServer(
