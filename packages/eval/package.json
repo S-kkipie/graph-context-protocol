@@ -22,6 +22,7 @@
         "@graph-context-protocol/scenario": "workspace:*",
         "@graph-context-protocol/server": "workspace:*",
         "@langchain/core": "^0.3.0",
+        "@langchain/ollama": "^0.2.4",
         "@modelcontextprotocol/sdk": "^1.18.0",
         "zod": "^4.4.3"
     },

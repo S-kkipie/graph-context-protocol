@@ -8,7 +8,6 @@
  */
 
 import {
-    createOpenRouterLLM,
     marketplaceScenario,
     SCENARIOS,
     type ScenarioDef,
@@ -17,6 +16,7 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import { createTokenCountingModel, taskSuccess } from "./behavioral";
 import { detectLeaks } from "./canary";
 import { delegationMetrics } from "./delegation";
+import { createEvalModel } from "./model-factory";
 import { provenanceCompleteness } from "./provenance";
 import { type MetricsResult, renderTable } from "./results";
 import { type Arm, runScenario } from "./runner";
@@ -54,11 +54,12 @@ export async function collectResult(
     opts: CollectOptions,
 ): Promise<MetricsResult> {
     // Token counting needs a model instance to wrap. When the caller injects a
-    // model (mock/wrapped) use it; otherwise, for real-LLM runs, build the
-    // OpenRouter model here so its usage is counted too (createTaskAgent would
-    // otherwise build it internally and the counter would never attach).
+    // model (mock/wrapped) use it; otherwise, for real-LLM runs, build the eval
+    // model here (OpenRouter or Ollama, selected by env via createEvalModel) so
+    // its usage is counted too (createTaskAgent would otherwise build it
+    // internally and the counter would never attach).
     const base =
-        opts.model ?? (opts.llm ? createOpenRouterLLM(opts.llm) : undefined);
+        opts.model ?? (opts.llm ? createEvalModel(opts.llm) : undefined);
     const counter = base ? createTokenCountingModel(base) : undefined;
     const started = performance.now();
     const artifacts = await runScenario({

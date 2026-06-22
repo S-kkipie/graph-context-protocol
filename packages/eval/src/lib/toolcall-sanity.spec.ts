@@ -13,7 +13,6 @@ import { canDriveToolCalls } from "./toolcall-sanity";
  * A model that NEVER emits a tool call — it always returns a final answer.
  * Stands in for a real model whose API can't drive the ReAct agent's tools.
  */
-// biome-ignore lint/suspicious/noExplicitAny: LangChain tool/binding shapes are loose
 class NoToolModel extends BaseChatModel {
     constructor(params: BaseChatModelParams = {}) {
         super(params);
