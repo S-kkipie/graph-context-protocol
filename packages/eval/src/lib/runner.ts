@@ -57,7 +57,7 @@ export interface RunOptions {
     readonly scenario: ScenarioDef;
     /** Injected model (mock or token-wrapped). When omitted, `llm` is used. */
     readonly model?: BaseChatModel;
-    readonly llm?: { apiKey?: string; model?: string };
+    readonly llm?: { apiKey?: string; model?: string; baseURL?: string };
 }
 
 const TOKEN = "tok:agent";

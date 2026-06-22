@@ -28,7 +28,25 @@ export interface CollectOptions {
     readonly n: number;
     readonly seed: number;
     readonly model?: BaseChatModel;
-    readonly llm?: { apiKey?: string; model?: string };
+    readonly llm?: { apiKey?: string; model?: string; baseURL?: string };
+}
+
+/**
+ * Builds the LLM carrier for a full-eval run. `baseURL` resolution: explicit
+ * argument wins, else `EVAL_BASE_URL` from the environment, else omitted (so
+ * `createOpenRouterLLM` uses its OpenRouter default). Pointing `baseURL` at a
+ * local OpenAI-compatible server (e.g. Ollama `http://localhost:11434/v1`) is
+ * the entire mechanism for evaluating local models — same code path, no
+ * per-arm drift.
+ */
+export function buildLlmConfig(
+    apiKey: string,
+    model: string,
+    baseURL?: string,
+    env: Record<string, string | undefined> = process.env,
+): { apiKey: string; model: string; baseURL?: string } {
+    const resolved = baseURL ?? env.EVAL_BASE_URL;
+    return { apiKey, model, ...(resolved ? { baseURL: resolved } : {}) };
 }
 
 /** Runs one scenario+arm and assembles the full MetricsResult. */
@@ -80,6 +98,7 @@ export async function runFullEval(opts?: {
     sweep?: number[];
     anchors?: number[];
     model?: string;
+    baseURL?: string;
 }): Promise<string> {
     const key = process.env.OPENROUTER_API_KEY;
     if (process.env.RUN_EVAL !== "1" || !key) {
@@ -95,7 +114,7 @@ export async function runFullEval(opts?: {
         opts?.model ??
         process.env.EVAL_MODEL ??
         "meta-llama/llama-3.3-70b-instruct:free";
-    const llm = { apiKey: key, model };
+    const llm = buildLlmConfig(key, model, opts?.baseURL);
     // Throttle between runs to stay under free-tier per-minute rate limits.
     const throttleMs = Number(process.env.EVAL_THROTTLE_MS ?? "4000");
     const sleep = (ms: number) =>
