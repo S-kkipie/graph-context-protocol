@@ -117,7 +117,7 @@ export function createMcpKnowledgeAdapter(
 4. wrap via `createKnowledgeNode(config.id, role, { contentType, content })`,
 5. return `succeed({ sourceId, nodes: [node], raw, metadata })`.
 
-Fail-soft (mirrors markdown adapter): connect/read failure → `fail(createServerError("unavailable" | "not-found", …))`. Capabilities: `["lookup"]` (plus `"search"` only if the MCP server advertises it; YAGNI default `["lookup"]`).
+Fail-soft (mirrors markdown adapter): connect/read failure → `fail(createServerError("knowledge-error", …))` (a valid `ServerErrorCode`; the earlier draft said `"unavailable"`, which is not a member of the union). Capabilities: `["lookup"]` (plus `"search"` only if the MCP server advertises it; YAGNI default `["lookup"]`).
 
 A GCP graph that registers this adapter now federates over an MCP server with
 zero changes to the read path — the bridge is transparent to GCP consumers.
@@ -265,7 +265,7 @@ MCP Client.readResource({uri})
 ## 9. Error handling
 
 - Consume: MCP connect/read failure → fail-soft `ServerError`
-  (`unavailable`/`not-found`); never throws into the GCP read path.
+  (`knowledge-error`); never throws into the GCP read path.
 - Expose: GCP denial → MCP error result (no content), not an exception; GCP
   internal error → MCP error surfaced with code, no content.
 - All transports closed in test teardown; in-memory pairs need no cleanup
