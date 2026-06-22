@@ -32,6 +32,9 @@
       },
       {
         "path": "./packages/eval"
+      },
+      {
+        "path": "./packages/mcp-bridge"
       }
     ]
 }
