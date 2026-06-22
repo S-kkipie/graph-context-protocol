@@ -153,6 +153,83 @@ describe("createGcpMcpServer (expose, gated)", () => {
     });
 });
 
+describe("createGcpMcpServer (expose, gated) — raw-string result shape", () => {
+    it("returns raw-string content when adapter sets raw (liveness on markdown-backed nodes)", async () => {
+        const RAW_CANARY = "RAW-STRING-CANARY-42";
+        const nodeRole = createRole("role:node", "Node", "");
+        const policy = createAccessPolicyDescriptor(
+            ["role:auditor"],
+            [],
+            false,
+            "error",
+        );
+        const knowledgeNode = createKnowledgeNode(
+            KNOWLEDGE_ID,
+            nodeRole,
+            createMetadataWithAccessPolicy(policy, {
+                tags: ["secret"],
+                contentType: "text/markdown",
+            }),
+        );
+        const graph = createGraph("graph:raw-test")
+            .addNode(createAgentNode("node:agent", nodeRole))
+            .addNode(knowledgeNode);
+        // This adapter mirrors createMarkdownKnowledgeAdapter: sets raw to a string
+        const rawAdapter: KnowledgeSourceAdapter = {
+            id: KNOWLEDGE_ID,
+            capabilities: ["lookup"],
+            async query() {
+                return succeed({
+                    sourceId: KNOWLEDGE_ID,
+                    nodes: [
+                        createKnowledgeNode(KNOWLEDGE_ID, nodeRole, {
+                            contentType: "text/markdown",
+                            content: `node body`,
+                        }),
+                    ],
+                    raw: `markdown content ${RAW_CANARY}`,
+                    metadata: {},
+                });
+            },
+        };
+        const registry = createKnowledgeSourceRegistry().register(rawAdapter);
+        if (!registry.success) throw new Error("adapter registration failed");
+        const principal: Principal = {
+            id: "principal:agent",
+            role: createRole("role:auditor", "Auditor", ""),
+            capabilities: [],
+            metadata: {},
+        };
+        const server = createGraphContextServer(
+            {
+                id: "server:raw-test",
+                localNodeId: "node:agent",
+                shutdownTimeoutMs: 5000,
+            },
+            {
+                graph,
+                knowledgeSources: registry.data,
+                auth: fixedPrincipalProvider(principal),
+            },
+        );
+        const started = await server.start();
+        if (!started.success) throw new Error("server start failed");
+        const expose = createGcpMcpServer({
+            server,
+            resources: [
+                { nodeId: KNOWLEDGE_ID, uri: "gcp://raw-secret", name: "raw-secret" },
+            ],
+            credentials: { type: "token", value: TOKEN },
+        });
+        const client = await linkClient(expose);
+        const res = await client.readResource({ uri: "gcp://raw-secret" });
+        const text = res.contents
+            .map((c) => ("text" in c ? c.text : ""))
+            .join("");
+        expect(text).toContain(RAW_CANARY);
+    });
+});
+
 describe("createRawMcpServer (ungated)", () => {
     it("returns the configured text with no policy", async () => {
         const raw = createRawMcpServer({

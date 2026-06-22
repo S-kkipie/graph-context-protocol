@@ -44,6 +44,39 @@ export interface GcpMcpServerConfig {
 
 const EXPOSE_URL = "http://gcp-mcp-expose";
 
+/**
+ * Extracts a text string from a context-query result value, handling the three
+ * shapes produced by executeTargetedContextQuery:
+ *   1. string  — adapter set KnowledgeQueryResult.raw to a string (markdown-backed).
+ *   2. array   — adapter returned KnowledgeNode[]; join metadata.content fields.
+ *   3. other   — JSON.stringify fallback.
+ */
+function extractResultText(result: unknown): string {
+    if (typeof result === "string") {
+        return result;
+    }
+    if (Array.isArray(result)) {
+        return result
+            .map((n: unknown) => {
+                if (
+                    n !== null &&
+                    typeof n === "object" &&
+                    "metadata" in n &&
+                    n.metadata !== null &&
+                    typeof n.metadata === "object" &&
+                    "content" in n.metadata
+                ) {
+                    const c = (n.metadata as Record<string, unknown>).content;
+                    return typeof c === "string" ? c : "";
+                }
+                return "";
+            })
+            .filter(Boolean)
+            .join("\n");
+    }
+    return JSON.stringify(result);
+}
+
 /** MCP server whose reads route through the GCP read gate via server.receive. */
 export function createGcpMcpServer(config: GcpMcpServerConfig): McpServer {
     const handler = createFetchHandler({ server: config.server });
@@ -78,26 +111,10 @@ export function createGcpMcpServer(config: GcpMcpServerConfig): McpServer {
             if (result.status !== "ok") {
                 return { contents: [] };
             }
-            // result.result is KnowledgeNode[] (nodes from the adapter).
-            // Each node stores its body under metadata.content (per spec).
-            const nodes = Array.isArray(result.result) ? result.result : [];
-            const text = nodes
-                .map((n: unknown) => {
-                    if (
-                        n !== null &&
-                        typeof n === "object" &&
-                        "metadata" in n &&
-                        n.metadata !== null &&
-                        typeof n.metadata === "object" &&
-                        "content" in n.metadata
-                    ) {
-                        const c = (n.metadata as Record<string, unknown>)
-                            .content;
-                        return typeof c === "string" ? c : JSON.stringify(c);
-                    }
-                    return typeof n === "string" ? n : JSON.stringify(n);
-                })
-                .join("\n");
+            // result.result may be a raw string (markdown-backed adapters set
+            // KnowledgeQueryResult.raw to a string), a KnowledgeNode[] array,
+            // or some other object. Handle all three shapes.
+            const text = extractResultText(result.result);
             if (!text) {
                 return { contents: [] };
             }
