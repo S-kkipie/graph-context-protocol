@@ -32,11 +32,11 @@ import {
     createStaticTokenAuthProvider,
     type Principal,
 } from "@graph-context-protocol/server";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { recordingFactory, type RunArtifacts } from "./runner";
+import { type RunArtifacts, recordingFactory } from "./runner";
 
 export type McpArm = "gcp-mcp" | "raw-mcp";
 
@@ -64,7 +64,9 @@ interface NodeWiring {
     cleanup(): Promise<void>;
 }
 
-async function wireGcpMcp(scenario: ScenarioDef): Promise<NodeWiring & { dir: string }> {
+async function wireGcpMcp(
+    scenario: ScenarioDef,
+): Promise<NodeWiring & { dir: string }> {
     const dir = mkdtempSync(join(tmpdir(), "eval-mcp-gcp-"));
     const principal: Principal = {
         id: `principal:${scenario.agent.nodeId}`,
@@ -86,7 +88,11 @@ async function wireGcpMcp(scenario: ScenarioDef): Promise<NodeWiring & { dir: st
                 serverId: `server:${node.nodeId}`,
                 nodeId: `node:${node.nodeId}`,
                 knowledgeId: node.nodeId,
-                role: { id: `role:${node.nodeId}`, name: node.nodeId, description: "" },
+                role: {
+                    id: `role:${node.nodeId}`,
+                    name: node.nodeId,
+                    description: "",
+                },
                 accessPolicy: {
                     readableByRoles: [...node.readableByRoles],
                     requiredCapabilities: [],
@@ -100,7 +106,11 @@ async function wireGcpMcp(scenario: ScenarioDef): Promise<NodeWiring & { dir: st
         const expose = createGcpMcpServer({
             server: gcpServer,
             resources: [
-                { nodeId: node.nodeId, uri: nodeUri(node.nodeId), name: node.nodeId },
+                {
+                    nodeId: node.nodeId,
+                    uri: nodeUri(node.nodeId),
+                    name: node.nodeId,
+                },
             ],
             credentials: { type: "token", value: TOKEN },
         });
@@ -129,7 +139,11 @@ async function wireRawMcp(scenario: ScenarioDef): Promise<NodeWiring> {
     for (const node of scenario.knowledgeNodes) {
         const raw = createRawMcpServer({
             resources: [
-                { uri: nodeUri(node.nodeId), name: node.nodeId, text: node.content },
+                {
+                    uri: nodeUri(node.nodeId),
+                    name: node.nodeId,
+                    text: node.content,
+                },
             ],
         });
         const client = await linkClient(raw);
@@ -170,7 +184,8 @@ export async function runMcpScenario(opts: {
         const baseFactory = createMcpPeerContextToolFactory({
             connect: async (peer) => {
                 const client = wiring.clientByNode.get(peer.targetNodeId);
-                if (!client) throw new Error(`no MCP client for ${peer.targetNodeId}`);
+                if (!client)
+                    throw new Error(`no MCP client for ${peer.targetNodeId}`);
                 return client;
             },
         });

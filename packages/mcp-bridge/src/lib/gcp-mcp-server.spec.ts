@@ -1,9 +1,9 @@
 import {
-    createKnowledgeNode,
-    createMetadataWithAccessPolicy,
     createAccessPolicyDescriptor,
     createAgentNode,
     createGraph,
+    createKnowledgeNode,
+    createMetadataWithAccessPolicy,
     createRole,
     fail,
     succeed,
@@ -35,7 +35,11 @@ function fixedPrincipalProvider(principal: Principal): AuthProvider {
                 : fail(createServerError("auth-error", "bad token"));
         },
         authorize() {
-            return succeed({ allowed: true, matchedRoles: [], matchedCapabilities: [] });
+            return succeed({
+                allowed: true,
+                matchedRoles: [],
+                matchedCapabilities: [],
+            });
         },
     } as unknown as AuthProvider;
 }
@@ -86,7 +90,11 @@ async function startGcpServer(readableByRoles: string[]) {
         metadata: {},
     };
     const server = createGraphContextServer(
-        { id: "server:test", localNodeId: "node:agent", shutdownTimeoutMs: 5000 },
+        {
+            id: "server:test",
+            localNodeId: "node:agent",
+            shutdownTimeoutMs: 5000,
+        },
         {
             graph,
             knowledgeSources: registry.data,
@@ -113,12 +121,16 @@ describe("createGcpMcpServer (expose, gated)", () => {
         const server = await startGcpServer(["role:owner"]);
         const expose = createGcpMcpServer({
             server,
-            resources: [{ nodeId: KNOWLEDGE_ID, uri: "gcp://secret", name: "secret" }],
+            resources: [
+                { nodeId: KNOWLEDGE_ID, uri: "gcp://secret", name: "secret" },
+            ],
             credentials: { type: "token", value: TOKEN },
         });
         const client = await linkClient(expose);
         const res = await client.readResource({ uri: "gcp://secret" });
-        const text = res.contents.map((c) => ("text" in c ? c.text : "")).join("");
+        const text = res.contents
+            .map((c) => ("text" in c ? c.text : ""))
+            .join("");
         expect(text).not.toContain(CANARY);
         expect(res.contents.length).toBe(0);
     });
@@ -127,12 +139,16 @@ describe("createGcpMcpServer (expose, gated)", () => {
         const server = await startGcpServer(["role:auditor"]);
         const expose = createGcpMcpServer({
             server,
-            resources: [{ nodeId: KNOWLEDGE_ID, uri: "gcp://secret", name: "secret" }],
+            resources: [
+                { nodeId: KNOWLEDGE_ID, uri: "gcp://secret", name: "secret" },
+            ],
             credentials: { type: "token", value: TOKEN },
         });
         const client = await linkClient(expose);
         const res = await client.readResource({ uri: "gcp://secret" });
-        const text = res.contents.map((c) => ("text" in c ? c.text : "")).join("");
+        const text = res.contents
+            .map((c) => ("text" in c ? c.text : ""))
+            .join("");
         expect(text).toContain(CANARY);
     });
 });
@@ -140,11 +156,15 @@ describe("createGcpMcpServer (expose, gated)", () => {
 describe("createRawMcpServer (ungated)", () => {
     it("returns the configured text with no policy", async () => {
         const raw = createRawMcpServer({
-            resources: [{ uri: "raw://secret", name: "secret", text: `leak ${CANARY}` }],
+            resources: [
+                { uri: "raw://secret", name: "secret", text: `leak ${CANARY}` },
+            ],
         });
         const client = await linkClient(raw);
         const res = await client.readResource({ uri: "raw://secret" });
-        const text = res.contents.map((c) => ("text" in c ? c.text : "")).join("");
+        const text = res.contents
+            .map((c) => ("text" in c ? c.text : ""))
+            .join("");
         expect(text).toContain(CANARY);
     });
 });

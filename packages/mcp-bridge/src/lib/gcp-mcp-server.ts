@@ -91,7 +91,8 @@ export function createGcpMcpServer(config: GcpMcpServerConfig): McpServer {
                         typeof n.metadata === "object" &&
                         "content" in n.metadata
                     ) {
-                        const c = (n.metadata as Record<string, unknown>).content;
+                        const c = (n.metadata as Record<string, unknown>)
+                            .content;
                         return typeof c === "string" ? c : JSON.stringify(c);
                     }
                     return typeof n === "string" ? n : JSON.stringify(n);

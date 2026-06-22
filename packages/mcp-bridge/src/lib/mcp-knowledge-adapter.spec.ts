@@ -43,7 +43,9 @@ describe("createMcpKnowledgeAdapter", () => {
         if (!result.success) return;
         expect(result.data.sourceId).toBe("knowledge:incident");
         expect(result.data.nodes).toHaveLength(1);
-        expect(result.data.nodes[0].metadata.content).toContain("incident body text");
+        expect(result.data.nodes[0].metadata.content).toContain(
+            "incident body text",
+        );
     });
 
     it("fails soft when the MCP connection throws", async () => {

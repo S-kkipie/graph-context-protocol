@@ -6,14 +6,24 @@ import type { RunArtifacts } from "./runner";
 const scenario = {
     id: "mcp-interop",
     knowledgeNodes: [],
-    agent: { nodeId: "a", role: "role:auditor", systemPrompt: "", goal: "", peers: ["p"] },
+    agent: {
+        nodeId: "a",
+        role: "role:auditor",
+        systemPrompt: "",
+        goal: "",
+        peers: ["p"],
+    },
     succeeded: () => false,
     forbiddenCanaries: ["MCP-LEAK-7Q2X"],
 } as unknown as ScenarioDef;
 
 const artifacts = (outputs: string[]): RunArtifacts => ({
     answer: "",
-    coupling: { peersKnown: 1, connectionsOpened: 1, messagesSent: outputs.length },
+    coupling: {
+        peersKnown: 1,
+        connectionsOpened: 1,
+        messagesSent: outputs.length,
+    },
     toolTranscript: outputs.map((output) => ({ peerId: "p", output })),
     auditEvents: [],
 });

@@ -1,4 +1,7 @@
-import { createCouplingMetrics, type PeerRef } from "@graph-context-protocol/agent-core";
+import {
+    createCouplingMetrics,
+    type PeerRef,
+} from "@graph-context-protocol/agent-core";
 import { describe, expect, it } from "vitest";
 import { createMcpPeerContextToolFactory } from "./mcp-peer-context-tool";
 
@@ -13,7 +16,9 @@ describe("createMcpPeerContextToolFactory", () => {
         const metrics = createCouplingMetrics();
         const factory = createMcpPeerContextToolFactory({
             connect: async () => ({
-                readResource: async () => ({ contents: [{ text: "hello world" }] }),
+                readResource: async () => ({
+                    contents: [{ text: "hello world" }],
+                }),
             }),
         });
         const t = factory(peer, metrics);
@@ -26,7 +31,9 @@ describe("createMcpPeerContextToolFactory", () => {
     it("returns a denied marker when no content is returned", async () => {
         const metrics = createCouplingMetrics();
         const factory = createMcpPeerContextToolFactory({
-            connect: async () => ({ readResource: async () => ({ contents: [] }) }),
+            connect: async () => ({
+                readResource: async () => ({ contents: [] }),
+            }),
         });
         const t = factory(peer, metrics);
         const out = await t.invoke({ question: "anything" });
