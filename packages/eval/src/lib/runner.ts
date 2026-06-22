@@ -63,7 +63,7 @@ export interface RunOptions {
 const TOKEN = "tok:agent";
 
 /** Wraps a tool factory so every tool output is appended to a transcript. */
-function recordingFactory(
+export function recordingFactory(
     base: PeerContextToolFactory,
     transcript: { peerId: string; output: string }[],
 ): PeerContextToolFactory {

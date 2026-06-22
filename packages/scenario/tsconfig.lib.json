@@ -11,24 +11,24 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
-      {
-        "path": "../server/tsconfig.lib.json"
-      },
-      {
-        "path": "../langgraph/tsconfig.lib.json"
-      },
-      {
-        "path": "../core/tsconfig.lib.json"
-      },
-      {
-        "path": "../agent-core/tsconfig.lib.json"
-      },
-      {
-        "path": "../adapters/tsconfig.lib.json"
-      },
-      {
-        "path": "../baseline/tsconfig.lib.json"
-      }
+        {
+            "path": "../server/tsconfig.lib.json"
+        },
+        {
+            "path": "../langgraph/tsconfig.lib.json"
+        },
+        {
+            "path": "../core/tsconfig.lib.json"
+        },
+        {
+            "path": "../agent-core/tsconfig.lib.json"
+        },
+        {
+            "path": "../adapters/tsconfig.lib.json"
+        },
+        {
+            "path": "../baseline/tsconfig.lib.json"
+        }
     ],
     "exclude": [
         "vite.config.ts",

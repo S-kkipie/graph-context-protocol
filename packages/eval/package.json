@@ -18,9 +18,11 @@
         "@graph-context-protocol/agent-core": "workspace:*",
         "@graph-context-protocol/baseline": "workspace:*",
         "@graph-context-protocol/core": "workspace:*",
+        "@graph-context-protocol/mcp-bridge": "workspace:*",
         "@graph-context-protocol/scenario": "workspace:*",
         "@graph-context-protocol/server": "workspace:*",
         "@langchain/core": "^0.3.0",
+        "@modelcontextprotocol/sdk": "^1.18.0",
         "zod": "^4.4.3"
     },
     "devDependencies": {

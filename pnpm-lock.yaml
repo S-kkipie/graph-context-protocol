@@ -381,6 +381,9 @@ importers:
       '@graph-context-protocol/core':
         specifier: workspace:*
         version: link:../core
+      '@graph-context-protocol/mcp-bridge':
+        specifier: workspace:*
+        version: link:../mcp-bridge
       '@graph-context-protocol/scenario':
         specifier: workspace:*
         version: link:../scenario
@@ -390,6 +393,9 @@ importers:
       '@langchain/core':
         specifier: ^0.3.0
         version: 0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.18.0
+        version: 1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
       zod:
         specifier: ^4.4.3
         version: 4.4.3

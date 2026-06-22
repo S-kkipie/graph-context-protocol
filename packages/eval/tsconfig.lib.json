@@ -11,11 +11,24 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
-        { "path": "../agent-core/tsconfig.lib.json" },
-        { "path": "../baseline/tsconfig.lib.json" },
-        { "path": "../core/tsconfig.lib.json" },
-        { "path": "../scenario/tsconfig.lib.json" },
-        { "path": "../server/tsconfig.lib.json" }
+      {
+        "path": "../server/tsconfig.lib.json"
+      },
+      {
+        "path": "../scenario/tsconfig.lib.json"
+      },
+      {
+        "path": "../mcp-bridge/tsconfig.lib.json"
+      },
+      {
+        "path": "../core/tsconfig.lib.json"
+      },
+      {
+        "path": "../baseline/tsconfig.lib.json"
+      },
+      {
+        "path": "../agent-core/tsconfig.lib.json"
+      }
     ],
     "exclude": [
         "vite.config.ts",

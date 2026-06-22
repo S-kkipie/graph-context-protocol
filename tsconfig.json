@@ -3,38 +3,38 @@
     "compileOnSave": false,
     "files": [],
     "references": [
-      {
-        "path": "./packages/core"
-      },
-      {
-        "path": "./packages/server"
-      },
-      {
-        "path": "./packages/langgraph"
-      },
-      {
-        "path": "./apps/executor"
-      },
-      {
-        "path": "./apps/researcher"
-      },
-      {
-        "path": "./packages/adapters"
-      },
-      {
-        "path": "./packages/scenario"
-      },
-      {
-        "path": "./packages/agent-core"
-      },
-      {
-        "path": "./packages/baseline"
-      },
-      {
-        "path": "./packages/eval"
-      },
-      {
-        "path": "./packages/mcp-bridge"
-      }
+        {
+            "path": "./packages/core"
+        },
+        {
+            "path": "./packages/server"
+        },
+        {
+            "path": "./packages/langgraph"
+        },
+        {
+            "path": "./apps/executor"
+        },
+        {
+            "path": "./apps/researcher"
+        },
+        {
+            "path": "./packages/adapters"
+        },
+        {
+            "path": "./packages/scenario"
+        },
+        {
+            "path": "./packages/agent-core"
+        },
+        {
+            "path": "./packages/baseline"
+        },
+        {
+            "path": "./packages/eval"
+        },
+        {
+            "path": "./packages/mcp-bridge"
+        }
     ]
 }
