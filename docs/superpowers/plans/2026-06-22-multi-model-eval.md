@@ -63,8 +63,12 @@ These do NOT fit the 6 GB GPU. Ollama keeps ~5.5 GB of layers on the GPU and the
 | --- | --- | --- |
 | `qwen2.5:32b` | ~20 GB | strong tools; the safe heavy pick |
 | `command-r:35b` | ~20 GB | Cohere — explicitly built for tool-use + RAG |
-| `gemma3:27b` | ~17 GB | tools partial — gate before sweeping |
+| `gemma4:12b` | ~7.6 GB | **Google, native function-calling**; medium (partial CPU on 6 GB GPU); multimodal (vision unused), thinking mode → gate + prefer non-thinking |
+| `gemma4:26b` | ~18 GB | Google Gemma 4 MoE (3.8B active → faster than size); native function-calling |
+| `gemma3:27b` | ~17 GB | tools partial — gate before sweeping (superseded by gemma4 for tools) |
 | `qwen3:32b` | ~20 GB | hybrid-thinking sibling of qwen3:4b |
+
+Gemma 4 family (Ollama): `gemma4:e2b` 7.2 GB · `gemma4:e4b` 9.6 GB · `gemma4:12b` 7.6 GB · `gemma4:26b` 18 GB (MoE) · `gemma4:31b` 20 GB (dense). All native function-calling + multimodal. Smallest is `gemma4:e2b` (still >6 GB VRAM → slight CPU spill).
 
 Too big for 24 GB at usable quant (skip): `llama3.3:70b` (~40 GB), `mixtral:8x7b` (~26 GB), `qwen2.5:72b` local. Use the 70B-class only via the OpenRouter `:free` tiers above.
 
@@ -306,6 +310,9 @@ ollama pull deepseek-r1:7b   # negative-result candidate only
 # heavy (CPU-bound on 6 GB GPU + 24 GB RAM — slow, reduced sweep)
 ollama pull qwen2.5:32b
 ollama pull command-r:35b
+# Google Gemma 4 (native tools): 12b medium (partial CPU), 26b heavy MoE
+ollama pull gemma4:12b
+ollama pull gemma4:26b
 ```
 
 - [ ] **Step 4: Verify the Ollama endpoints answer**

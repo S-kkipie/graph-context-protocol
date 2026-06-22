@@ -72,9 +72,13 @@ Run each row as one invocation (§3). Confirm `:free` availability at run time.
 | 5 | `qwen3:4b` | ollama (native) | seeds 5 | local small, best tool-caller |
 | 6 | `llama3.1:8b` | ollama (native) | seeds 5 | local 8B |
 | 7 | `granite3.3:8b` | ollama (native) | seeds 5 | local, tool-tuned (optional) |
+| 7b | `gemma4:12b` | ollama (native) | seeds 5 (≈7.6 GB → partial CPU) | **Google**, native function-calling, multimodal |
 | 8 | `qwen2.5:32b` | ollama (native) | **seeds 3, anchors 2,5** | heavy, CPU-bound |
 | 9 | `command-r:35b` | ollama (native) | **seeds 3, anchors 2,5** | heavy, tool/RAG-tuned |
+| 9b | `gemma4:26b` | ollama (native) | **seeds 3, anchors 2,5** | heavy MoE (18 GB, 3.8B active → faster than size); Google |
 | N | `deepseek-r1:7b` | ollama (native) | seeds 1, anchors 2 | **negative** (reasoning, expect 0 tool calls) |
+
+Gemma 4 (Ollama) tags + footprint: `gemma4:e2b` 7.2 GB · `gemma4:e4b` 9.6 GB · `gemma4:12b` 7.6 GB · `gemma4:26b` 18 GB (MoE) · `gemma4:31b` 20 GB (dense). Native function-calling — unlike gemma2 (no tools) / gemma3 (partial). Multimodal, but scenarios are text-only (vision unused). Has a configurable **thinking** mode — run the §3a pre-flight and prefer non-thinking (thinking traces can break `tool_calls`); on the 6 GB GPU everything ≥7 GB spills partly to CPU. Smallest fit: `gemma4:e2b`.
 
 Minimal set if time-bound: rows 1, 3, 4, 5, 6.
 
@@ -117,12 +121,14 @@ On 429 storms: raise `EVAL_THROTTLE_MS=8000`. A model that 429s past
 
 ```bash
 LOCAL="RUN_EVAL=1 EVAL_THROTTLE_MS=0 OPENROUTER_API_KEY=ollama EVAL_ADAPTER=ollama EVAL_BASE_URL=http://localhost:11434"
-# small/medium (rows 5-7)
+# small/medium (rows 5-7b)
 env $LOCAL EVAL_SEEDS=5 EVAL_MODEL=qwen3:4b   pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
 env $LOCAL EVAL_SEEDS=5 EVAL_MODEL=llama3.1:8b pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
-# heavy, CPU-bound (rows 8-9) — minutes per run; reduced sweep
+env $LOCAL EVAL_SEEDS=5 EVAL_MODEL=gemma4:12b pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
+# heavy, CPU-bound (rows 8-9b) — minutes per run; reduced sweep
 env $LOCAL EVAL_SEEDS=3 EVAL_ANCHORS=2,5 EVAL_MODEL=qwen2.5:32b  pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
 env $LOCAL EVAL_SEEDS=3 EVAL_ANCHORS=2,5 EVAL_MODEL=command-r:35b pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
+env $LOCAL EVAL_SEEDS=3 EVAL_ANCHORS=2,5 EVAL_MODEL=gemma4:26b   pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
 # negative (row N) — expect failure/0 tool calls; keep out of comparison rows
 env $LOCAL EVAL_SEEDS=1 EVAL_ANCHORS=2 EVAL_MODEL=deepseek-r1:7b pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec || true
 ```
