@@ -36,8 +36,10 @@ be presented as a model-varying result.
 - Harness is built (this branch): `createEvalModel` selects the adapter by env;
   `runFullEval` threads `baseURL`; gate stays `RUN_EVAL=1` + non-empty
   `OPENROUTER_API_KEY`.
-- For local models: Ollama installed + serving, models pulled (companion plan
-  Task 3). NOT required for the hosted (OpenRouter) arm.
+- For local models: Ollama installed + serving, models pulled. Quickest path —
+  `scripts/eval-ollama.sh --install --serve --small` (flags: `--install --serve
+  --small --heavy --negative --all --list --check --gpu --dry-run`; see
+  `--help`). NOT required for the hosted (OpenRouter) arm.
 
 **Env knobs (all read by `run-eval.full.spec` / `runFullEval`):**
 
