@@ -539,25 +539,25 @@ async function startGcpServer(readableByRoles: string[]) {
     };
     const registry = createKnowledgeSourceRegistry().register(adapter);
     if (!registry.success) throw new Error("adapter registration failed");
-    return startServer(graph, registry.data, readableByRoles);
-
-    function startServer(g: typeof graph, sources: typeof registry.data, _r: string[]) {
-        return (async () => {
-            const principal: Principal = {
-                id: "principal:agent",
-                role: createRole("role:auditor", "Auditor", ""),
-                capabilities: [],
-                metadata: {},
-            };
-            const server = createGraphContextServer(
-                { id: "server:test", localNodeId: "node:agent" },
-                { graph: g, knowledgeSources: sources, auth: fixedPrincipalProvider(principal) },
-            );
-            const started = await server.start();
-            if (!started.success) throw new Error("server start failed");
-            return server;
-        })();
-    }
+    // The agent principal's role is role:auditor; whether it can read is
+    // controlled solely by readableByRoles passed in by the caller.
+    const principal: Principal = {
+        id: "principal:agent",
+        role: createRole("role:auditor", "Auditor", ""),
+        capabilities: [],
+        metadata: {},
+    };
+    const server = createGraphContextServer(
+        { id: "server:test", localNodeId: "node:agent" },
+        {
+            graph,
+            knowledgeSources: registry.data,
+            auth: fixedPrincipalProvider(principal),
+        },
+    );
+    const started = await server.start();
+    if (!started.success) throw new Error("server start failed");
+    return server;
 }
 
 async function linkClient(mcpServer: ReturnType<typeof createRawMcpServer>) {
@@ -1420,6 +1420,7 @@ git commit -m "feat(eval): InteropMetrics (MCP-over-GCP containment vs raw-MCP l
 
 **Files:**
 - Modify: `packages/eval/package.json` (add `@graph-context-protocol/mcp-bridge` dep)
+- Modify: `packages/eval/src/lib/runner.ts` (add `export` to the existing `recordingFactory` so the MCP runner reuses it — no duplicated logic block)
 - Create: `packages/eval/src/lib/mcp-runner.ts`
 - Test: `packages/eval/src/lib/mcp-containment.spec.ts`
 
@@ -1436,6 +1437,16 @@ In `packages/eval/package.json`, add to `dependencies` (keep alphabetical with t
         "@graph-context-protocol/mcp-bridge": "workspace:*",
 ```
 Then run: `pnpm install`
+
+Also export the existing recording helper so the MCP runner reuses it. In `packages/eval/src/lib/runner.ts`, change the private declaration:
+```ts
+function recordingFactory(
+```
+to:
+```ts
+export function recordingFactory(
+```
+(No other change to `runner.ts`.)
 
 - [ ] **Step 2: Write the failing test** — `packages/eval/src/lib/mcp-containment.spec.ts`
 
@@ -1515,10 +1526,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-    type CouplingMetrics,
     createCouplingMetrics,
     createTaskAgent,
-    type PeerContextToolFactory,
     type PeerRef,
     runTaskAgent,
     type ScenarioDef,
@@ -1539,31 +1548,11 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import type { RunArtifacts } from "./runner";
+import { recordingFactory, type RunArtifacts } from "./runner";
 
 export type McpArm = "gcp-mcp" | "raw-mcp";
 
 const TOKEN = "tok:agent";
-
-/** Wraps a tool factory so every tool output is appended to a transcript. */
-function recordingFactory(
-    base: PeerContextToolFactory,
-    transcript: { peerId: string; output: string }[],
-): PeerContextToolFactory {
-    return (peer: PeerRef, metrics: CouplingMetrics) => {
-        const tool = base(peer, metrics);
-        const originalInvoke = tool.invoke.bind(tool);
-        // biome-ignore lint/suspicious/noExplicitAny: LangChain tool invoke is loosely typed
-        tool.invoke = (async (input: any, config?: any) => {
-            const output = await originalInvoke(input, config);
-            const text =
-                typeof output === "string" ? output : String(output);
-            transcript.push({ peerId: peer.peerId, output: text });
-            return output;
-        }) as typeof tool.invoke;
-        return tool;
-    };
-}
 
 /** Connects an in-memory MCP Client to an McpServer and returns the client. */
 async function linkClient(mcpServer: McpServer): Promise<Client> {
