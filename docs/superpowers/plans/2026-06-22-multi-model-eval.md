@@ -439,9 +439,9 @@ The containment proof (`mcp-containment.spec.ts`) currently uses the determinist
 
 ---
 
-### Task 7: Save metrics / cross-model comparison — TO BE DETAILED (co-edit)
+### Task 7: Save metrics / cross-model comparison — ✅ DETAILED in the runbook
 
-> The run protocol (Tasks 4–6) and the metrics-saving format will be refined WITH the user before any execution. Below is intent only — do NOT execute yet. Paper write-up (`paper.tex`/`paper-es.tex`, PDFs, limitation rewrite) is explicitly OUT OF SCOPE for this plan — deferred to a later session.
+> Run protocol + metrics collection are now fully specified in the **runbook**: [`docs/superpowers/specs/2026-06-22-multi-model-eval-runbook.md`](../specs/2026-06-22-multi-model-eval-runbook.md) (§3 run, §4 collect). Path A (grep the markdown reports, works today) + Path B (optional JSON sidecar + aggregator, small TDD task). Paper write-up (`paper.tex`/`paper-es.tex`, PDFs, limitation rewrite) stays OUT OF SCOPE — deferred.
 
 **Files:**
 - Create: metrics summary doc — path + format TBD with the user.
