@@ -3,10 +3,11 @@ import { PROVIDE_CONTEXT_SKILL, SCENARIOS } from "./index";
 import { marketplaceScenario } from "./marketplace";
 
 describe("SCENARIOS", () => {
-    it("defines all four scenarios keyed by id", () => {
+    it("defines all five scenarios keyed by id", () => {
         expect(Object.keys(SCENARIOS).sort()).toEqual([
             "delegation",
             "marketplace",
+            "mcp-interop",
             "software-org",
             "supply-chain",
         ]);
@@ -15,6 +16,20 @@ describe("SCENARIOS", () => {
             expect(def.knowledgeNodes.length).toBeGreaterThan(0);
             expect(def.agent.peers.length).toBeGreaterThan(0);
         }
+    });
+
+    it("mcp-interop gates the confidential node by role (not the agent's role)", () => {
+        const s = SCENARIOS["mcp-interop"];
+        const node = s.knowledgeNodes[0];
+        // The auditor agent's role is NOT permitted -> GCP-over-MCP denies.
+        expect(node.readableByRoles).not.toContain(s.agent.role);
+        // Raw MCP would still expose it (the architectural leak).
+        expect(node.exposedSkills).toContain(PROVIDE_CONTEXT_SKILL);
+        expect(node.canaryToken).toBeDefined();
+        expect(s.forbiddenCanaries).toContain(node.canaryToken);
+        // Success means the read leaked the token through to the agent.
+        expect(s.succeeded(node.canaryToken as string)).toBe(true);
+        expect(s.succeeded("MCP read denied: no content returned")).toBe(false);
     });
 
     it("delegation scenario is in delegate mode and gates the privileged action by the delegate capability, not the role", () => {

@@ -14,7 +14,8 @@ export type ScenarioId =
     | "marketplace"
     | "software-org"
     | "supply-chain"
-    | "delegation";
+    | "delegation"
+    | "mcp-interop";
 
 /**
  * How the agent consults its peers:
