@@ -43,20 +43,20 @@
         ".next"
     ],
     "references": [
-        {
-            "path": "../../packages/server"
-        },
-        {
-            "path": "../../packages/langgraph"
-        },
-        {
-            "path": "../../packages/core"
-        },
-        {
-            "path": "../../packages/adapters"
-        },
-        {
-            "path": "../../packages/scenario"
-        }
+      {
+        "path": "../../packages/server"
+      },
+      {
+        "path": "../../packages/langgraph"
+      },
+      {
+        "path": "../../packages/core"
+      },
+      {
+        "path": "../../packages/adapters"
+      },
+      {
+        "path": "../../packages/scenario"
+      }
     ]
 }
