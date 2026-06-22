@@ -59,6 +59,39 @@ Output of each run: `packages/eval/results/eval-report-<stamp>-<model>.md`
 (git-ignored). Header carries model + seeds + timestamp; body has one table per
 scenario plus the marketplace structural curve.
 
+### 1.1 Local setup helper — `scripts/eval-ollama.sh`
+
+Idempotent helper that installs Ollama and pulls the local model sets (§2).
+Nothing runs without an explicit flag; model sets stay in sync with §2.
+
+| flag | action |
+| --- | --- |
+| `--install` | install Ollama via `curl https://ollama.com/install.sh \| sh` (skips if present) |
+| `--serve` | start `ollama serve` in the background, wait until up |
+| `--small` | pull `qwen3:4b llama3.1:8b granite3.3:8b gemma4:12b` |
+| `--heavy` | pull `qwen2.5:32b command-r:35b gemma4:26b` |
+| `--negative` | pull `deepseek-r1:7b` (reasoning control) |
+| `--all` | `--install --serve --small --heavy --negative` |
+| `--list` | `ollama list` |
+| `--check` | probe native `:11434/api/tags` + OpenAI-compat `/v1/models` |
+| `--gpu` | `nvidia-smi -L` + VRAM usage |
+| `--dry-run` | print intended commands, change nothing |
+| `-h`, `--help` | usage |
+
+```bash
+# fast start: install, serve, pull the small/medium set, show GPU
+./scripts/eval-ollama.sh --install --serve --small --gpu
+# verify endpoints before running the sweep
+./scripts/eval-ollama.sh --check
+# add heavy + negative models later
+./scripts/eval-ollama.sh --heavy --negative
+# preview everything without touching the machine
+./scripts/eval-ollama.sh --all --dry-run
+```
+
+Respects `OLLAMA_HOST` (default `http://localhost:11434`). After setup, run the
+sweep per §3.
+
 ---
 
 ## 2. Model matrix
