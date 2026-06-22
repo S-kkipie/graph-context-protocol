@@ -419,6 +419,31 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
 
+  packages/mcp-bridge:
+    dependencies:
+      '@graph-context-protocol/agent-core':
+        specifier: workspace:*
+        version: link:../agent-core
+      '@graph-context-protocol/core':
+        specifier: workspace:*
+        version: link:../core
+      '@graph-context-protocol/server':
+        specifier: workspace:*
+        version: link:../server
+      '@langchain/core':
+        specifier: ^0.3.0
+        version: 0.3.80(@opentelemetry/api@1.9.0)(openai@6.37.0(ws@8.20.0)(zod@4.4.3))
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.18.0
+        version: 1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      fast-check:
+        specifier: ^4.0.0
+        version: 4.8.0
+
   packages/scenario:
     dependencies:
       '@graph-context-protocol/adapters':
@@ -13045,6 +13070,30 @@ snapshots:
       raw-body: 3.0.2
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
+    optionalDependencies:
+      '@cfworker/json-schema': 4.1.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)':
+    dependencies:
+      '@hono/node-server': 1.19.14(hono@4.12.18)
+      ajv: 8.18.0
+      ajv-formats: 3.0.1(ajv@8.18.0)
+      content-type: 1.0.5
+      cors: 2.8.6
+      cross-spawn: 7.0.6
+      eventsource: 3.0.7
+      eventsource-parser: 3.0.8
+      express: 5.2.1
+      express-rate-limit: 8.5.1(express@5.2.1)
+      hono: 4.12.18
+      jose: 6.2.3
+      json-schema-typed: 8.0.2
+      pkce-challenge: 5.0.1
+      raw-body: 3.0.2
+      zod: 4.4.3
+      zod-to-json-schema: 3.25.2(zod@4.4.3)
     optionalDependencies:
       '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
