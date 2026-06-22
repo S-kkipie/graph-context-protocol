@@ -70,6 +70,17 @@ Too big for 24 GB at usable quant (skip): `llama3.3:70b` (~40 GB), `mixtral:8x7b
 
 Skip for this study: `qwen3-vl` (vision model — scenarios have no images; larger for no benefit) and `deepseek-r1` distills (`deepseek-r1:1.5b/7b/8b` — reasoning, flaky tools; same caveat as the hosted R1). One documented negative run is enough.
 
+### Local transport: native `ChatOllama` vs OpenAI-compat `baseURL` (DECISION — co-edit)
+
+Two ways to reach Ollama. Token counting works with BOTH — the counter (`behavioral.ts` `usageTokens`) is provider-agnostic (reads `usage_metadata.total_tokens`, which recent `ChatOllama` populates). Fairness is preserved either way: the SAME injected model object drives both arms (model is built once in `collectResult` and injected), so the "one neutral factory" property is about per-arm symmetry, which holds regardless of transport.
+
+| Option | How | Pros | Cons |
+| --- | --- | --- | --- |
+| **OpenAI-compat `baseURL`** (built, Task 1) | `EVAL_BASE_URL=http://localhost:11434/v1`, dummy key, reuse `createOpenRouterLLM` | zero new deps; ONE construction path; works today; also covers vLLM / LM Studio / llama.cpp servers | relies on Ollama's `/v1` shim — some tool-capable models surface `tool_calls` less cleanly → risk of FALSE exclusion by the sanity gate |
+| **Native `ChatOllama`** (`@langchain/ollama`) | `new ChatOllama({ model, baseUrl: "http://localhost:11434" })` (native API, NOT `/v1`); `.bindTools()` first-class | most reliable Ollama tool-calling → fewer false exclusions; idiomatic; native usage→`usage_metadata` | new dep `@langchain/ollama`; a second construction branch (selected only for local; OpenRouter still via `createOpenRouterLLM`) |
+
+**Recommendation:** keep OpenAI-compat `baseURL` as the generic default (done). If any tool-capable local model FAILS the `canDriveToolCalls` gate over `/v1`, re-test it through native `ChatOllama` before excluding it — exclude only if BOTH transports yield 0 round-trips. Add the native factory as a small additive task IF the `/v1` path proves lossy in practice. Decide at co-edit time.
+
 **Recommended minimal set** (good coverage, bounded time): re-run `gpt-oss-120b:free` (baseline) + add `llama-3.1-8b-instruct:free` and `qwen-2.5-72b-instruct:free` (free, cross-lineage), then local `qwen3:4b` and `llama3.1:8b`. Five models, three lineages, hosted-vs-local contrast. Add `granite3.3:8b` if a third local is wanted, and one R1 negative run for honesty.
 
 ---
@@ -86,7 +97,9 @@ Skip for this study: `qwen3-vl` (vision model — scenarios have no images; larg
 
 ---
 
-### Task 1: Thread `baseURL` through `runFullEval`
+### Task 1: Thread `baseURL` through `runFullEval` — ✅ DONE (commit 6b88c62)
+
+> **As-built:** extracted a pure seam `buildLlmConfig(apiKey, model, baseURL?, env = process.env)` (explicit `baseURL` > `EVAL_BASE_URL` > omitted), TDD'd with 3 cases in `run-eval.spec.ts`; wired into `runFullEval` (`const llm = buildLlmConfig(key, model, opts?.baseURL)`); widened the `llm` carrier to `{ apiKey?, model?, baseURL? }` on `CollectOptions` and `RunOptions`. The brittle `clientConfig.baseURL` assertion sketched below was replaced by the `buildLlmConfig` unit tests (cleaner, not coupled to ChatOpenAI internals). 4/4 tests + typecheck green.
 
 **Files:**
 - Modify: `packages/eval/src/lib/run-eval.ts`
@@ -146,7 +159,9 @@ git commit -m "feat(eval): thread baseURL into runFullEval (enables Ollama/local
 
 ---
 
-### Task 2: Tool-call sanity gate
+### Task 2: Tool-call sanity gate — ✅ DONE (commit 2b2de92)
+
+> **As-built:** `canDriveToolCalls({ model?, llm? }): Promise<{ ok, roundTrips, answer }>` runs one `gcp`-arm `supply-chain` run; `ok = roundTrips > 0`. Transport-agnostic (any injected `BaseChatModel`). Tests: the real mock (calls bound tools → ok) + an inline `NoToolModel` that never emits `tool_calls` (→ not-ok). 2/2 tests + typecheck green.
 
 **Files:**
 - Create: `packages/eval/src/lib/toolcall-sanity.ts`
