@@ -70,7 +70,7 @@ Too big for 24 GB at usable quant (skip): `llama3.3:70b` (~40 GB), `mixtral:8x7b
 
 Skip for this study: `qwen3-vl` (vision model — scenarios have no images; larger for no benefit) and `deepseek-r1` distills (`deepseek-r1:1.5b/7b/8b` — reasoning, flaky tools; same caveat as the hosted R1). One documented negative run is enough.
 
-### Local transport: native `ChatOllama` vs OpenAI-compat `baseURL` (DECISION — co-edit)
+### Local transport: native `ChatOllama` vs OpenAI-compat `baseURL` (✅ BUILT — env-selected)
 
 Two ways to reach Ollama. Token counting works with BOTH — the counter (`behavioral.ts` `usageTokens`) is provider-agnostic (reads `usage_metadata.total_tokens`, which recent `ChatOllama` populates). Fairness is preserved either way: the SAME injected model object drives both arms (model is built once in `collectResult` and injected), so the "one neutral factory" property is about per-arm symmetry, which holds regardless of transport.
 
@@ -79,7 +79,15 @@ Two ways to reach Ollama. Token counting works with BOTH — the counter (`behav
 | **OpenAI-compat `baseURL`** (built, Task 1) | `EVAL_BASE_URL=http://localhost:11434/v1`, dummy key, reuse `createOpenRouterLLM` | zero new deps; ONE construction path; works today; also covers vLLM / LM Studio / llama.cpp servers | relies on Ollama's `/v1` shim — some tool-capable models surface `tool_calls` less cleanly → risk of FALSE exclusion by the sanity gate |
 | **Native `ChatOllama`** (`@langchain/ollama`) | `new ChatOllama({ model, baseUrl: "http://localhost:11434" })` (native API, NOT `/v1`); `.bindTools()` first-class | most reliable Ollama tool-calling → fewer false exclusions; idiomatic; native usage→`usage_metadata` | new dep `@langchain/ollama`; a second construction branch (selected only for local; OpenRouter still via `createOpenRouterLLM`) |
 
-**Recommendation:** keep OpenAI-compat `baseURL` as the generic default (done). If any tool-capable local model FAILS the `canDriveToolCalls` gate over `/v1`, re-test it through native `ChatOllama` before excluding it — exclude only if BOTH transports yield 0 round-trips. Add the native factory as a small additive task IF the `/v1` path proves lossy in practice. Decide at co-edit time.
+**BOTH are built.** `createEvalModel(cfg, env)` (`model-factory.ts`) selects the adapter:
+1. explicit `adapter` arg, else
+2. `EVAL_ADAPTER` env (`ollama` | `openrouter`), else
+3. inference from the baseURL — `:11434` WITHOUT `/v1` → `ollama` (native); a `…/v1` URL → `openrouter` (OpenAI-compat shim / OpenRouter), else
+4. default `openrouter`.
+
+`collectResult` now builds the real model through `createEvalModel` instead of `createOpenRouterLLM` directly. The OpenRouter path still requires a key; the ollama path needs none.
+
+**Recommendation for local:** use the NATIVE adapter — `EVAL_ADAPTER=ollama` with `EVAL_BASE_URL=http://localhost:11434` (note: NO `/v1`). It's the most reliable for Ollama tool-calling. Keep the OpenAI-compat `/v1` path only as a fallback (also serves vLLM / LM Studio / llama.cpp). Exclude a tool-capable model only if it yields 0 round-trips under BOTH transports.
 
 **Recommended minimal set** (good coverage, bounded time): re-run `gpt-oss-120b:free` (baseline) + add `llama-3.1-8b-instruct:free` and `qwen-2.5-72b-instruct:free` (free, cross-lineage), then local `qwen3:4b` and `llama3.1:8b`. Five models, three lineages, hosted-vs-local contrast. Add `granite3.3:8b` if a third local is wanted, and one R1 negative run for honesty.
 
@@ -89,7 +97,10 @@ Two ways to reach Ollama. Token counting works with BOTH — the counter (`behav
 
 - `packages/agent-core/src/lib/llm.ts` — already supports `baseURL`; no change.
 - `packages/eval/src/lib/run-eval.ts` — **modify**: add `baseURL` to `runFullEval` opts + the `llm` carrier; read `EVAL_BASE_URL`. Widen the inline `llm` type `{ apiKey?; model?; baseURL? }`.
-- `packages/eval/src/lib/run-eval.spec.ts` — **modify**: add a test that `baseURL` flows into the constructed model's config.
+- `packages/eval/src/lib/run-eval.spec.ts` — **modify**: tests for `buildLlmConfig` baseURL resolution.
+- `packages/eval/package.json` — **modify**: add dep `@langchain/ollama@^0.2.4`.
+- `packages/eval/src/lib/model-factory.ts` — **create**: `resolveAdapter` + `createEvalModel` (env-driven adapter selection: OpenRouter `ChatOpenAI` vs native `ChatOllama`).
+- `packages/eval/src/lib/model-factory.spec.ts` — **create**: adapter-precedence + client-type tests.
 - `packages/eval/src/lib/toolcall-sanity.ts` — **create**: a tiny gate that runs one scenario×one seed and reports whether the model emitted any tool call (round-trips > 0).
 - `packages/eval/src/lib/toolcall-sanity.spec.ts` — **create**: the failing-first test for the gate, using the deterministic mock model.
 - `packages/eval/results/` — run artifacts (git-ignored).
@@ -247,6 +258,22 @@ git commit -m "feat(eval): tool-call sanity gate to exclude non-tool-calling mod
 
 ---
 
+### Task 2b: Env-driven adapter factory (`createEvalModel`) — ✅ DONE
+
+> **As-built:** added dep `@langchain/ollama@^0.2.4` (peer `@langchain/core >=0.3.58 <0.4.0`, satisfied by the resolved `0.3.80`; the newest 0.x line — `1.x` needs core `^1.0.0` which the repo is not on). New `packages/eval/src/lib/model-factory.ts` exports `EvalAdapter`, `resolveAdapter(cfg, env)`, `createEvalModel(cfg, env)`. `collectResult` now builds the real model via `createEvalModel` (was `createOpenRouterLLM`). 7 unit tests (adapter precedence + both client types via `instanceof`); full eval suite 47 passed / 1 skipped, typecheck green.
+
+**Files:**
+- Modify: `packages/eval/package.json` (add `@langchain/ollama`)
+- Create: `packages/eval/src/lib/model-factory.ts`
+- Test: `packages/eval/src/lib/model-factory.spec.ts`
+- Modify: `packages/eval/src/lib/run-eval.ts` (`collectResult` → `createEvalModel`)
+
+**Interfaces:**
+- Produces: `type EvalAdapter = "openrouter" | "ollama"`; `resolveAdapter(cfg?: { adapter?: EvalAdapter; baseURL?: string }, env?): EvalAdapter`; `createEvalModel(cfg?: { apiKey?; model?; baseURL?; adapter?; temperature? }, env?): BaseChatModel`.
+- Selection rule: explicit `adapter` > `EVAL_ADAPTER` env > baseURL inference (`:11434` w/o `/v1` ⇒ ollama) > `openrouter`.
+
+---
+
 ### Task 3: Install + warm Ollama, pull the local model set
 
 **Files:** none (environment setup). Done once on the WSL host.
@@ -281,23 +308,25 @@ ollama pull qwen2.5:32b
 ollama pull command-r:35b
 ```
 
-- [ ] **Step 4: Verify the OpenAI-compatible endpoint answers**
+- [ ] **Step 4: Verify the Ollama endpoints answer**
 
 ```bash
+# native API (used by the ChatOllama adapter — note NO /v1)
+curl -s http://localhost:11434/api/tags | head -c 400; echo
+# OpenAI-compat shim (fallback path)
 curl -s http://localhost:11434/v1/models | head -c 400; echo
 ```
-Expected: JSON listing the pulled models. This is the `EVAL_BASE_URL` the harness will hit.
+Expected: both list the pulled models. Native base = `http://localhost:11434`; shim base = `…/v1`.
 
-- [ ] **Step 5: Tool-call pre-flight per local model**
+- [ ] **Step 5: Tool-call pre-flight per local model (native adapter)**
 
-For each pulled model, run the Task 2 gate via a one-off (do NOT add to the committed report yet):
+For each pulled model, run the Task 2 gate via a one-off (do NOT add to the committed report yet). Uses the native `ChatOllama` adapter (no `/v1`):
 
 ```bash
-set -a; source .env.local; set +a
-OPENROUTER_API_KEY=ollama EVAL_BASE_URL=http://localhost:11434/v1 EVAL_MODEL=qwen3:4b \
-  pnpm tsx -e "import {canDriveToolCalls} from './packages/eval/src/lib/toolcall-sanity'; canDriveToolCalls({llm:{apiKey:'ollama',model:'qwen3:4b',baseURL:'http://localhost:11434/v1'}}).then(r=>console.log(r))"
+EVAL_ADAPTER=ollama EVAL_BASE_URL=http://localhost:11434 \
+  pnpm tsx -e "import {canDriveToolCalls} from './packages/eval/src/lib/toolcall-sanity'; import {createEvalModel} from './packages/eval/src/lib/model-factory'; canDriveToolCalls({model: createEvalModel({model:'qwen3:4b'})}).then(r=>console.log(r))"
 ```
-Expected: `{ ok: true, roundTrips: >0, ... }`. Record any model that returns `ok:false` as **excluded (no tool calls)** for the comparison doc — do not run its full sweep.
+Expected: `{ ok: true, roundTrips: >0, ... }`. If `ok:false`, re-test the SAME model via the `/v1` shim (`createEvalModel({model:'qwen3:4b', baseURL:'http://localhost:11434/v1'})`). Record as **excluded (no tool calls)** only if BOTH transports give 0 round-trips — do not run its full sweep.
 
 ---
 
@@ -305,7 +334,7 @@ Expected: `{ ok: true, roundTrips: >0, ... }`. Record any model that returns `ok
 
 **Files:** writes to `packages/eval/results/` (git-ignored).
 
-Each run is one model. Behavioral scenarios + marketplace anchors are model-dependent; the structural curve at the tail is deterministic (identical every run) — keep it, it's free, but the paper cites it ONCE.
+Adapter defaults to `openrouter` — no `EVAL_ADAPTER`/`EVAL_BASE_URL` needed for these. Each run is one model. Behavioral scenarios + marketplace anchors are model-dependent; the structural curve at the tail is deterministic (identical every run) — keep it, it's free, but cite it ONCE.
 
 - [ ] **Step 1: Baseline re-run (continuity)**
 
@@ -337,25 +366,27 @@ For each: note the report filename, whether all scenarios produced round-trips >
 
 **Files:** writes to `packages/eval/results/` (git-ignored).
 
-Local has NO rate limit → set `EVAL_THROTTLE_MS=0`. Local is slower per call; bound time with fewer anchors/seeds if needed.
+Local uses the **native `ChatOllama` adapter**: `EVAL_ADAPTER=ollama` + `EVAL_BASE_URL=http://localhost:11434` (NO `/v1`). `OPENROUTER_API_KEY=ollama` is still required — the `runFullEval` GATE checks for a non-empty key even though the ollama path ignores it. No rate limit → `EVAL_THROTTLE_MS=0`. Local is slower per call; bound time with fewer anchors/seeds if needed.
+
+Shared env prefix for every local run:
+
+```bash
+set -a; source .env.local; set +a   # for any other vars; key is overridden below
+LOCAL="RUN_EVAL=1 EVAL_THROTTLE_MS=0 OPENROUTER_API_KEY=ollama EVAL_ADAPTER=ollama EVAL_BASE_URL=http://localhost:11434"
+```
 
 - [ ] **Step 1: One local model, full behavioral**
 
 ```bash
-set -a; source .env.local; set +a
-RUN_EVAL=1 EVAL_THROTTLE_MS=0 EVAL_SEEDS=5 \
-  OPENROUTER_API_KEY=ollama EVAL_BASE_URL=http://localhost:11434/v1 \
-  EVAL_MODEL=qwen3:4b \
+env $LOCAL EVAL_SEEDS=5 EVAL_MODEL=qwen3:4b \
   pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
 ```
 Expected: `packages/eval/results/eval-report-<stamp>-qwen3_4b.md`. Watch `nvidia-smi` in another shell to confirm GPU use.
 
-- [ ] **Step 2: Remaining local models, one at a time**
+- [ ] **Step 2: Remaining small/medium local models, one at a time**
 
 ```bash
-RUN_EVAL=1 EVAL_THROTTLE_MS=0 EVAL_SEEDS=5 \
-  OPENROUTER_API_KEY=ollama EVAL_BASE_URL=http://localhost:11434/v1 \
-  EVAL_MODEL=llama3.1:8b \
+env $LOCAL EVAL_SEEDS=5 EVAL_MODEL=llama3.1:8b \
   pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
 ```
 Repeat per pulled model. If a model is slow, drop to `EVAL_SEEDS=3 EVAL_ANCHORS=2,5` to bound wall-clock; note the reduced config in the comparison doc.
@@ -365,13 +396,9 @@ Repeat per pulled model. If a model is slow, drop to `EVAL_SEEDS=3 EVAL_ANCHORS=
 These exceed 6 GB VRAM → mostly CPU → minutes per run. Use a small sweep and watch `nvidia-smi`/`htop` (expect high CPU, partial GPU):
 
 ```bash
-RUN_EVAL=1 EVAL_THROTTLE_MS=0 EVAL_SEEDS=3 EVAL_ANCHORS=2,5 \
-  OPENROUTER_API_KEY=ollama EVAL_BASE_URL=http://localhost:11434/v1 \
-  EVAL_MODEL=qwen2.5:32b \
+env $LOCAL EVAL_SEEDS=3 EVAL_ANCHORS=2,5 EVAL_MODEL=qwen2.5:32b \
   pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
-RUN_EVAL=1 EVAL_THROTTLE_MS=0 EVAL_SEEDS=3 EVAL_ANCHORS=2,5 \
-  OPENROUTER_API_KEY=ollama EVAL_BASE_URL=http://localhost:11434/v1 \
-  EVAL_MODEL=command-r:35b \
+env $LOCAL EVAL_SEEDS=3 EVAL_ANCHORS=2,5 EVAL_MODEL=command-r:35b \
   pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
 ```
 Record the reduced `EVAL_SEEDS`/`EVAL_ANCHORS` in the comparison doc so the heavy rows are not compared head-to-head with 5-seed rows.
@@ -379,12 +406,22 @@ Record the reduced `EVAL_SEEDS`/`EVAL_ANCHORS` in the comparison doc so the heav
 - [ ] **Step 4: One R1 negative run (honesty)**
 
 ```bash
-RUN_EVAL=1 EVAL_THROTTLE_MS=0 EVAL_SEEDS=1 EVAL_ANCHORS=2 \
-  OPENROUTER_API_KEY=ollama EVAL_BASE_URL=http://localhost:11434/v1 \
-  EVAL_MODEL=deepseek-r1:7b \
+env $LOCAL EVAL_SEEDS=1 EVAL_ANCHORS=2 EVAL_MODEL=deepseek-r1:7b \
   pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec || true
 ```
 Expected: likely 0 round-trips / failed tool calls. Record it as the documented "reasoning model cannot drive the protocol tool" negative — do NOT put it in the comparison rows.
+
+- [ ] **Step 5: (fallback) re-test a gate-failing model via the `/v1` shim**
+
+If a tool-capable model gave 0 round-trips natively, try the OpenAI-compat shim before excluding it:
+
+```bash
+env RUN_EVAL=1 EVAL_THROTTLE_MS=0 OPENROUTER_API_KEY=ollama \
+  EVAL_ADAPTER=openrouter EVAL_BASE_URL=http://localhost:11434/v1 \
+  EVAL_SEEDS=3 EVAL_MODEL=<model> \
+  pnpm nx test @graph-context-protocol/eval -- run-eval.full.spec
+```
+Exclude only if BOTH transports yield 0 round-trips.
 
 ---
 
