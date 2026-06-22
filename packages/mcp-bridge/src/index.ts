@@ -10,3 +10,7 @@ export {
     type GcpMcpServerConfig,
     type RawMcpResource,
 } from "./lib/gcp-mcp-server";
+export {
+    createMcpPeerContextToolFactory,
+    type McpPeerContextToolOptions,
+} from "./lib/mcp-peer-context-tool";
