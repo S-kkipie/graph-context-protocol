@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Re-run the GCP-vs-A2A behavioral evaluation (plus M2 delegation and M4a MCP-interop containment) across **several models** — free OpenRouter tiers *and* cheap local Ollama models — so the paper's robustness no longer rests on a single model (`gpt-oss-120b`), directly retiring the stated limitation.
+**Goal:** Re-run the GCP-vs-A2A behavioral evaluation (plus M2 delegation and M4a MCP-interop containment) across **several models** — free OpenRouter tiers *and* cheap local Ollama models — so the robustness of the results no longer rests on a single model (`gpt-oss-120b`). Paper write-up is OUT OF SCOPE here (done later).
 
 **Architecture:** The harness already constructs every model through one neutral factory (`createOpenRouterLLM`, OpenAI-compatible) that *already* accepts a `baseURL`. The single missing wire is threading `baseURL` from env through `runFullEval`. Once wired, Ollama (OpenAI-compatible server at `http://localhost:11434/v1`, dummy key) is just another `baseURL` — no new client, no per-arm drift. Structural-coupling metrics are pure topology math (model-independent) and are NOT re-run per model; only behavioral metrics (tokens, latency, success, leakage, round-trips, provenance) are swept. A pre-flight tool-call sanity gate excludes models whose API can't drive the ReAct agent (no `tool_calls` → 0 round-trips → meaningless metrics) instead of polluting the tables.
 
@@ -82,9 +82,7 @@ Skip for this study: `qwen3-vl` (vision model — scenarios have no images; larg
 - `packages/eval/src/lib/toolcall-sanity.ts` — **create**: a tiny gate that runs one scenario×one seed and reports whether the model emitted any tool call (round-trips > 0).
 - `packages/eval/src/lib/toolcall-sanity.spec.ts` — **create**: the failing-first test for the gate, using the deterministic mock model.
 - `packages/eval/results/` — run artifacts (git-ignored).
-- `docs/paper/eval-report-<model>-seedsK.md` — **create per model**: copied/renamed from `results/` for the ones cited.
-- `docs/paper/multi-model-comparison.md` — **create**: cross-model summary table the paper sections cite.
-- `docs/paper/paper.tex` + `docs/paper/paper-es.tex` — **modify**: replace/extend the "single model" limitation paragraph with the multi-model robustness result.
+- Metrics summary doc — **create**: cross-model comparison table. Exact path + format TO BE DETAILED with the user (Task 7). Paper edits (`paper.tex`/`paper-es.tex`, PDFs) are OUT OF SCOPE here — deferred.
 
 ---
 
@@ -389,47 +387,24 @@ The containment proof (`mcp-containment.spec.ts`) currently uses the determinist
 
 ---
 
-### Task 7: Cross-model comparison doc + paper update
+### Task 7: Save metrics / cross-model comparison — TO BE DETAILED (co-edit)
+
+> The run protocol (Tasks 4–6) and the metrics-saving format will be refined WITH the user before any execution. Below is intent only — do NOT execute yet. Paper write-up (`paper.tex`/`paper-es.tex`, PDFs, limitation rewrite) is explicitly OUT OF SCOPE for this plan — deferred to a later session.
 
 **Files:**
-- Create: `docs/paper/multi-model-comparison.md`
-- Copy cited reports: `docs/paper/eval-report-<model>-seeds5.md` (these live under `docs/paper/`, which is NOT git-ignored — only `packages/eval/results/` is)
-- Modify: `docs/paper/paper.tex`, `docs/paper/paper-es.tex`
+- Create: metrics summary doc — path + format TBD with the user.
 
-- [ ] **Step 1: Assemble the comparison table**
-
-Build `docs/paper/multi-model-comparison.md`: one row per model × scenario, columns = the model-dependent metrics that matter to the claims — `successRate`, `leakageRate`, `provenanceCompleteness`, `roundTrips`, `tokens` (gcp vs a2a). Mark structural metrics as "model-independent (see baseline)". List excluded models with the reason (no tool calls / unavailable).
-
-- [ ] **Step 2: Verify the claims hold across models**
-
-The paper's load-bearing, model-INDEPENDENT facts (must hold for every included model):
-- `provenanceCompleteness`: gcp = 1, a2a = 0 (structural property of the audit sink, not the model).
-- structural `integrationEffort`: gcp = 1, a2a = 4; `pairwiseConnections` curve linear vs quadratic.
-The model-DEPENDENT facts (report the spread, don't overclaim): `leakageRate`, `successRate`, `tokens`, `latencyMs`. State ranges across models, not a single number.
-
-- [ ] **Step 3: Rewrite the limitation paragraph**
-
-In `paper.tex` (~line 440) and `paper-es.tex` (~line 549/569): replace "single free-tier model (gpt-oss-120b) … pilot" with the multi-model result — N models across M lineages (hosted + local), which facts were invariant, which varied and by how much. Keep honesty: small local models have lower `successRate`; reasoning models (R1) could not drive the tool at all (cite the negative).
-
-- [ ] **Step 4: Rebuild PDFs**
-
-```bash
-cd docs/paper && latexmk -pdf paper.tex && latexmk -pdf paper-es.tex
-```
-Expected: `paper.pdf`, `paper-es.pdf` rebuilt, no undefined-reference errors.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add docs/paper/multi-model-comparison.md docs/paper/eval-report-*-seeds5.md docs/paper/paper.tex docs/paper/paper-es.tex docs/paper/paper.pdf docs/paper/paper-es.pdf
-git commit -m "docs(paper): multi-model robustness evaluation (free OpenRouter + local Ollama)"
-```
+**Intent (to refine together):**
+- One row per model × scenario; columns = model-dependent metrics (`successRate`, `leakageRate`, `provenanceCompleteness`, `roundTrips`, `tokens`) for gcp vs a2a.
+- Mark structural metrics model-independent (cite the baseline once; not re-run per model).
+- List excluded models + reason (no tool calls / unavailable / reduced sweep config).
+- Decide where reports live and which are kept vs git-ignored.
 
 ---
 
 ## Self-Review
 
-- **Coverage:** baseURL wiring (T1), non-tool-callers excluded cleanly (T2), env setup (T3), free sweep (T4), local sweep (T5), optional MCP-interop sweep (T6), comparison + paper (T7). The user's two explicit asks — gpt-oss via API AND local Ollama (gemma/qwen/deepseek family) — are both covered, with the tool-calling caveat surfaced (gemma2/R1 gated or documented-negative rather than silently failing).
+- **Coverage:** baseURL wiring (T1), non-tool-callers excluded cleanly (T2), env setup (T3), free sweep (T4), local sweep (T5), optional MCP-interop sweep (T6), metrics-saving/comparison (T7 — to co-edit; paper OUT OF SCOPE). The user's two explicit asks — gpt-oss via API AND local Ollama (gemma/qwen/deepseek family) — are both covered, with the tool-calling caveat surfaced (gemma2/R1 gated or documented-negative rather than silently failing).
 - **No silent caps:** every exclusion (no tool calls, rate-limited, reduced seeds/anchors) is recorded in the comparison doc, not dropped.
 - **Fairness:** identical code path per model (only `EVAL_MODEL`/`EVAL_BASE_URL` change); structural metrics not re-run because they cannot vary by model.
 - **Type consistency:** `{ apiKey?; model?; baseURL? }` is the single carrier shape across `runFullEval` opts, `CollectOptions.llm`, `RunOptions.llm`. `canDriveToolCalls` returns `{ ok; roundTrips; answer }` and is consumed only by the pre-flight step.
