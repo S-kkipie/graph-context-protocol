@@ -1013,6 +1013,7 @@ export const MCP_RUN_OPTS: { numRuns: number; seed?: number } = {
 
 ```ts
 import {
+    type AccessPolicyDescriptor,
     createAgentNode,
     createGraph,
     createKnowledgeNode,
@@ -1040,9 +1041,7 @@ const KNOWLEDGE_ID = "knowledge:p5";
 const TOKEN = "tok:p5";
 
 async function mcpReadHasContent(
-    policy: ReturnType<typeof createMetadataWithAccessPolicy> extends infer _
-        ? Parameters<typeof createMetadataWithAccessPolicy>[0]
-        : never,
+    policy: AccessPolicyDescriptor,
     principal: Principal,
 ): Promise<{ mcpContent: boolean; gateAllows: boolean; leaked: boolean }> {
     const nodeRole = createRole("role:node", "Node", "");
