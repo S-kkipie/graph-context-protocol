@@ -19,7 +19,6 @@ import {
 import {
     createServerError,
     type KnowledgeSourceAdapter,
-    type ServerErrorCode,
 } from "@graph-context-protocol/server";
 
 /** Minimal MCP client surface the adapter needs (real SDK Client satisfies it). */
@@ -77,10 +76,7 @@ export function createMcpKnowledgeAdapter(
             } catch (cause) {
                 return fail(
                     createServerError(
-                        // "unavailable" is the semantic code for this error;
-                        // cast because the server's ServerErrorCode union does not yet
-                        // include it and we cannot modify the server package here.
-                        "unavailable" as ServerErrorCode,
+                        "knowledge-error",
                         `Cannot read MCP resource: ${config.resourceUri}`,
                         { metadata: { cause: String(cause) } },
                     ),

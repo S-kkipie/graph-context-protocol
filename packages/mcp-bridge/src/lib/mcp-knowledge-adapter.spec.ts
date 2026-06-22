@@ -66,6 +66,6 @@ describe("createMcpKnowledgeAdapter", () => {
         });
         expect(result.success).toBe(false);
         if (result.success) return;
-        expect(result.error.code).toBe("unavailable");
+        expect(result.error.code).toBe("knowledge-error");
     });
 });
