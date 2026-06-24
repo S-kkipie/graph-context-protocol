@@ -42,6 +42,11 @@ import {
     queryRemoteContext,
 } from "@graph-context-protocol/server";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import {
+    type DiscoveryResult,
+    measureA2aDiscovery,
+    measureGcpDiscovery,
+} from "./discovery";
 
 export type Arm = "gcp" | "a2a";
 
@@ -50,6 +55,12 @@ export interface RunArtifacts {
     readonly coupling: CouplingMetricsSnapshot;
     readonly toolTranscript: ReadonlyArray<{ peerId: string; output: string }>;
     readonly auditEvents: ReadonlyArray<ReadProvenance>;
+    /**
+     * Discovery-leg coupling: substrate round-trips paid to LEARN the peers
+     * before any query. GCP O(1) (one substrate query) vs A2A O(N) (one card
+     * fetch per peer). See {@link DiscoveryResult}.
+     */
+    readonly discovery: DiscoveryResult;
 }
 
 export interface RunOptions {
@@ -180,11 +191,21 @@ async function runGcp(opts: RunOptions): Promise<RunArtifacts> {
             metrics,
         });
         const answer = await runTaskAgent(agent, scenario.agent.goal);
+        // GCP discovery: every peer registered with the shared substrate; one
+        // query resolves the whole set (O(1)), independent of N.
+        const discovery = measureGcpDiscovery(
+            scenario.agent.peers.map((nodeId) => ({
+                peerId: nodeId,
+                knowledgeNodeId: nodeId,
+                url: urlByNodeId.get(nodeId) ?? "",
+            })),
+        );
         return {
             answer,
             coupling: metrics.snapshot(),
             toolTranscript: transcript,
             auditEvents: auditSink.list(),
+            discovery,
         };
     } finally {
         rmSync(dir, { recursive: true, force: true });
@@ -218,11 +239,20 @@ async function runA2a(opts: RunOptions): Promise<RunArtifacts> {
             metrics,
         });
         const answer = await runTaskAgent(agent, scenario.agent.goal);
+        // A2A discovery: no shared substrate — the consumer fetches each peer's
+        // agent card individually (one round-trip per peer, O(N)).
+        const discovery = await measureA2aDiscovery(
+            scenario.agent.peers.map(
+                (nodeId) =>
+                    `${urlByNodeId.get(nodeId) ?? ""}/.well-known/agent-card.json`,
+            ),
+        );
         return {
             answer,
             coupling: metrics.snapshot(),
             toolTranscript: transcript,
             auditEvents: [],
+            discovery,
         };
     } finally {
         await Promise.all(handles.map((h) => h.close()));

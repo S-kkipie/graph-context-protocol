@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     aggregateBehavioral,
     type MetricsResult,
+    renderScalingTable,
     renderTable,
 } from "./results";
 
@@ -21,6 +22,8 @@ function mk(
             integrationEffort: arm === "a2a" ? 6 : 1,
         },
         behavioral: {
+            // n=3: A2A fetches one card per peer (3), GCP one substrate query (1).
+            discoveryMessages: arm === "a2a" ? 3 : 1,
             messages: 3,
             connections: 3,
             tokens,
@@ -61,5 +64,30 @@ describe("renderTable", () => {
         expect(md).toContain("gcp");
         expect(md).toContain("a2a");
         expect(md).toContain("|");
+    });
+
+    it("renders a discoveryMessages row (GCP O(1) vs A2A O(N))", () => {
+        const md = renderTable("marketplace", [
+            mk("gcp", 1, 50, true),
+            mk("a2a", 1, 80, true),
+        ]);
+        const row = md
+            .split("\n")
+            .find((l: string) => l.includes("discoveryMessages"));
+        expect(row).toBeDefined();
+        // gcp 1.0 | a2a 3.0
+        expect(row).toContain("1.0");
+        expect(row).toContain("3.0");
+    });
+});
+
+describe("renderScalingTable", () => {
+    it("emits one row per N with discovery diverging while tokens stay close", () => {
+        const results = [mk("gcp", 1, 100, true), mk("a2a", 1, 100, true)];
+        const md = renderScalingTable("scaling", results, [3]);
+        const row = md.split("\n").find((l: string) => l.startsWith("| 3 |"));
+        expect(row).toBeDefined();
+        // | N | gcp disc | a2a disc | gcp tokens | a2a tokens | ...
+        expect(row).toBe("| 3 | 1 | 3 | 100 | 100 | 10 | 10 |");
     });
 });

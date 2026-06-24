@@ -18,7 +18,7 @@ import { detectLeaks } from "./canary";
 import { delegationMetrics } from "./delegation";
 import { createEvalModel } from "./model-factory";
 import { provenanceCompleteness } from "./provenance";
-import { type MetricsResult, renderTable } from "./results";
+import { type MetricsResult, renderScalingTable, renderTable } from "./results";
 import { type Arm, runScenario } from "./runner";
 import { structuralMetrics } from "./topology";
 
@@ -77,6 +77,7 @@ export async function collectResult(
         seed: opts.seed,
         structural: structuralMetrics(opts.arm, opts.n),
         behavioral: {
+            discoveryMessages: artifacts.discovery.discoveryMessages,
             messages: artifacts.coupling.messagesSent,
             connections: artifacts.coupling.connectionsOpened,
             tokens: counter ? counter.total() : 0,
@@ -108,7 +109,9 @@ export async function runFullEval(opts?: {
         );
     }
     const seeds = opts?.seeds ?? 5;
-    const anchors = opts?.anchors ?? [2, 5, 10];
+    // Log-spaced sweep so the discovery curve (A2A O(N) vs GCP O(1)) and runtime
+    // parity are both legible per N. Override with EVAL_ANCHORS.
+    const anchors = opts?.anchors ?? [2, 4, 8, 16, 32];
     // Free OpenRouter models support tool-calling (react agent needs it);
     // overridable via opts.model or EVAL_MODEL. Default is a free tier model.
     const model =
@@ -180,7 +183,24 @@ export async function runFullEval(opts?: {
             }
         }
     }
-    sections.push(renderTable("marketplace", mkt));
+    // Per-N scaling first (the headline curve), then one detail table per N.
+    // Pooling all anchors into ONE table conflates different N and is what made
+    // the earlier marketplace row (messages 5.7 ± 3.3) meaningless.
+    sections.push(
+        renderScalingTable(
+            "marketplace scaling — discovery O(1) vs O(N), query at parity",
+            mkt,
+            anchors,
+        ),
+    );
+    for (const n of anchors) {
+        sections.push(
+            renderTable(
+                `marketplace (N=${n})`,
+                mkt.filter((r) => r.n === n),
+            ),
+        );
+    }
 
     sections.push("### marketplace structural curve (pairwiseConnections)");
     sections.push("");

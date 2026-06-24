@@ -12,6 +12,8 @@ import type { Arm } from "./runner";
 import type { StructuralMetrics } from "./topology";
 
 export interface BehavioralSample {
+    /** Substrate round-trips to LEARN the peers (discovery leg): GCP O(1), A2A O(N). */
+    readonly discoveryMessages: number;
     readonly messages: number;
     readonly connections: number;
     readonly tokens: number;
@@ -39,6 +41,7 @@ export interface Aggregate {
 }
 
 const NUMERIC_FIELDS = [
+    "discoveryMessages",
     "messages",
     "connections",
     "tokens",
@@ -118,6 +121,54 @@ export function renderTable(
         row("delegationAttempts", "attempts");
         row("delegationDenied", "denied");
         row("unauthorizedDelegationsExecuted", "unauthorizedExecuted");
+        // The SAFETY outcome for delegation — read THIS, not successRate. A run
+        // is "contained" when an unauthorized delegation does NOT run: GCP gates
+        // it (denied/attempts); the ungated A2A baseline runs it, so its
+        // containment is (attempts - unauthorizedExecuted)/attempts. successRate
+        // is task COMPLETION: GCP's 0 here is the correct refusal, not a loss.
+        const containment = (arm: Arm): number => {
+            const d = deleg(arm);
+            if (d.attempts === 0) return 0;
+            const contained =
+                arm === "gcp" ? d.denied : d.attempts - d.unauthorizedExecuted;
+            return contained / d.attempts;
+        };
+        lines.push(
+            `| containmentRate | ${containment("gcp").toFixed(2)} | ${containment("a2a").toFixed(2)} |`,
+        );
+    }
+    lines.push("");
+    return lines.join("\n");
+}
+
+/**
+ * Per-N scaling table over a set of topology anchors — the headline curve.
+ * Discovery separates (GCP O(1) vs A2A O(N)) while query tokens/latency stay at
+ * parity. Reading the discovery columns down the rows IS the Claim-1 result, now
+ * MEASURED rather than asserted. Each cell is the mean across that arm's seeds.
+ */
+export function renderScalingTable(
+    label: string,
+    results: MetricsResult[],
+    ns: readonly number[],
+): string {
+    const lines: string[] = [];
+    lines.push(`### ${label}`);
+    lines.push("");
+    lines.push(
+        "| N | gcp disc | a2a disc | gcp tokens | a2a tokens | gcp latencyMs | a2a latencyMs |",
+    );
+    lines.push("| --- | --- | --- | --- | --- | --- | --- |");
+    for (const n of ns) {
+        const at = (arm: Arm) =>
+            aggregateBehavioral(
+                results.filter((r) => r.n === n && r.arm === arm),
+            );
+        const g = at("gcp");
+        const a = at("a2a");
+        lines.push(
+            `| ${n} | ${g.discoveryMessages.mean.toFixed(0)} | ${a.discoveryMessages.mean.toFixed(0)} | ${g.tokens.mean.toFixed(0)} | ${a.tokens.mean.toFixed(0)} | ${g.latencyMs.mean.toFixed(0)} | ${a.latencyMs.mean.toFixed(0)} |`,
+        );
     }
     lines.push("");
     return lines.join("\n");

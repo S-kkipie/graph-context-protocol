@@ -12,6 +12,7 @@ const baseArt = {
     coupling: { peersKnown: 0, connectionsOpened: 0, messagesSent: 0 },
     toolTranscript: [],
     auditEvents: [] as never,
+    discovery: { discoveryMessages: 0, peersDiscovered: 0 },
 };
 
 describe("taskSuccess", () => {

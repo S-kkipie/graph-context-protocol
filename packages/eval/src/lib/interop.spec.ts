@@ -26,6 +26,7 @@ const artifacts = (outputs: string[]): RunArtifacts => ({
     },
     toolTranscript: outputs.map((output) => ({ peerId: "p", output })),
     auditEvents: [],
+    discovery: { discoveryMessages: 0, peersDiscovered: 0 },
 });
 
 describe("interopMetrics", () => {

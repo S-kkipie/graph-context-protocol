@@ -5,6 +5,7 @@ const base = {
     answer: "",
     coupling: { peersKnown: 0, connectionsOpened: 0, messagesSent: 0 },
     toolTranscript: [],
+    discovery: { discoveryMessages: 0, peersDiscovered: 0 },
 };
 
 describe("provenanceCompleteness", () => {

@@ -13,6 +13,7 @@ function artifacts(
         } as unknown as RunArtifacts["coupling"],
         toolTranscript: transcript,
         auditEvents: [],
+        discovery: { discoveryMessages: 0, peersDiscovered: 0 },
     };
 }
 

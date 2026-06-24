@@ -21,12 +21,33 @@ averaged (mean ± population s.d.).
 
 | Class | Metrics | Varies by model? |
 | --- | --- | --- |
-| **Model-independent** (topology / wiring) | `pairwiseConnections`, `integrationEffort`, `provenanceCompleteness` | **No** — pure structure. Report ONCE from the baseline; do NOT re-tabulate per model. |
+| **Model-independent** (topology / wiring) | `pairwiseConnections`, `integrationEffort`, `provenanceCompleteness`, `discoveryMessages`, `containmentRate` | **No** — pure structure. Report ONCE from the baseline; do NOT re-tabulate per model. |
 | **Model-dependent** (behavioral) | `successRate`, `leakageRate`, `tokens`, `roundTrips`, `messages`, `connections`, `latencyMs` | **Yes** — report the spread across models. |
 
 `provenanceCompleteness` is structural: `gcp = 1` (audit sink records every
 read), `a2a = 0` (no provenance). It does not depend on the model and must not
 be presented as a model-varying result.
+
+### 0.1 The three headline signals (read these first)
+
+The per-run behavioral fan-out is **O(N) on both arms by construction** (one
+orchestrator queries each peer once), so `tokens`/`latency` look equal — that
+parity is expected, not a weakness. The protocol's edge lives in three signals
+the report now surfaces explicitly:
+
+| signal | where | gcp | a2a | what it proves |
+| --- | --- | --- | --- | --- |
+| **discovery** (`discoveryMessages`) | `marketplace scaling` table + per-N tables | `1` at every N | `N` (one card fetch per peer) | acquaintance cost is **O(1) vs O(N)** — MEASURED, not just the analytic `pairwiseConnections` curve |
+| **runtime parity** (`tokens`, `latencyMs`) | `marketplace scaling` table | ≈ a2a | ≈ gcp | GCP buys structure + provenance + containment at **zero query-cost penalty** |
+| **containment** (`containmentRate`) | `delegation` table | `1.00` | `0.00` | unauthorized delegation gated (GCP) vs executed (A2A). Read THIS, not `successRate` — GCP's `successRate=0` on delegation is the **correct refusal**, not a failure |
+
+Discovery is measured genuinely: the GCP arm registers every peer with the
+shared substrate and resolves them in one query; the A2A arm fetches each peer's
+real `.well-known/agent-card.json`. The `1`-vs-`N` gap emerges from the protocol
+topology, not a hand-written constant — both funnel through the same
+`CouplingMetrics` seam. (Impl: `packages/eval/src/lib/discovery.ts`.) The gap
+only widens with N, so the marketplace sweep must span several N (see
+`EVAL_ANCHORS` below).
 
 ---
 
@@ -51,13 +72,17 @@ be presented as a model-varying result.
 | `EVAL_ADAPTER` | `openrouter` \| `ollama` (else inferred from baseURL) | inferred → `openrouter` |
 | `EVAL_BASE_URL` | OpenAI-compat base (`…/v1`) or native Ollama (`http://localhost:11434`) | OpenRouter |
 | `EVAL_SEEDS` | reps per arm | `5` |
-| `EVAL_ANCHORS` | marketplace behavioral Ns (comma list) | `2,5,10` |
+| `EVAL_ANCHORS` | marketplace behavioral Ns (comma list) — the discovery/scaling sweep | `2,4,8,16,32` |
 | `EVAL_THROTTLE_MS` | inter-run pause (rate-limit guard; multiplied by attempt) | `4000` |
 | `EVAL_RUN_RETRIES` | whole-run retries on failure | `3` |
 
 Output of each run: `packages/eval/results/eval-report-<stamp>-<model>.md`
 (git-ignored). Header carries model + seeds + timestamp; body has one table per
-scenario plus the marketplace structural curve.
+scenario (with `discoveryMessages` and, for delegation, `containmentRate`), the
+**`marketplace scaling`** table (one row per N — discovery O(1) vs O(N), tokens
+at parity), one detail table per N, and the analytic structural curve. The old
+single pooled marketplace table is gone — it conflated different N (that is why
+the earlier `messages 5.7 ± 3.3` row was meaningless).
 
 ### 1.1 Local setup helper — `scripts/eval-ollama.sh`
 
@@ -121,6 +146,31 @@ Minimal set if time-bound: rows 1, 3, 4, 5, 6.
 
 ## 3. Run instructions
 
+### 3.0 One-command guided run (recommended) — `scripts/eval-run.sh`
+
+Wraps pre-flight (§3a) + full eval (§3b/§3c) + report surfacing into one step.
+Adapter is inferred from the model id: an id with `/` is hosted (OpenRouter); a
+bare tag is local Ollama. Hosted runs read `OPENROUTER_API_KEY` from
+`.env.local`; local runs need Ollama up (`scripts/eval-ollama.sh --serve`). The
+key is exported, never echoed.
+
+```bash
+# local, default sweep (seeds 5, anchors 2,4,8,16,32)
+./scripts/eval-run.sh qwen3:4b
+# local, tighter error bars + explicit curve
+./scripts/eval-run.sh qwen3:4b 15 2,4,8,16,32
+# hosted (OpenRouter)
+./scripts/eval-run.sh openai/gpt-oss-120b:free 5
+# preview the exact commands, run nothing
+./scripts/eval-run.sh qwen2.5:32b 3 2,8 --dry-run
+```
+
+On finish it prints the report path, the `marketplace scaling` block (discovery
+O(1) vs O(N), tokens at parity), and the `containmentRate` row. Pre-flight that
+fails (0 tool calls) aborts before writing a junk report — override with
+`--no-preflight`. The manual steps below (§3a–§3c) are what this script runs;
+use them when you need finer control.
+
 ### 3a. Pre-flight (every model, before its full sweep)
 
 Confirm the model actually drives tool calls — a 0-round-trip model produces
@@ -171,6 +221,11 @@ env $LOCAL EVAL_SEEDS=1 EVAL_ANCHORS=2 EVAL_MODEL=deepseek-r1:7b pnpm nx test @g
 adapter ignores it. Watch `nvidia-smi` to confirm GPU offload (small models)
 vs CPU spill (heavy models).
 
+Heavy rows use a reduced `EVAL_ANCHORS=2,5` for speed — that truncates the
+discovery curve to two points (still `1` vs `2` and `1` vs `5`). The full
+`2,4,8,16,32` curve shape is established by the small/local models at default
+sweep; heavy models only need to confirm the same direction, not re-trace it.
+
 ---
 
 ## 4. Collect metrics
@@ -195,7 +250,11 @@ single metric across all reports with grep, e.g. leakage and success:
 for f in packages/eval/results/eval-report-*.md; do
   m=$(grep -m1 "^- model:" "$f" | sed 's/^- model: //')
   echo "== $m =="
-  grep -E "^\| (successRate|leakageRate|tokens|roundTrips) " "$f"
+  grep -E "^\| (successRate|leakageRate|tokens|roundTrips|discoveryMessages|containmentRate) " "$f"
+done
+# the discovery curve lives in the scaling table — pull it per report:
+for f in packages/eval/results/eval-report-*.md; do
+  echo "== $f =="; sed -n '/marketplace scaling/,/^$/p' "$f"
 done
 ```
 Transcribe into the comparison template (§4d). Tedious but exact; fine for ≤10
@@ -235,7 +294,9 @@ columns only. Template:
 
 Structural (model-independent, from baseline): integrationEffort gcp=1 a2a=4;
 provenanceCompleteness gcp=1 a2a=0; pairwiseConnections linear (gcp) vs
-quadratic (a2a) — see baseline report.
+quadratic (a2a); discoveryMessages gcp=1 (any N) vs a2a=N; containmentRate
+(delegation) gcp=1.00 vs a2a=0.00 — see baseline report's `marketplace scaling`
+and `delegation` tables.
 
 ## software-org
 | model | seeds | successRate g/a | leakageRate g/a | tokens g/a | roundTrips g/a |

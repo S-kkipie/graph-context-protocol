@@ -9,6 +9,7 @@ const scenario = {
 const base = {
     coupling: { peersKnown: 0, connectionsOpened: 0, messagesSent: 0 },
     auditEvents: [] as never,
+    discovery: { discoveryMessages: 0, peersDiscovered: 0 },
 };
 
 describe("detectLeaks", () => {

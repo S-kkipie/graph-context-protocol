@@ -36,6 +36,7 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { measureGcpDiscovery } from "./discovery";
 import { type RunArtifacts, recordingFactory } from "./runner";
 
 export type McpArm = "gcp-mcp" | "raw-mcp";
@@ -198,11 +199,21 @@ export async function runMcpScenario(opts: {
             metrics,
         });
         const answer = await runTaskAgent(agent, scenario.agent.goal);
+        // The MCP bridge carries GCP's register-once-then-discover semantics, so
+        // discovery is one substrate query (O(1)) like the native GCP arm.
+        const discovery = measureGcpDiscovery(
+            scenario.agent.peers.map((nodeId) => ({
+                peerId: nodeId,
+                knowledgeNodeId: nodeId,
+                url: nodeUri(nodeId),
+            })),
+        );
         return {
             answer,
             coupling: metrics.snapshot(),
             toolTranscript: transcript,
             auditEvents: [],
+            discovery,
         };
     } finally {
         await wiring.cleanup();
