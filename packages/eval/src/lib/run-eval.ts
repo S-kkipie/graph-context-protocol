@@ -78,6 +78,7 @@ export async function collectResult(
         structural: structuralMetrics(opts.arm, opts.n),
         behavioral: {
             discoveryMessages: artifacts.discovery.discoveryMessages,
+            toolPromptTokens: artifacts.toolBudget.toolPromptTokens,
             messages: artifacts.coupling.messagesSent,
             connections: artifacts.coupling.connectionsOpened,
             tokens: counter ? counter.total() : 0,
@@ -188,7 +189,7 @@ export async function runFullEval(opts?: {
     // the earlier marketplace row (messages 5.7 ± 3.3) meaningless.
     sections.push(
         renderScalingTable(
-            "marketplace scaling — discovery O(1) vs O(N), query at parity",
+            "marketplace scaling — discovery + tool-prompt O(1) vs O(N), query at parity",
             mkt,
             anchors,
         ),

@@ -21,33 +21,51 @@ averaged (mean ± population s.d.).
 
 | Class | Metrics | Varies by model? |
 | --- | --- | --- |
-| **Model-independent** (topology / wiring) | `pairwiseConnections`, `integrationEffort`, `provenanceCompleteness`, `discoveryMessages`, `containmentRate` | **No** — pure structure. Report ONCE from the baseline; do NOT re-tabulate per model. |
+| **Model-independent** (topology / wiring) | `pairwiseConnections`, `integrationEffort`, `provenanceCompleteness`, `discoveryMessages`, `toolPromptTokens`, `containmentRate` | **No** — pure structure. Report ONCE from the baseline; do NOT re-tabulate per model. |
 | **Model-dependent** (behavioral) | `successRate`, `leakageRate`, `tokens`, `roundTrips`, `messages`, `connections`, `latencyMs` | **Yes** — report the spread across models. |
 
 `provenanceCompleteness` is structural: `gcp = 1` (audit sink records every
 read), `a2a = 0` (no provenance). It does not depend on the model and must not
 be presented as a model-varying result.
 
-### 0.1 The three headline signals (read these first)
+### 0.1 The headline signals (read these first)
 
-The per-run behavioral fan-out is **O(N) on both arms by construction** (one
-orchestrator queries each peer once), so `tokens`/`latency` look equal — that
-parity is expected, not a weakness. The protocol's edge lives in three signals
-the report now surfaces explicitly:
+The per-run **query** fan-out is **O(N) on both arms by construction** (one
+orchestrator queries each peer once), so the live `tokens`/`latency` of the
+query path look equal — that parity is expected, not a weakness. The protocol's
+edge lives in the signals the report now surfaces explicitly:
 
 | signal | where | gcp | a2a | what it proves |
 | --- | --- | --- | --- | --- |
-| **discovery** (`discoveryMessages`) | `marketplace scaling` table + per-N tables | `1` at every N | `N` (one card fetch per peer) | acquaintance cost is **O(1) vs O(N)** — MEASURED, not just the analytic `pairwiseConnections` curve |
-| **runtime parity** (`tokens`, `latencyMs`) | `marketplace scaling` table | ≈ a2a | ≈ gcp | GCP buys structure + provenance + containment at **zero query-cost penalty** |
+| **discovery** (`discoveryMessages`) | `marketplace scaling` + per-N tables | `1` at every N | `N` (one card fetch per peer) | acquaintance cost **O(1) vs O(N)** — MEASURED, not just the analytic `pairwiseConnections` curve |
+| **tool-prompt tokens** (`toolPromptTokens`) | `marketplace scaling` (`toolTok` cols) + per-N tables | flat (one `query_context` tool) | grows with N (one tool per peer) | **prompt-token** cost of the tool-binding model is **O(1) vs O(N)** — re-sent every react turn, so it compounds. This is where GCP saves real tokens |
+| **runtime parity** (`tokens`, `latencyMs`) | `marketplace scaling` table | ≈ a2a | ≈ gcp | GCP buys all of the above at **zero query-cost penalty** |
 | **containment** (`containmentRate`) | `delegation` table | `1.00` | `0.00` | unauthorized delegation gated (GCP) vs executed (A2A). Read THIS, not `successRate` — GCP's `successRate=0` on delegation is the **correct refusal**, not a failure |
 
-Discovery is measured genuinely: the GCP arm registers every peer with the
-shared substrate and resolves them in one query; the A2A arm fetches each peer's
-real `.well-known/agent-card.json`. The `1`-vs-`N` gap emerges from the protocol
-topology, not a hand-written constant — both funnel through the same
-`CouplingMetrics` seam. (Impl: `packages/eval/src/lib/discovery.ts`.) The gap
-only widens with N, so the marketplace sweep must span several N (see
-`EVAL_ANCHORS` below).
+Both scaling signals are MEASURED genuinely, not hand-written:
+- **discovery** — the GCP arm registers every peer with the shared substrate and
+  resolves them in one query; the A2A arm fetches each peer's real
+  `.well-known/agent-card.json`. (Impl: `packages/eval/src/lib/discovery.ts`.)
+- **tool-prompt tokens** — counted from the actual tool definitions each arm
+  binds: A2A's per-peer tool (`createA2aPeerContextToolFactory`) × N vs GCP's
+  single `createGcpQueryToolFactory` tool. It is *structural* (the protocol's
+  prescribed binding, like the topology curve) but expressed in tokens and
+  grounded in real schemas; it predicts the live `tokens` gap because an LLM
+  re-receives every bound tool's schema on every turn. To confirm end-to-end you
+  would run the GCP arm with the single tool live — future work; the structural
+  number already quantifies the gap. (Impl: `packages/eval/src/lib/tool-budget.ts`.)
+
+Both gaps widen with N, so the marketplace sweep must span several N (see
+`EVAL_ANCHORS` below). Sample (mock model, so live `tokens` are 0; `toolTok` is
+the deterministic driver):
+
+```
+| N  | gcp toolTok | a2a toolTok |
+| 2  | 72          | 110         |
+| 8  | 72          | 440         |
+| 16 | 72          | 886         |
+| 32 | 72          | 1782        |   ~25x, and re-sent every turn
+```
 
 ---
 
@@ -78,9 +96,10 @@ only widens with N, so the marketplace sweep must span several N (see
 
 Output of each run: `packages/eval/results/eval-report-<stamp>-<model>.md`
 (git-ignored). Header carries model + seeds + timestamp; body has one table per
-scenario (with `discoveryMessages` and, for delegation, `containmentRate`), the
-**`marketplace scaling`** table (one row per N — discovery O(1) vs O(N), tokens
-at parity), one detail table per N, and the analytic structural curve. The old
+scenario (with `discoveryMessages`, `toolPromptTokens`, and, for delegation,
+`containmentRate`), the **`marketplace scaling`** table (one row per N —
+discovery and `toolTok` O(1) vs O(N), live tokens/latency at parity), one detail
+table per N, and the analytic structural curve. The old
 single pooled marketplace table is gone — it conflated different N (that is why
 the earlier `messages 5.7 ± 3.3` row was meaningless).
 
@@ -250,7 +269,7 @@ single metric across all reports with grep, e.g. leakage and success:
 for f in packages/eval/results/eval-report-*.md; do
   m=$(grep -m1 "^- model:" "$f" | sed 's/^- model: //')
   echo "== $m =="
-  grep -E "^\| (successRate|leakageRate|tokens|roundTrips|discoveryMessages|containmentRate) " "$f"
+  grep -E "^\| (successRate|leakageRate|tokens|roundTrips|discoveryMessages|toolPromptTokens|containmentRate) " "$f"
 done
 # the discovery curve lives in the scaling table — pull it per report:
 for f in packages/eval/results/eval-report-*.md; do
@@ -294,7 +313,7 @@ columns only. Template:
 
 Structural (model-independent, from baseline): integrationEffort gcp=1 a2a=4;
 provenanceCompleteness gcp=1 a2a=0; pairwiseConnections linear (gcp) vs
-quadratic (a2a); discoveryMessages gcp=1 (any N) vs a2a=N; containmentRate
+quadratic (a2a); discoveryMessages gcp=1 (any N) vs a2a=N; toolPromptTokens gcp=O(1) vs a2a=O(N); containmentRate
 (delegation) gcp=1.00 vs a2a=0.00 — see baseline report's `marketplace scaling`
 and `delegation` tables.
 

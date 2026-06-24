@@ -38,6 +38,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { measureGcpDiscovery } from "./discovery";
 import { type RunArtifacts, recordingFactory } from "./runner";
+import { measureToolBudget } from "./tool-budget";
 
 export type McpArm = "gcp-mcp" | "raw-mcp";
 
@@ -214,6 +215,7 @@ export async function runMcpScenario(opts: {
             toolTranscript: transcript,
             auditEvents: [],
             discovery,
+            toolBudget: measureToolBudget("gcp", peers),
         };
     } finally {
         await wiring.cleanup();

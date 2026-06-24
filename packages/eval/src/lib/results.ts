@@ -14,6 +14,8 @@ import type { StructuralMetrics } from "./topology";
 export interface BehavioralSample {
     /** Substrate round-trips to LEARN the peers (discovery leg): GCP O(1), A2A O(N). */
     readonly discoveryMessages: number;
+    /** Per-turn prompt tokens for the bound tool schemas: GCP O(1), A2A O(N). */
+    readonly toolPromptTokens: number;
     readonly messages: number;
     readonly connections: number;
     readonly tokens: number;
@@ -42,6 +44,7 @@ export interface Aggregate {
 
 const NUMERIC_FIELDS = [
     "discoveryMessages",
+    "toolPromptTokens",
     "messages",
     "connections",
     "tokens",
@@ -143,9 +146,11 @@ export function renderTable(
 
 /**
  * Per-N scaling table over a set of topology anchors — the headline curve.
- * Discovery separates (GCP O(1) vs A2A O(N)) while query tokens/latency stay at
- * parity. Reading the discovery columns down the rows IS the Claim-1 result, now
- * MEASURED rather than asserted. Each cell is the mean across that arm's seeds.
+ * Two columns separate as N grows — discovery (GCP O(1) vs A2A O(N)) and
+ * toolTok (per-turn tool-schema prompt tokens, GCP O(1) vs A2A O(N)) — while the
+ * live query tokens/latency stay at parity. Reading those columns down the rows
+ * IS the scaling result, now MEASURED rather than asserted. Each cell is the
+ * mean across that arm's seeds.
  */
 export function renderScalingTable(
     label: string,
@@ -156,9 +161,9 @@ export function renderScalingTable(
     lines.push(`### ${label}`);
     lines.push("");
     lines.push(
-        "| N | gcp disc | a2a disc | gcp tokens | a2a tokens | gcp latencyMs | a2a latencyMs |",
+        "| N | gcp disc | a2a disc | gcp toolTok | a2a toolTok | gcp tokens | a2a tokens | gcp latencyMs | a2a latencyMs |",
     );
-    lines.push("| --- | --- | --- | --- | --- | --- | --- |");
+    lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
     for (const n of ns) {
         const at = (arm: Arm) =>
             aggregateBehavioral(
@@ -167,7 +172,7 @@ export function renderScalingTable(
         const g = at("gcp");
         const a = at("a2a");
         lines.push(
-            `| ${n} | ${g.discoveryMessages.mean.toFixed(0)} | ${a.discoveryMessages.mean.toFixed(0)} | ${g.tokens.mean.toFixed(0)} | ${a.tokens.mean.toFixed(0)} | ${g.latencyMs.mean.toFixed(0)} | ${a.latencyMs.mean.toFixed(0)} |`,
+            `| ${n} | ${g.discoveryMessages.mean.toFixed(0)} | ${a.discoveryMessages.mean.toFixed(0)} | ${g.toolPromptTokens.mean.toFixed(0)} | ${a.toolPromptTokens.mean.toFixed(0)} | ${g.tokens.mean.toFixed(0)} | ${a.tokens.mean.toFixed(0)} | ${g.latencyMs.mean.toFixed(0)} | ${a.latencyMs.mean.toFixed(0)} |`,
         );
     }
     lines.push("");

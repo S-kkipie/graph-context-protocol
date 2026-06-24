@@ -47,6 +47,7 @@ import {
     measureA2aDiscovery,
     measureGcpDiscovery,
 } from "./discovery";
+import { measureToolBudget, type ToolBudget } from "./tool-budget";
 
 export type Arm = "gcp" | "a2a";
 
@@ -61,6 +62,12 @@ export interface RunArtifacts {
      * fetch per peer). See {@link DiscoveryResult}.
      */
     readonly discovery: DiscoveryResult;
+    /**
+     * Tool-prompt budget: per-turn prompt tokens for the bound tool schemas.
+     * GCP O(1) (one `query_context` tool) vs A2A O(N) (one tool per peer). See
+     * {@link ToolBudget}.
+     */
+    readonly toolBudget: ToolBudget;
 }
 
 export interface RunOptions {
@@ -206,6 +213,7 @@ async function runGcp(opts: RunOptions): Promise<RunArtifacts> {
             toolTranscript: transcript,
             auditEvents: auditSink.list(),
             discovery,
+            toolBudget: measureToolBudget("gcp", peers),
         };
     } finally {
         rmSync(dir, { recursive: true, force: true });
@@ -253,6 +261,7 @@ async function runA2a(opts: RunOptions): Promise<RunArtifacts> {
             toolTranscript: transcript,
             auditEvents: [],
             discovery,
+            toolBudget: measureToolBudget("a2a", peers),
         };
     } finally {
         await Promise.all(handles.map((h) => h.close()));

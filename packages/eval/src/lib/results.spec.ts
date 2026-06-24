@@ -24,6 +24,8 @@ function mk(
         behavioral: {
             // n=3: A2A fetches one card per peer (3), GCP one substrate query (1).
             discoveryMessages: arm === "a2a" ? 3 : 1,
+            // A2A binds 3 per-peer tools; GCP binds 1 query tool.
+            toolPromptTokens: arm === "a2a" ? 60 : 30,
             messages: 3,
             connections: 3,
             tokens,
@@ -79,6 +81,20 @@ describe("renderTable", () => {
         expect(row).toContain("1.0");
         expect(row).toContain("3.0");
     });
+
+    it("renders a toolPromptTokens row (GCP O(1) vs A2A O(N))", () => {
+        const md = renderTable("marketplace", [
+            mk("gcp", 1, 50, true),
+            mk("a2a", 1, 80, true),
+        ]);
+        const row = md
+            .split("\n")
+            .find((l: string) => l.includes("toolPromptTokens"));
+        expect(row).toBeDefined();
+        // gcp 30.0 | a2a 60.0
+        expect(row).toContain("30.0");
+        expect(row).toContain("60.0");
+    });
 });
 
 describe("renderScalingTable", () => {
@@ -87,7 +103,7 @@ describe("renderScalingTable", () => {
         const md = renderScalingTable("scaling", results, [3]);
         const row = md.split("\n").find((l: string) => l.startsWith("| 3 |"));
         expect(row).toBeDefined();
-        // | N | gcp disc | a2a disc | gcp tokens | a2a tokens | ...
-        expect(row).toBe("| 3 | 1 | 3 | 100 | 100 | 10 | 10 |");
+        // N | gcp disc | a2a disc | gcp toolTok | a2a toolTok | gcp tokens | a2a tokens | gcp lat | a2a lat
+        expect(row).toBe("| 3 | 1 | 3 | 30 | 60 | 100 | 100 | 10 | 10 |");
     });
 });
