@@ -1,0 +1,7 @@
+- [Server context-query response contract](server-context-query-response-contract.md) — the context-query-response ProtocolMessage carries the ContextQueryResult as its `.payload`
+- [Fetch-handler HTTP status mapping](fetch-handler-http-status-mapping.md) — how createFetchHandler maps dispatch outcomes (400/500/502/200); all ServerError codes collapse to 500
+- [nx typecheck is pre-broken](nx-typecheck-broken.md) — repo-wide `nx typecheck` fails TS6310 by default; type-check per-package with tsc -p tsconfig.lib.json
+- [createReactAgent prompt param](langgraph-react-agent-prompt-param.md) — messageModifier/stateModifier deprecated in langgraph 0.2.74; prefer `prompt`
+- [langgraph llm.spec pre-existing failure](langgraph-llm-spec-preexisting-failure.md) — llm.spec.ts fails to load (afterEach undefined); pre-existing, don't blame a branch
+- [zod4 prefault vs default on nested objects](zod4-prefault-vs-default-nested-objects.md) — in zod v4 use .prefault({}) not .default({}) so inner field defaults apply
+- [server.receive returns Result<unknown>](server-receive-returns-result-unknown.md) — receive + protocol payload are typed unknown; casts in tests to narrow are expected, not a smell
