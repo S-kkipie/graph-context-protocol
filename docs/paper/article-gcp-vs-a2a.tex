@@ -4,8 +4,9 @@
 % run-ins, and numeric references in citation order).
 %
 % Multi-model, reviewer-revised edition. Reuses the preamble, macros, and thesis
-% of paper.tex; rebuilds the empirical section from the four-model run set
-% (llama3.1:8b, qwen3:4b x2, qwen2.5:32b, 2026-08-11); adds the delegation
+% of paper.tex; rebuilds the empirical section from the three-model, four-run-set
+% run set (llama3.1:8b, qwen3:4b x2 independent run sets, qwen2.5:32b,
+% 2026-08-11); adds the delegation
 % scenario, the discovery / tool-prompt coupling levers, a reproducible technical
 % specification of GCP, and a two-baseline framing of the provenance metric.
 \documentclass[10pt,twocolumn,letterpaper]{article}
@@ -76,29 +77,35 @@ kguevarap@unsa.edu.pe
 \maketitle
 
 \begin{abstract}
-\textbf{Problem.} Multi-agent systems built on large language models (LLMs) coordinate
-predominantly by \emph{point-to-point message-passing}, as standardized by Google's Agent2Agent
-(A2A) protocol. This paradigm couples every interacting pair, and---in its base form, without
-additional instrumentation---produces no per-read access trail. \textbf{Method.} We evaluate an
-alternative substrate, the Graph Context Protocol (\gcp{}): agents \emph{read} context from
-independently owned knowledge nodes through a role gate that authorizes each read and records a
-provenance entry. We compare the two under a fairness invariant---identical agent brain, model,
-and task; only the interop layer swapped---over four scenarios (marketplace, software
-organization, cross-owner supply chain, delegation) and four open-weight models
-(\texttt{llama3.1:8b}, \texttt{qwen3:4b}, \texttt{qwen2.5:32b}), 3--5 seeds per arm.
-\textbf{Results.} \gcp{} offers \emph{structural} advantages in coupling and traceability that are
-model-independent: integration edges grow $\bigoh(n)$ vs.\ $\bigoh(n^2)$ ($50$ vs.\ $2450$ at
-$n{=}50$), and per-request discovery and tool-prompt overhead stay constant for \gcp{} while
-growing linearly for the base A2A arm. In the delegation scenario, \gcp{} refused every
-unauthorized action (containment $1.00$) while the base A2A arm refused none and executed the
-action under three of four models. Provenance is native to \gcp{} and requires added instrumentation
-under message-passing. We find \emph{preliminary} evidence that \gcp{} does not increase---and in
-some scenarios reduces---cost, at equal task success. \textbf{Limitations.} Behavioral results use
-open-weight models and few seeds; canary leakage \emph{tied} across arms in the supply-chain
-scenario, so no privacy advantage is demonstrated there. \textbf{Contribution.} The defensible
-novelty is not read-first access, role gating, or auditing in isolation---each exists---but their
-\emph{integration} (federated read $+$ role control $+$ per-read provenance) and a
-fairness-controlled, multi-model comparison against a real message-passing baseline.
+\textbf{Problem.} Multi-agent systems based on large language models (LLMs) commonly rely on
+point-to-point message-passing for agent coordination, which can increase integration complexity
+and requires additional mechanisms for fine-grained access control and traceability.
+\textbf{Method.} This study evaluates the Graph Context Protocol (\gcp{}), a read-first
+context-federation approach that integrates role- and capability-based access control with per-read
+provenance. \gcp{} is compared with a base Agent2Agent (\ata{}) message-passing implementation
+under a controlled experimental design in which both approaches use the same agent logic, models,
+tasks, and evaluation criteria, differing only in the interoperability layer. The evaluation
+comprises four scenarios (marketplace, software organization, cross-owner supply chain, delegation)
+and three open-weight LLMs (\texttt{llama3.1:8b}, \texttt{qwen3:4b}, \texttt{qwen2.5:32b}) across
+four independent run sets---\texttt{qwen3:4b} is evaluated in two independent run sets, not a fourth
+distinct model---3--5 seeds per arm, and distinguishes deterministic architectural properties from
+model-dependent behavioral outcomes. \textbf{Results.} Structural analysis shows that \gcp{} reduces
+integration-edge growth from $\bigoh(n^2)$ to $\bigoh(n)$ ($50$ vs.\ $2450$ at $n{=}50$) and
+maintains constant per-request discovery and tool-description overhead as the number of peers
+increases, while both grow linearly for base \ata{}. In the delegation scenario, \gcp{} prevented
+all attempted unauthorized actions (containment $1.00$), whereas base \ata{} executed unauthorized
+actions whenever the model attempted them. \gcp{} also provided complete provenance by construction,
+while equivalent per-read traceability in \ata{} requires additional instrumentation. Behavioral
+experiments showed comparable task success and communication cost between approaches, while current
+canary-based leakage experiments showed no behavioral privacy advantage for either architecture.
+These results indicate that \gcp{} provides model-independent structural and governance benefits
+while maintaining comparable behavioral performance. \textbf{Limitations.} Behavioral results use
+open-weight models and 3--5 seeds rather than the 20--30 recommended for significance testing on the
+token/latency/success deltas; this affects only those preliminary behavioral columns, not the
+deterministic/architectural results (coupling, discovery, tool-prompt, provenance, containment).
+\textbf{Contribution.} The contribution lies in integrating federated read-first access, role- and
+capability-based control, and native per-read provenance within a unified multi-agent coordination
+substrate, supported by a fairness-controlled, multi-model evaluation.
 \end{abstract}
 
 \smallskip
@@ -153,8 +160,9 @@ point, A2A augmented with minimal read logging (Section~\ref{sec:metrics}).
   authorization algorithm (Section~\ref{sec:arch}).
   \item \textbf{A fairness-controlled benchmark method.} One scenario definition and one injected
   model build both arms; only the interop layer changes (Section~\ref{sec:method}).
-  \item \textbf{A multi-model empirical head-to-head} over four scenarios and four open-weight
-  models, separating deterministic from model-dependent results (Section~\ref{sec:results}).
+  \item \textbf{A multi-model empirical head-to-head} over four scenarios and three open-weight
+  models across four independent run sets, separating deterministic from model-dependent results
+  (Section~\ref{sec:results}).
   \item \textbf{Metric definitions} for structural coupling, discovery/tool-prompt overhead, a
   four-way leakage/agency taxonomy, provenance completeness, and delegation containment
   (Section~\ref{sec:metrics}).
@@ -313,20 +321,24 @@ role gating, deny-by-default, and native per-read provenance.
 
 \begin{table}[t]
 \centering
-\caption{Property comparison. ``ext.'' $=$ achievable only with additional external instrumentation.}
+\caption{Property comparison. A ``no'' does not mean the protocol makes the property impossible;
+every cell below is achievable in principle by extending the base protocol. ``not nat.'' $=$ not a
+native primitive of the base protocol (would require added logic on top of it); ``ext.'' $=$
+achievable only with additional external instrumentation; ``n/a'' $=$ the concept does not apply to
+this protocol's design.}
 \label{tab:props}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lccc}
 \toprule
 property & \ata{} & MCP & \gcp{} \\
 \midrule
-agent$\leftrightarrow$agent            & yes & no  & yes \\
-read-first                             & no  & yes & yes \\
-cross-owner boundary                   & yes & no  & yes \\
-role/capability gating                 & coarse & no & yes \\
+agent$\leftrightarrow$agent            & yes & not nat. & yes \\
+read-first                             & not nat. & yes & yes \\
+cross-owner boundary                   & yes & not nat. & yes \\
+role/capability gating                 & coarse & not nat. & yes \\
 per-read provenance (native)           & ext. & ext. & yes \\
-deny-by-default                        & no  & no  & yes \\
-stricter-capability delegation         & no  & n/a & yes \\
+deny-by-default                        & not nat. & not nat. & yes \\
+stricter-capability delegation         & not nat. & n/a & yes \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -339,7 +351,9 @@ We report metrics in four families and separate deterministic from model-depende
 \paragraph{Structural coupling (deterministic).} For $n$ peers, \emph{pairwise connections} are the
 integration edges the topology requires: $C_{\ata{}}(n)=n(n{-}1)$ vs.\ $C_{\gcp{}}(n)=n$.
 \emph{Integration effort} is the marginal cost $C(n{+}1)-C(n)$: constant $1$ for \gcp{}, $2n$ for
-\ata{}. Computed exactly.
+\ata{}. Computed exactly. We count \emph{directed} integration edges; therefore each bidirectional
+peer relationship contributes two directed edges. Under an undirected channel definition the
+corresponding count is $n(n{-}1)/2$; the asymptotic conclusion remains $\bigoh(n^2)$.
 
 \paragraph{Discovery and tool-prompt overhead (per request).} \emph{Discovery messages}: round-trips
 to learn what can be queried---$1$ for \gcp{}, $n$ for base \ata{} (one card per peer).
@@ -389,8 +403,10 @@ curves; its behavioral rows are excluded from the main claims because task succe
 arms (Section~\ref{sec:threats}).
 
 \paragraph{Models, seeds, harness.} Open-weight models served locally: \texttt{llama3.1:8b} (5 seeds
-per arm), \texttt{qwen3:4b} (3 seeds per arm, two independent run sets), \texttt{qwen2.5:32b} (3 seeds
-per arm). The harness is CI-gated, throttles, and retries on transient errors. We report mean $\pm$
+per arm), \texttt{qwen3:4b} (3 seeds per arm, two independent run sets, labeled (a) and (b) below),
+\texttt{qwen2.5:32b} (3 seeds per arm)---three distinct models, four independent run sets in total,
+since (a) and (b) are two separate executions of the identical \texttt{qwen3:4b} configuration, not
+two different models. The harness is CI-gated, throttles, and retries on transient errors. We report mean $\pm$
 population s.d.; where a 95\% normal-approximation interval is informative we give $\pm1.96\,s/\sqrt{k}$.
 Structural curves are computed for $n=2,\dots,50$; discovery/tool-prompt curves are measured over
 $n\in\{2,4,8,16,32\}$. \textbf{We treat coupling/discovery/tool-prompt/provenance/containment as
@@ -403,7 +419,8 @@ pending more seeds and hosted-model replication.}
 \subsection{Coupling: $\bigoh(n)$ vs.\ $\bigoh(n^2)$ (deterministic)}
 Table~\ref{tab:struct} shows the structural curve: \gcp{} grows linearly, \ata{} quadratically---
 $9\times$ at $n{=}10$, $49\times$ at $n{=}50$. Integration effort is constant $1$ for \gcp{} and $2n$
-for \ata{}, so the gap widens with every node. Identical across all four models.
+for \ata{}, so the gap widens with every node. Identical regardless of model: the curve is set by
+topology, not by model behavior.
 
 \begin{table}[t]
 \centering
@@ -426,8 +443,8 @@ $n$ & \gcp{} $(n)$ & \ata{} $(n(n{-}1))$ & ratio \\
 \subsection{Per-request overhead: $\bigoh(1)$ vs.\ $\bigoh(n)$ (deterministic)}
 The coupling tax is paid on \emph{every request} via discovery messages and the tool-prompt budget
 (Table~\ref{tab:disc}). \gcp{} holds both flat ($1$ message, $72$ tokens); base \ata{} reaches $32$
-messages and $1782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap. Identical across all four
-models, since these are set by prompt construction, not model behavior.
+messages and $1782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap. Identical regardless of
+model, since these are set by prompt construction, not model behavior.
 
 \begin{table}[t]
 \centering
@@ -451,7 +468,7 @@ $n$ & \gcp{} & \ata{} & \gcp{} & \ata{} \\
 \end{table}
 
 \subsection{Provenance: native to \gcp{}, added instrumentation for base \ata{} (architectural)}
-Across all four scenarios, all four models, every seed, provenance completeness is $1.0$ for \gcp{}
+Across all four scenarios, all three models (four run sets), every seed, provenance completeness is $1.0$ for \gcp{}
 and $0.0$ for base \ata{}. This is architectural: \gcp{} records every decision; the base
 message-passing arm has no audit sink, so no trail exists to query. As stated in
 Section~\ref{sec:metrics}, this reflects the \emph{base} implementation, not a necessary limit of A2A;
@@ -468,8 +485,9 @@ protocol did not permit misbehavior.''
 
 \begin{table}[t]
 \centering
-\caption{Delegation, four-way agency metrics by model. att.\ $=$ attempted unauthorized;
-grant\ $=$ granted unauthorized (executed); cont.\ $=$ containment.}
+\caption{Delegation, four-way agency metrics by run set. att.\ $=$ attempted unauthorized;
+grant\ $=$ granted unauthorized (executed); cont.\ $=$ containment. \texttt{qwen3:4b} (a) and (b) are
+two independent run sets of the identical model, not two distinct models.}
 \label{tab:deleg}
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{llrrrr}
@@ -522,23 +540,41 @@ delegation and provenance results, not by these canary counts.
 
 \subsection{Architectural guarantee: executable no-leak property}
 The distinction above rests on a proof, not only measurement. Over the shipped read/authorize path we
-run property-based tests: P1 (end-to-end no-content-leak) asserts that for randomly generated
-$(policy,principal)$ pairs an unauthorized query never returns a sentinel canary and is marked
-\texttt{denied}, while an authorized one does return it (liveness, so the test is not vacuous); P2
-(authorize soundness) checks the shipped gate equals the reference predicate; P3 (role-inheritance
-soundness) checks effective-capability computation. All pass at 1000 runs. The canary metric
-\emph{measures} leakage in scenarios; the property suite \emph{proves} the gate is sound over the input
-space. Together: the property shows the gate is correct; the canary confirms it is on the hot path.
+run property-based tests (\texttt{fast-check}) against fixed, finite pools: five capabilities and four
+roles, one of which (\texttt{role:child}) inherits from another (\texttt{role:a}) so effective-capability
+computation is exercised, not only direct grants. Each random \emph{policy} independently samples a
+subset of the role pool for \texttt{readableByRoles}, a subset of the capability pool for
+\texttt{requiredCapabilities}, a random \texttt{fallbackAllowed} boolean, and a random denial mode.
+Each random \emph{principal} independently samples one role from the pool or none, plus a random
+subset of capabilities held directly. Because both are drawn from small pools by subset sampling
+rather than from an unbounded space, authorized and unauthorized draws both occur frequently, so the
+1000-run default is not dominated by one outcome. Every generated $(policy,principal)$ pair is then
+driven through the real context-query handler (not a mock) against a stub adapter that
+\emph{always} returns a sentinel canary string, so P1 (end-to-end no-content-leak) asserts that an
+unauthorized query never returns the canary and is marked \texttt{denied}, while an authorized one
+does return it (liveness, so the test is not vacuous); P2 (authorize soundness) checks the shipped
+gate's decision equals an independently written reference predicate over the same pair; P3
+(role-inheritance soundness) checks effective-capability computation against the role chain directly.
+All pass at 1000 runs (raisable via an environment variable; runs are seed-reproducible for
+debugging). The canary metric \emph{measures} leakage in scenarios; the property suite \emph{proves}
+the gate is sound over the input space. Together: the property shows the gate is correct; the canary
+confirms it is on the hot path.
 
 \section{Discussion and Threats to Validity}
 \label{sec:threats}
 
-\paragraph{Four models, but open-weight and few seeds.} The behavioral results span four open-weight
-models over two size classes ($4$B--$32$B), removing the single-model threat, but seed counts are
-3--5 and all models are locally hosted. The deterministic and architectural columns do not depend on
-model or seed and are robust; the token/latency/leakage/success columns are \emph{preliminary} and
-should be replicated with 20--30 seeds, confidence intervals, and significance tests on the deltas,
-and on at least one frontier hosted model.
+\paragraph{Three models, four run sets, but open-weight and few seeds.} The behavioral results span
+three open-weight models over two size classes ($4$B--$32$B) across four independent run sets
+(\texttt{qwen3:4b} was run twice, as an internal replication check, not as a fourth model), removing
+the single-model threat, but seed counts are 3--5 and all models are locally hosted. We used 3--5
+seeds per arm rather than the 20--30 recommended for significance testing because of the wall-clock
+cost of running every seed as a full multi-step ReAct agent loop against a locally hosted LLM server,
+repeated per model, per scenario, and per arm; 20--30 seeds across three models, four scenarios, and
+two arms multiplies that cost by roughly an order of magnitude. This constraint does not affect the
+deterministic/architectural claims (coupling, discovery, tool-prompt overhead, provenance,
+containment), which do not depend on seed count at all; it bears only on the preliminary
+token/latency/leakage/success columns, which we accordingly report as preliminary pending a
+higher-seed-count replication and, ideally, at least one frontier hosted model.
 
 \paragraph{Provenance is a base-implementation property.} The $0.0$ for \ata{} is a property of base
 message-passing, not a proof that A2A cannot audit. We frame it as ``no per-read traceability without

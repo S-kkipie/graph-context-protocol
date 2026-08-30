@@ -16,6 +16,7 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import { createTokenCountingModel, taskSuccess } from "./behavioral";
 import { detectLeaks } from "./canary";
 import { delegationMetrics } from "./delegation";
+import { forcedAccessMetrics } from "./forced-access";
 import { createEvalModel } from "./model-factory";
 import { provenanceCompleteness } from "./provenance";
 import { type MetricsResult, renderScalingTable, renderTable } from "./results";
@@ -88,6 +89,7 @@ export async function collectResult(
         },
         leakage: detectLeaks(opts.scenario, artifacts),
         delegation: delegationMetrics(opts.scenario, artifacts, opts.arm),
+        forcedAccess: forcedAccessMetrics(opts.scenario, artifacts, opts.arm),
         provenance: provenanceCompleteness(artifacts, readDecisions),
     };
 }
@@ -145,6 +147,7 @@ export async function runFullEval(opts?: {
         SCENARIOS["software-org"],
         SCENARIOS["supply-chain"],
         SCENARIOS.delegation,
+        SCENARIOS["forced-access"],
     ];
     const sections: string[] = [];
 

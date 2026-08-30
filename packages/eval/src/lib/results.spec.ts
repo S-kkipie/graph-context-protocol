@@ -40,6 +40,12 @@ function mk(
             executed: 0,
             unauthorizedExecuted: 0,
         },
+        forcedAccess: {
+            attempts: 0,
+            denied: 0,
+            executed: 0,
+            unauthorizedExecuted: 0,
+        },
         provenance: arm === "gcp" ? 1 : 0,
     };
 }

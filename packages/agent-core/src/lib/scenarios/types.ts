@@ -15,7 +15,8 @@ export type ScenarioId =
     | "software-org"
     | "supply-chain"
     | "delegation"
-    | "mcp-interop";
+    | "mcp-interop"
+    | "forced-access";
 
 /**
  * How the agent consults its peers:

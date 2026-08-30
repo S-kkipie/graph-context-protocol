@@ -1,4 +1,5 @@
 import { delegation } from "./delegation";
+import { forcedAccess } from "./forced-access";
 import { marketplace } from "./marketplace";
 import { mcpInterop } from "./mcp-interop";
 import { softwareOrg } from "./software-org";
@@ -11,8 +12,10 @@ export const SCENARIOS: Record<ScenarioId, ScenarioDef> = {
     "supply-chain": supplyChain,
     delegation,
     "mcp-interop": mcpInterop,
+    "forced-access": forcedAccess,
 };
 
+export { forcedAccess } from "./forced-access";
 export { marketplaceScenario } from "./marketplace";
 export {
     type AgentNodeDef,

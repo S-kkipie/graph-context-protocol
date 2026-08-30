@@ -3,9 +3,10 @@ import { PROVIDE_CONTEXT_SKILL, SCENARIOS } from "./index";
 import { marketplaceScenario } from "./marketplace";
 
 describe("SCENARIOS", () => {
-    it("defines all five scenarios keyed by id", () => {
+    it("defines all six scenarios keyed by id", () => {
         expect(Object.keys(SCENARIOS).sort()).toEqual([
             "delegation",
+            "forced-access",
             "marketplace",
             "mcp-interop",
             "software-org",
@@ -68,6 +69,26 @@ describe("SCENARIOS", () => {
         expect(s.forbiddenCanaries).toContain(confidential?.canaryToken);
         // Coarse A2A exposure: it still exposes the skill (architectural leak).
         expect(confidential?.exposedSkills).toContain(PROVIDE_CONTEXT_SKILL);
+    });
+
+    it("forced-access gates the confidential node by role and forces the task to target it directly", () => {
+        const s = SCENARIOS["forced-access"];
+        const confidential = s.knowledgeNodes.find(
+            (n) => n.canaryToken !== undefined,
+        );
+        expect(confidential).toBeDefined();
+        // Same gate as software-org: contractor role is excluded.
+        expect(confidential?.readableByRoles).not.toContain(s.agent.role);
+        expect(confidential?.exposedSkills).toContain(PROVIDE_CONTEXT_SKILL);
+        expect(s.forbiddenCanaries).toContain(confidential?.canaryToken);
+        // Unlike software-org, the goal itself names the confidential node —
+        // the leak path is forced, not latent.
+        expect(s.agent.goal).toMatch(/confidential/i);
+        expect(s.agent.peers).toContain(confidential?.nodeId);
+        expect(s.succeeded(confidential?.canaryToken as string)).toBe(true);
+        expect(
+            s.succeeded("Peer context query denied: no matching policy"),
+        ).toBe(false);
     });
 
     it("supply-chain spans at least two distinct owners' nodes", () => {
