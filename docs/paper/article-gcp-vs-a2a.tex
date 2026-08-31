@@ -1,79 +1,78 @@
-% SAI / IEEE-style two-column conference format (IEEEtran.cls is not installed
-% locally, so we emulate the SAI_PAPER_FORMAT template in the article class:
-% two columns, US-letter, Roman-numeral section heads, "Abstract--"/"Keywords--"
-% run-ins, and numeric references in citation order).
+% SAI / IJACSA journal format, using the official IEEEtran-based
+% SAI_Paper_Format_Latex template (docclass, fancyhdr header/footer,
+% caption styling) provided by the journal. Ported from the prior
+% article-class emulation of this same layout; content/macros/citations
+% unchanged, only the document scaffolding now matches the real template.
 %
-% Multi-model, reviewer-revised edition. Reuses the preamble, macros, and thesis
-% of paper.tex; rebuilds the empirical section from the three-model, four-run-set
-% run set (llama3.1:8b, qwen3:4b x2 independent run sets, qwen2.5:32b,
-% 2026-08-11); adds the delegation
-% scenario, the discovery / tool-prompt coupling levers, a reproducible technical
+% Multi-model, reviewer-revised edition. Rebuilds the empirical section from
+% the three-model, four-run-set run set (llama3.1:8b, qwen3:4b x2 independent
+% run sets, qwen2.5:32b, 2026-08-11); includes the delegation scenario, the
+% discovery / tool-prompt coupling levers, a reproducible technical
 % specification of GCP, and a two-baseline framing of the provenance metric.
-\documentclass[10pt,twocolumn,letterpaper]{article}
+\documentclass[conference,letterpaper]{IEEEtran}
 
-% --- packages (all confirmed present in the local TeX install) ---
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern} % scalable fonts, required for microtype font expansion
-\usepackage[letterpaper,top=0.75in,bottom=1in,left=0.625in,right=0.625in,columnsep=0.25in]{geometry}
-\usepackage{amsmath,amssymb}
-\usepackage{graphicx}
+% --- packages (template base, in the template's own order) ---
+\ifCLASSINFOpdf
+  \usepackage[pdftex]{graphicx}
+\else
+\fi
+\usepackage[cmex10]{amsmath}
+\usepackage{color}
+\usepackage{flushend}
+\usepackage{fancyhdr}
+\usepackage{subcaption}
+\usepackage{balance}
+\captionsetup[table]{justification=centering, labelsep=period, font={footnotesize,sc}}
+\captionsetup[figure]{justification=centering, labelsep=period, font={footnotesize}}
 \usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{threeparttable}
+
+% --- additional packages this paper needs on top of the template base ---
+\usepackage{amssymb}
 \usepackage{multirow}
-\usepackage{caption}
 \usepackage{microtype}
-\usepackage{xcolor}
 \usepackage{verbatim}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{xurl} % allow long reference URLs to break across lines
 \usepackage[hidelinks]{hyperref}
 
-% IEEE/SAI section numbering: Roman sections (I, II, ...), lettered subsections.
-\renewcommand{\thesection}{\Roman{section}}
-\renewcommand{\thesubsection}{\Alph{subsection}}
-\renewcommand{\thesubsubsection}{\arabic{subsubsection}}
-\captionsetup{font=small,labelsep=period}
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\renewcommand{\thispagestyle}[2]{}
+\fancypagestyle{plain}{
+        \fancyhead{}
+        \fancyhead[C]{first page center header}
+        \fancyfoot{}
+        \fancyfoot[C]{first page center footer}
+}
+\pagestyle{fancy}
+\headheight 23pt
+\footskip 20pt
+\rhead{}
+\setcounter{page}{1}
+\fancyhead[R]{\textit{(IJACSA) International Journal of Advanced Computer Science and Applications, \\ Vol. XXX, No. XXX, 2026}}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[C]{www.ijacsa.thesai.org}
+\renewcommand{\footrulewidth}{0.5pt}
+\fancyfoot[R]{\thepage \  $|$ P a g e }
 
 \newcommand{\gcp}{\textsc{gcp}}
 \newcommand{\ata}{\textsc{a2a}}
 \newcommand{\bigoh}{\mathcal{O}}
 
-\title{\textbf{Read-First, Role-Gated Context Federation for Multi-Agent LLM
-Systems:\\ A Fairness-Controlled, Multi-Model Evaluation Against\\
-Point-to-Point Message-Passing}}
+\begin{document}
 
-% IEEE-style author block: fixed-width author columns laid out side by side,
-% name / affiliation (italic) / city, country / email. Three authors fit the
-% full-width title band produced by \maketitle in twocolumn mode.
-\author{%
-\begin{minipage}[t]{0.32\textwidth}\centering
-Adrian Issac Mamani Quispe\\
-\textit{Univ.\ Nacional de San Agust\'in}\\
-\textit{de Arequipa}\\
-Arequipa, Peru\\
-admamaniq@unsa.edu.pe
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.32\textwidth}\centering
-Ryan Fabian Valdivia Segovia\\
-\textit{Univ.\ Nacional de San Agust\'in}\\
-\textit{de Arequipa}\\
-Arequipa, Peru\\
-rvaldiviase@unsa.edu.pe
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.32\textwidth}\centering
-Karim Guevara Puente de la Vega\\
-\textit{Univ.\ Nacional de San Agust\'in}\\
-\textit{de Arequipa}\\
-Arequipa, Peru\\
-kguevarap@unsa.edu.pe
-\end{minipage}%
+\title{Read-First, Role-Gated Context Federation for Multi-Agent LLM
+Systems: A Fairness-Controlled, Multi-Model Evaluation Against
+Point-to-Point Message-Passing}
+
+\author{\IEEEauthorblockN{Adrian Issac Mamani Quispe\IEEEauthorrefmark{1}, Ryan Fabian Valdivia Segovia\IEEEauthorrefmark{1}, Karim Guevara Puente de la Vega\IEEEauthorrefmark{1}}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Universidad Nacional de San Agust\'in de Arequipa, Arequipa, Peru\\
+admamaniq@unsa.edu.pe, rvaldiviase@unsa.edu.pe, kguevarap@unsa.edu.pe}
 }
 
-\date{August 2026}
-
-\begin{document}
 \maketitle
 
 \begin{abstract}
@@ -108,11 +107,10 @@ capability-based control, and native per-read provenance within a unified multi-
 substrate, supported by a fairness-controlled, multi-model evaluation.
 \end{abstract}
 
-\smallskip
-\noindent\textbf{\textit{Keywords---}}\textit{context federation; multi-agent
-systems; large language models; access control; least privilege; provenance;
-agent containment; software coupling; agent communication protocols}
-\smallskip
+\begin{IEEEkeywords}
+context federation; multi-agent systems; large language models; access control; least privilege;
+provenance; agent containment; software coupling; agent communication protocols
+\end{IEEEkeywords}
 
 \section{Introduction}
 
@@ -618,6 +616,7 @@ we claim no privacy advantage there yet. The defensible contribution is the \emp
 read, role control, and per-read provenance---plus its measured comparison; the behavioral results are a
 multi-model pilot that invites replication with more seeds and hosted models.
 
+\balance
 \bibliographystyle{unsrtnat}
 \bibliography{refs}
 
