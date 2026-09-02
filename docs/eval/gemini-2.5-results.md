@@ -137,5 +137,9 @@ inputs, not env vars, and will otherwise replay a stale report.
 
 ## TODO
 
-- gemini-2.5-pro full run (~$5-8 alone; deferred).
+- gemini-2.5-pro full run: **attempted 2026-09-02, timed out.** Pro's heavy
+  thinking makes 540 runs exceed the `run-eval.full.spec.ts` harness timeout
+  (`60 * 60 * 1000` ms), so vitest killed the test and no report was written.
+  To retry: raise `testTimeout` in that spec (≥3h) and/or drop seeds to 15 or
+  the marketplace anchors to {2,4,8}. Deferred.
 - Fold these numbers into the article tables (`docs/paper/article-gcp-vs-a2a.tex`).
