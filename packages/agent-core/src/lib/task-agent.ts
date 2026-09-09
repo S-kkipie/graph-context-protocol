@@ -37,14 +37,22 @@ export function createTaskAgent(config: TaskAgentConfig) {
 /**
  * Runs a task agent against a goal and returns its final textual answer.
  * Single answer-extraction path so both arms read results identically.
+ * `recursionLimit` overrides LangGraph's default (25) — some local models
+ * (e.g. command-r, gemma4 via Ollama tool-calling) loop several extra steps
+ * before converging on a final answer; override via `EVAL_RECURSION_LIMIT`
+ * env when running those. Unset stays at LangGraph's default, unchanged.
  */
 export async function runTaskAgent(
     agent: ReturnType<typeof createTaskAgent>,
     goal: string,
 ): Promise<string> {
-    const result = await agent.invoke({
-        messages: [new HumanMessage(goal)],
-    });
+    const recursionLimit = process.env.EVAL_RECURSION_LIMIT
+        ? Number(process.env.EVAL_RECURSION_LIMIT)
+        : undefined;
+    const result = await agent.invoke(
+        { messages: [new HumanMessage(goal)] },
+        recursionLimit ? { recursionLimit } : undefined,
+    );
     const messages = result.messages;
     const last = messages[messages.length - 1];
     return typeof last.content === "string"

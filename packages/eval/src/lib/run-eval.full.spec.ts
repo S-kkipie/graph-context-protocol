@@ -8,7 +8,9 @@
  *   RUN_EVAL=1 EVAL_SEEDS=3 pnpm nx test @graph-context-protocol/eval
  *
  * Knobs (env): EVAL_MODEL (OpenRouter model id), EVAL_SEEDS (reps per arm),
- * EVAL_ANCHORS (comma-separated N for the marketplace behavioral anchors).
+ * EVAL_ANCHORS (comma-separated N for the marketplace behavioral anchors),
+ * EVAL_TEST_TIMEOUT_MS (overrides the test's own timeout; default 60min —
+ * heavy/CPU-bound local models can need longer).
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -51,6 +53,6 @@ describe.skipIf(!ENABLED)("full eval (real LLM)", () => {
             // biome-ignore lint/suspicious/noConsole: surface the artifact path
             console.log(`\n[eval] report written: ${file}\n`);
         },
-        60 * 60 * 1000,
+        Number(process.env.EVAL_TEST_TIMEOUT_MS ?? 60 * 60 * 1000),
     );
 });
