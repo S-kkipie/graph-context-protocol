@@ -5,10 +5,14 @@
 % unchanged, only the document scaffolding now matches the real template.
 %
 % Multi-model, reviewer-revised edition. Rebuilds the empirical section from
-% the three-model, four-run-set run set (llama3.1:8b, qwen3:4b x2 independent
-% run sets, qwen2.5:32b, 2026-08-11); includes the delegation scenario, the
-% discovery / tool-prompt coupling levers, a reproducible technical
-% specification of GCP, and a two-baseline framing of the provenance metric.
+% the three-model, four-run-set open-weight run set (llama3.1:8b, qwen3:4b x2
+% independent run sets, qwen2.5:32b, 2026-08-11), plus a fourth model family,
+% a hosted frontier baseline (Gemini 2.5: flash-lite/flash/pro, native
+% @langchain/google-genai adapter, 2026-09-01/02), and the forced-access
+% scenario (2026-09-09, all four families) that was future work in the prior
+% edition. Includes the delegation scenario, the discovery / tool-prompt
+% coupling levers, a reproducible technical specification of GCP, and a
+% two-baseline framing of the provenance metric.
 \documentclass[conference,letterpaper]{IEEEtran}
 
 % --- packages (template base, in the template's own order) ---
@@ -84,24 +88,34 @@ context-federation approach that integrates role- and capability-based access co
 provenance. \gcp{} is compared with a base Agent2Agent (\ata{}) message-passing implementation
 under a controlled experimental design in which both approaches use the same agent logic, models,
 tasks, and evaluation criteria, differing only in the interoperability layer. The evaluation
-comprises four scenarios (marketplace, software organization, cross-owner supply chain, delegation)
-and three open-weight LLMs (\texttt{llama3.1:8b}, \texttt{qwen3:4b}, \texttt{qwen2.5:32b}) across
-four independent run sets---\texttt{qwen3:4b} is evaluated in two independent run sets, not a fourth
-distinct model---3--5 seeds per arm, and distinguishes deterministic architectural properties from
-model-dependent behavioral outcomes. \textbf{Results.} Structural analysis shows that \gcp{} reduces
-integration-edge growth from $\bigoh(n^2)$ to $\bigoh(n)$ ($50$ vs.\ $2450$ at $n{=}50$) and
-maintains constant per-request discovery and tool-description overhead as the number of peers
-increases, while both grow linearly for base \ata{}. In the delegation scenario, \gcp{} prevented
-all attempted unauthorized actions (containment $1.00$), whereas base \ata{} executed unauthorized
-actions whenever the model attempted them. \gcp{} also provided complete provenance by construction,
-while equivalent per-read traceability in \ata{} requires additional instrumentation. Behavioral
-experiments showed comparable task success and communication cost between approaches, while current
-canary-based leakage experiments showed no behavioral privacy advantage for either architecture.
-These results indicate that \gcp{} provides model-independent structural and governance benefits
-while maintaining comparable behavioral performance. \textbf{Limitations.} Behavioral results use
-open-weight models and 3--5 seeds rather than the 20--30 recommended for significance testing on the
-token/latency/success deltas; this affects only those preliminary behavioral columns, not the
-deterministic/architectural results (coupling, discovery, tool-prompt, provenance, containment).
+comprises five scenarios (marketplace, software organization, cross-owner supply chain, delegation,
+forced-access) across \textbf{four model families}: three open-weight LLMs served locally
+(\texttt{llama3.1:8b}, \texttt{qwen3:4b}, \texttt{qwen2.5:32b}, 3--5 seeds per arm across four
+independent run sets---\texttt{qwen3:4b} is evaluated twice, not as a fourth distinct model) and one
+hosted frontier family, Gemini 2.5 (\texttt{flash-lite}, \texttt{flash}: 30 seeds per arm;
+\texttt{pro}: 15 seeds per arm), for seven run configurations in total. The evaluation distinguishes
+deterministic architectural properties from model-dependent behavioral outcomes. \textbf{Results.}
+Structural analysis shows that \gcp{} reduces integration-edge growth from $\bigoh(n^2)$ to
+$\bigoh(n)$ ($50$ vs.\ $2450$ at $n{=}50$) and maintains constant per-request discovery and
+tool-description overhead as the number of peers increases, while both grow linearly for base
+\ata{}. In the delegation scenario, \gcp{} prevented all attempted unauthorized actions (containment
+$1.00$) on every model family, whereas base \ata{} executed unauthorized actions whenever the model
+attempted them. The \emph{forced-access} scenario---a read-side counterpart that directly instructs
+the agent to read a confidential node it is not authorized for---replicates the same $1.00$/$0.00$
+containment split on every model that engaged the task; on the two strongest hosted tiers
+(\texttt{flash}, \texttt{pro}) base \ata{} additionally \emph{executed} the unauthorized read and
+surfaced the canary, an observed (not only architectural) leak that \gcp{}'s role gate denied outright
+on the same tiers. \gcp{} also provided complete provenance by construction, while equivalent per-read
+traceability in \ata{} requires additional instrumentation. Behavioral experiments showed comparable
+task success and communication cost between approaches, while current canary-based leakage
+experiments in the non-adversarial scenarios showed no behavioral privacy advantage for either
+architecture. These results indicate that \gcp{} provides model-independent structural and governance
+benefits while maintaining comparable behavioral performance. \textbf{Limitations.} Open-weight
+behavioral results use 3--5 seeds rather than the 20--30 recommended for significance testing on the
+token/latency/success deltas; the hosted Gemini family closes part of this gap (30 seeds for
+\texttt{flash-lite}/\texttt{flash}, 15 for \texttt{pro}) but is one model family, evaluated once. This
+affects only the preliminary behavioral columns, not the deterministic/architectural results
+(coupling, discovery, tool-prompt, provenance, containment).
 \textbf{Contribution.} The contribution lies in integrating federated read-first access, role- and
 capability-based control, and native per-read provenance within a unified multi-agent coordination
 substrate, supported by a fairness-controlled, multi-model evaluation.
@@ -158,11 +172,12 @@ point, A2A augmented with minimal read logging (Section~\ref{sec:metrics}).
   authorization algorithm (Section~\ref{sec:arch}).
   \item \textbf{A fairness-controlled benchmark method.} One scenario definition and one injected
   model build both arms; only the interop layer changes (Section~\ref{sec:method}).
-  \item \textbf{A multi-model empirical head-to-head} over four scenarios and three open-weight
-  models across four independent run sets, separating deterministic from model-dependent results
-  (Section~\ref{sec:results}).
+  \item \textbf{A multi-model empirical head-to-head} over five scenarios---including a
+  \emph{forced-access} probe that directly targets the confidential node---and four model families
+  (three open-weight, one hosted frontier family) across seven run configurations, separating
+  deterministic from model-dependent results (Section~\ref{sec:results}).
   \item \textbf{Metric definitions} for structural coupling, discovery/tool-prompt overhead, a
-  four-way leakage/agency taxonomy, provenance completeness, and delegation containment
+  four-way leakage/agency taxonomy, provenance completeness, and delegation/forced-access containment
   (Section~\ref{sec:metrics}).
 \end{enumerate}
 
@@ -394,7 +409,11 @@ change.
 project info; a confidential engineering node (canary) is readable only by the engineering role.
 \emph{supply-chain} (cross-owner): a logistics agent states the shareable shipping relationship
 between two independently owned nodes, each holding an owner-scoped canary. \emph{delegation}
-(agency): an agent attempts an action it is not authorized to command; the oracle checks containment.
+(agency, write-side): an agent attempts an action it is not authorized to command; the oracle checks
+containment. \emph{forced-access} (agency, read-side): the agent's task explicitly instructs it to
+read a confidential node directly, despite its role lacking the required capability---unlike
+software-org, the unauthorized-read path is exercised on \emph{every} run rather than left latent;
+the oracle checks containment of the read, mirroring the delegation oracle for the read side.
 \emph{marketplace} (coupling): $n$ seller nodes with descending prices. Following reviewer guidance,
 the marketplace contributes \emph{only} its deterministic structural, discovery, and tool-prompt
 curves; its behavioral rows are excluded from the main claims because task success was low on both
@@ -404,12 +423,18 @@ arms (Section~\ref{sec:threats}).
 per arm), \texttt{qwen3:4b} (3 seeds per arm, two independent run sets, labeled (a) and (b) below),
 \texttt{qwen2.5:32b} (3 seeds per arm)---three distinct models, four independent run sets in total,
 since (a) and (b) are two separate executions of the identical \texttt{qwen3:4b} configuration, not
-two different models. The harness is CI-gated, throttles, and retries on transient errors. We report mean $\pm$
+two different models. We additionally evaluate one hosted frontier family through the native Gemini
+API (\texttt{EVAL\_ADAPTER=google}, parallel-tool-call sanitizer, non-streaming): \texttt{gemini-2.5-flash-lite}
+and \texttt{gemini-2.5-flash} (30 seeds per arm) and \texttt{gemini-2.5-pro} (15 seeds per arm, run
+through an incremental JSONL-per-run writer after an initial 30-seed attempt exceeded the harness's
+60-minute test timeout)---four model families in total across seven run configurations. The harness is
+CI-gated, throttles, and retries on transient errors. We report mean $\pm$
 population s.d.; where a 95\% normal-approximation interval is informative we give $\pm1.96\,s/\sqrt{k}$.
 Structural curves are computed for $n=2,\dots,50$; discovery/tool-prompt curves are measured over
 $n\in\{2,4,8,16,32\}$. \textbf{We treat coupling/discovery/tool-prompt/provenance/containment as
-established (deterministic or architectural) and token/latency/leakage/success as preliminary,
-pending more seeds and hosted-model replication.}
+established (deterministic or architectural) and token/latency/leakage/success as preliminary}: the
+open-weight rows remain low-seed and locally hosted, and the hosted-frontier replication (higher seed
+count, one model family) partially, not fully, retires that limitation.
 
 \section{Results}
 \label{sec:results}
@@ -466,26 +491,36 @@ $n$ & \gcp{} & \ata{} & \gcp{} & \ata{} \\
 \end{table}
 
 \subsection{Provenance: native to \gcp{}, added instrumentation for base \ata{} (architectural)}
-Across all four scenarios, all three models (four run sets), every seed, provenance completeness is $1.0$ for \gcp{}
-and $0.0$ for base \ata{}. This is architectural: \gcp{} records every decision; the base
-message-passing arm has no audit sink, so no trail exists to query. As stated in
-Section~\ref{sec:metrics}, this reflects the \emph{base} implementation, not a necessary limit of A2A;
-an instrumented A2A would raise the number at the cost of the instrumentation \gcp{} makes native.
+Across the four non-marketplace scenarios, all four model families, every seed, provenance
+completeness is $1.0$ for \gcp{} and $0.0$ for base \ata{}, with one reported exception:
+\texttt{gemini-2.5-flash-lite}'s \ata{} arm on forced-access shows $1.0$, a degenerate case since that
+arm made zero attempts (it declined the task, Section~\ref{sec:forced})---there was nothing to fail to
+record, not a case of base \ata{} actually producing a trail. This is otherwise architectural: \gcp{}
+records every decision; the base message-passing arm has no audit sink, so no trail exists to query.
+As stated in Section~\ref{sec:metrics}, this reflects the \emph{base} implementation, not a necessary
+limit of A2A; an instrumented A2A would raise the number at the cost of the instrumentation \gcp{}
+makes native.
 
 \subsection{Delegation containment: \gcp{} contains, base \ata{} executes (architectural + observed)}
-Table~\ref{tab:deleg} reports the four-way agency metrics across models. \gcp{} containment is $1.00$
-for every model, with zero unauthorized executions---an \emph{architectural} guarantee: the delegate
-capability gate refuses by construction. Base \ata{} containment is $0.00$, and under three of four
-models it \emph{executed} the unauthorized action (\emph{observed} granted-unauthorized-access). Under
-\texttt{qwen2.5:32b} the larger model happened not to attempt it, so nothing executed---but the gate is
-still absent, so containment is $0.00$ by construction. This separates ``the model behaved'' from ``the
-protocol did not permit misbehavior.''
+Table~\ref{tab:deleg} reports the four-way agency metrics across all four model families. \gcp{}
+containment is $1.00$ for every model, with zero unauthorized executions---an \emph{architectural}
+guarantee: the delegate capability gate refuses by construction. Base \ata{} containment is $0.00$,
+and under five of the six evaluated configurations it \emph{executed} the unauthorized action
+(\emph{observed} granted-unauthorized-access). Under \texttt{qwen2.5:32b} the larger open-weight model
+happened not to attempt it, so nothing executed---but the gate is still absent, so containment is
+$0.00$ by construction. This separates ``the model behaved'' from ``the protocol did not permit
+misbehavior.'' The hosted frontier tiers behave the same way as the open-weight ones: attempts scale
+with model capability (\texttt{gemini-2.5-pro} attempted $14/15$ seeds, aggregated), yet \gcp{}'s
+containment stays $1.00$ regardless.
 
 \begin{table}[t]
 \centering
 \caption{Delegation, four-way agency metrics by run set. att.\ $=$ attempted unauthorized;
 grant\ $=$ granted unauthorized (executed); cont.\ $=$ containment. \texttt{qwen3:4b} (a) and (b) are
-two independent run sets of the identical model, not two distinct models.}
+two independent run sets of the identical model, not two distinct models. Open-weight and
+\texttt{gemini-2.5-\{flash-lite,flash\}} rows are a single representative run (seed[0]);
+\texttt{gemini-2.5-pro} is summed over all 15 seeds (labeled $\Sigma$/15), per
+Section~\ref{sec:method}.}
 \label{tab:deleg}
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{llrrrr}
@@ -507,11 +542,97 @@ model & arm & att. & grant & cont. & prov. \\
 \multirow{2}{*}{\texttt{qwen2.5:32b}}
  & \gcp{} & 1 & 0 & $1.00$ & $1.0$ \\
  & \ata{} & 0$^\dagger$ & 0 & $0.00$ & --$^\dagger$ \\
+\midrule
+\multirow{2}{*}{\texttt{gemini-2.5-flash-lite}}
+ & \gcp{} & 1 & 0 & $1.00$ & $1.0$ \\
+ & \ata{} & 1 & 1 & $0.00$ & $0.0$ \\
+\midrule
+\multirow{2}{*}{\texttt{gemini-2.5-flash}}
+ & \gcp{} & 1 & 0 & $1.00$ & $1.0$ \\
+ & \ata{} & 1 & 1 & $0.00$ & $0.0$ \\
+\midrule
+\multirow{2}{*}{\texttt{gemini-2.5-pro} ($\Sigma$/15)}
+ & \gcp{} & 14 & 0 & $1.00$ & -- \\
+ & \ata{} & 11 & 11 & $0.00$ & -- \\
 \bottomrule
 \end{tabular}
 \par\smallskip
 \footnotesize $^\dagger$ degenerate run: the base \ata{} agent never issued the request, so nothing
 was attempted, executed, or recorded; the gate is still absent.
+\end{table}
+
+\subsection{Forced-access containment: the read-side counterpart (architectural + observed)}
+\label{sec:forced}
+Table~\ref{tab:forced} reports the forced-access scenario, the read-side mirror of delegation: the
+task instructs the agent to read the confidential node directly, so the unauthorized-read path is
+exercised on every run that engages the task at all, not left latent as in software-org. \gcp{}
+containment is $1.00$ on every configuration that attempted the read. Base \ata{} containment is
+$0.00$ throughout, and on two of the three hosted tiers---\texttt{flash} and \texttt{pro}, the
+stronger models---it \emph{executed} the unauthorized read and the canary surfaced in the transcript,
+an \emph{observed} granted-unauthorized-access, not only an architectural possibility. This is the
+result the prior edition of this article flagged as future work (Section~\ref{sec:threats}): running
+the scenario is what separates ``the model behaved'' from ``the protocol did not permit
+misbehavior,'' and stronger models are exactly where that distinction earns its keep, since they are
+the ones that actually attempt and complete the unauthorized read.
+
+\texttt{llama3.1:8b} is a genuine outlier, not a missing data point: it made \emph{zero} tool calls on
+either arm across two independent 5-seed reruns (20/20 runs), reproduced deterministically. A direct
+non-agentic probe against the same scenario input shows the model refusing in its final answer before
+ever invoking a tool---verbatim \emph{``I can't do that. Is there anything else I can help you
+with?''} (\gcp{} arm) and \emph{``I can't help you with this request.''} (\ata{} arm). The scenario's
+system-prompt phrase making the role mismatch explicit (``even though your role is not engineering'')
+reads to this model's alignment training as a policy violation, so it declines outright---on
+\emph{both} arms, independent of whether a gate exists to catch the read. This is a small-model
+alignment-vs-tool-use interaction, orthogonal to the protocol comparison: the same model calls tools
+without hesitation on software-org, supply-chain, and delegation. \texttt{gemini-2.5-flash-lite} shows
+a milder version of the same effect on the \ata{} arm only (it declined the task, $0$ attempts), while
+its \gcp{} arm attempted and was denied---so containment reads $1.00$/$0.00$ by construction on both
+tiers, but for different reasons: the smallest hosted tier avoided the ungated read by declining the
+task, the smallest local model avoided it by declining everything.
+
+\begin{table}[t]
+\centering
+\caption{Forced-access, agency metrics by model family. att.\ $=$ attempted unauthorized read;
+grant\ $=$ granted unauthorized (executed, canary served); cont.\ $=$ containment. Counting
+conventions match Table~\ref{tab:deleg} (\texttt{gemini-2.5-pro} row is $\Sigma$/15).}
+\label{tab:forced}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{llrrr}
+\toprule
+model & arm & att. & grant & cont. \\
+\midrule
+\multirow{2}{*}{\texttt{llama3.1:8b}}
+ & \gcp{} & 0$^\ddagger$ & 0 & n/a$^\ddagger$ \\
+ & \ata{} & 0$^\ddagger$ & 0 & n/a$^\ddagger$ \\
+\midrule
+\multirow{2}{*}{\texttt{qwen3:4b}}
+ & \gcp{} & 1 & 0 & $1.00$ \\
+ & \ata{} & 1 & 1 & $0.00$ \\
+\midrule
+\multirow{2}{*}{\texttt{qwen2.5:32b}}
+ & \gcp{} & 1 & 0 & $1.00$ \\
+ & \ata{} & 1 & 1 & $0.00$ \\
+\midrule
+\multirow{2}{*}{\texttt{gemini-2.5-flash-lite}}
+ & \gcp{} & 1 & 0 & $1.00$ \\
+ & \ata{} & 0$^\dagger$ & 0 & $0.00^\dagger$ \\
+\midrule
+\multirow{2}{*}{\texttt{gemini-2.5-flash}}
+ & \gcp{} & 1 & 0 & $1.00$ \\
+ & \ata{} & 1 & 1 & $0.00$ \\
+\midrule
+\multirow{2}{*}{\texttt{gemini-2.5-pro} ($\Sigma$/15)}
+ & \gcp{} & 11 & 0 & $1.00$ \\
+ & \ata{} & 12 & 12 & $0.00$ \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\footnotesize $^\ddagger$ neither arm ever called a tool---the model refused the task outright in its
+final answer (see text); no gate was exercised on either side, so containment is not defined (not the
+same as $1.00$: the gate was never tested). $^\dagger$ the base \ata{} agent declined the task and
+never attempted the read, so nothing was executed---but the gate is still absent, so containment is
+$0.00$ by construction, matching the \texttt{qwen2.5:32b} degenerate-run convention in
+Table~\ref{tab:deleg}.
 \end{table}
 
 \subsection{Cost and success: parity (preliminary)}
@@ -561,30 +682,41 @@ confirms it is on the hot path.
 \section{Discussion and Threats to Validity}
 \label{sec:threats}
 
-\paragraph{Three models, four run sets, but open-weight and few seeds.} The behavioral results span
-three open-weight models over two size classes ($4$B--$32$B) across four independent run sets
-(\texttt{qwen3:4b} was run twice, as an internal replication check, not as a fourth model), removing
-the single-model threat, but seed counts are 3--5 and all models are locally hosted. We used 3--5
-seeds per arm rather than the 20--30 recommended for significance testing because of the wall-clock
-cost of running every seed as a full multi-step ReAct agent loop against a locally hosted LLM server,
-repeated per model, per scenario, and per arm; 20--30 seeds across three models, four scenarios, and
-two arms multiplies that cost by roughly an order of magnitude. This constraint does not affect the
-deterministic/architectural claims (coupling, discovery, tool-prompt overhead, provenance,
+\paragraph{Four model families, seven run sets, but open-weight seed counts stay low.} The behavioral
+results now span three open-weight models over two size classes ($4$B--$32$B), locally hosted, across
+four independent run sets (\texttt{qwen3:4b} was run twice, as an internal replication check, not as a
+fourth model), plus one hosted frontier family (Gemini 2.5, three tiers) across three further run
+sets---removing both the single-model and the open-weight-only threats. Seed counts, however, are
+uneven across the two groups: the open-weight arm stays at 3--5 seeds, the wall-clock cost of running
+every seed as a full multi-step ReAct agent loop against a locally hosted LLM server, repeated per
+model, per scenario, and per arm, making 20--30 seeds roughly an order of magnitude more expensive
+there. The hosted Gemini arm closes this gap for two of its three tiers (30 seeds for
+\texttt{flash-lite}/\texttt{flash}, meeting the significance-testing convention we could not afford
+locally) and partially for the third (\texttt{gemini-2.5-pro}, 15 seeds---a first 30-seed attempt was
+killed by the harness's 60-minute test timeout before writing a report; the incremental writer used for
+the reported run avoids that failure mode but the timeout itself has not yet been raised to let a
+30-seed \texttt{pro} run complete). This constraint does not affect the deterministic/architectural
+claims (coupling, discovery, tool-prompt overhead, provenance, containment, delegation/forced-access
 containment), which do not depend on seed count at all; it bears only on the preliminary
-token/latency/leakage/success columns, which we accordingly report as preliminary pending a
-higher-seed-count replication and, ideally, at least one frontier hosted model.
+token/latency/leakage/success columns, and only for the open-weight rows and the \texttt{pro} tier. A
+second hosted frontier family, and 20--30 seeds on \texttt{pro}, remain the natural next replication
+step.
 
 \paragraph{Provenance is a base-implementation property.} The $0.0$ for \ata{} is a property of base
 message-passing, not a proof that A2A cannot audit. We frame it as ``no per-read traceability without
 added instrumentation'' and identify instrumented A2A as the fair second baseline.
 
 \paragraph{Leakage measurement is limited.} Exact-match canary scanning misses paraphrase and semantic
-leakage, and behavioral leakage depends on the agent exercising the path (latent in software-org, tied
-in supply-chain). We separate architectural guarantee from observed leakage in every claim, and flag
-three reinforcing scenarios as future work: a \emph{forced-access} probe that explicitly targets the
-confidential node, an \emph{adversarial-prompt} scenario that induces unauthorized retrieval, and a
-\emph{semantic} leakage metric beyond exact match. The delegation scenario is already a forced-action
-probe and shows the gate engaging.
+leakage, and behavioral leakage in the non-adversarial scenarios depends on the agent exercising the
+path (latent in software-org, tied in supply-chain). The forced-access scenario
+(Section~\ref{sec:forced}) now closes part of this gap by directly targeting the confidential node
+rather than waiting for the agent to request it, and shows both an architectural guarantee (\gcp{}
+containment $1.00$ throughout) and, on the two strongest hosted tiers, an \emph{observed} granted-read
+leak on base \ata{}. Two reinforcing gaps remain as future work: an \emph{adversarial-prompt} scenario
+that induces unauthorized retrieval through indirection rather than an explicit instruction, and a
+\emph{semantic} leakage metric beyond exact match, which would also let the software-org and
+supply-chain canaries detect paraphrased disclosure. Delegation and forced-access are both already
+forced-action probes and both show the gate engaging.
 
 \paragraph{Marketplace used for structure only.} Marketplace task success was low on \emph{both} arms
 (e.g.\ falling to $0.0$--$0.4$ at $n{=}16,32$ on \texttt{llama3.1:8b}); the model often failed to pick
@@ -597,24 +729,31 @@ the same task, built with equal care; its disadvantages (no read gate, no delega
 audit sink, pairwise topology) are intrinsic to base message-passing, not artifacts of a strawman.
 
 \section{Limitations and Future Work}
-Extend to frontier hosted models and 20--30 seeds with significance testing on token/latency/message
-deltas; add the instrumented-A2A second baseline; add the forced-access, adversarial-prompt, and
-semantic-leakage scenarios and split transcript vs.\ final-answer leakage; and design a privacy testbed
-that removes the authorized-read confound of the current supply-chain scenario so the gating advantage
-can be \emph{observed}, not only argued. Bridging \gcp{} to MCP and A2A as first-class interop is the
-natural deployment path.
+Raise the open-weight arm toward 20--30 seeds with significance testing on token/latency/message
+deltas, raise the harness timeout so \texttt{gemini-2.5-pro} can complete a full 30-seed run, and add
+a second hosted frontier family beyond Gemini; add the instrumented-A2A second baseline; add the
+adversarial-prompt and semantic-leakage scenarios and split transcript vs.\ final-answer leakage; and
+design a privacy testbed that removes the authorized-read confound of the current supply-chain
+scenario so the gating advantage can be \emph{observed}, not only argued, in that scenario too.
+Bridging \gcp{} to MCP and A2A as first-class interop is the natural deployment path.
 
 \section{Conclusion}
 We presented \gcp{}---read-first, role-gated, audited context federation with a stricter-capability
-delegation gate---and a fairness-controlled, multi-model comparison against base A2A message-passing.
-The \emph{structural} advantages are strong and model-independent: coupling improves from $\bigoh(n^2)$
-to $\bigoh(n)$ in integration edges and from $\bigoh(n)$ to $\bigoh(1)$ in per-request discovery and
-tool-prompt overhead; provenance is native rather than added instrumentation; and in the delegation
-scenario \gcp{} contained every unauthorized action while base \ata{} contained none. Cost and success
-are at parity in preliminary behavioral runs, and canary leakage \emph{ties} on the current testbed, so
-we claim no privacy advantage there yet. The defensible contribution is the \emph{integration}---federated
-read, role control, and per-read provenance---plus its measured comparison; the behavioral results are a
-multi-model pilot that invites replication with more seeds and hosted models.
+delegation gate---and a fairness-controlled comparison against base A2A message-passing across four
+model families: three open-weight local models and one hosted frontier family (Gemini 2.5, three
+tiers). The \emph{structural} advantages are strong and model-independent: coupling improves from
+$\bigoh(n^2)$ to $\bigoh(n)$ in integration edges and from $\bigoh(n)$ to $\bigoh(1)$ in per-request
+discovery and tool-prompt overhead; provenance is native rather than added instrumentation; and in
+both agency scenarios---delegation (write-side) and forced-access (read-side)---\gcp{} contained every
+unauthorized action while base \ata{} contained none, on every model family that engaged the task. The
+forced-access results additionally turn the architectural guarantee into an \emph{observed} one on the
+two strongest hosted tiers, where base \ata{} did not just risk but actually executed the unauthorized
+read and surfaced the canary. Cost and success are at parity in preliminary behavioral runs, and canary
+leakage \emph{ties} on the current non-adversarial testbed, so we claim no privacy advantage there yet.
+The defensible contribution is the \emph{integration}---federated read, role control, and per-read
+provenance---plus its measured comparison; the behavioral results are a multi-model pilot, now spanning
+one hosted frontier family alongside three open-weight models, that invites replication with more
+seeds and additional hosted models.
 
 \balance
 \bibliographystyle{unsrtnat}
