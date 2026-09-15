@@ -80,45 +80,24 @@ admamaniq@unsa.edu.pe, rvaldiviase@unsa.edu.pe, kguevarap@unsa.edu.pe}
 \maketitle
 
 \begin{abstract}
-\textbf{Problem.} Multi-agent systems based on large language models (LLMs) commonly rely on
-point-to-point message-passing for agent coordination, which can increase integration complexity
-and requires additional mechanisms for fine-grained access control and traceability.
-\textbf{Method.} This study evaluates the Graph Context Protocol (\gcp{}), a read-first
-context-federation approach that integrates role- and capability-based access control with per-read
-provenance. \gcp{} is compared with a base Agent2Agent (\ata{}) message-passing implementation
-under a controlled experimental design in which both approaches use the same agent logic, models,
-tasks, and evaluation criteria, differing only in the interoperability layer. The evaluation
-comprises five scenarios (marketplace, software organization, cross-owner supply chain, delegation,
-forced-access) across four model families: three open-weight LLMs served locally
-(\texttt{llama3.1:8b}, \texttt{qwen3:4b}, \texttt{qwen2.5:32b}, 3--5 seeds per arm across four
-independent run sets---\texttt{qwen3:4b} is evaluated twice, not as a fourth distinct model) and one
-hosted frontier family, Gemini 2.5 (\texttt{flash-lite}, \texttt{flash}: 30 seeds per arm;
-\texttt{pro}: 15 seeds per arm), for seven run configurations in total. The evaluation distinguishes
-deterministic architectural properties from model-dependent behavioral outcomes. \textbf{Results.}
-Structural analysis shows that \gcp{} reduces integration-edge growth from $\bigoh(n^2)$ to
-$\bigoh(n)$ ($50$ vs.\ $2450$ at $n{=}50$) and maintains constant per-request discovery and
-tool-description overhead as the number of peers increases, while both grow linearly for base
-\ata{}. In the delegation scenario, \gcp{} prevented all attempted unauthorized actions (containment
-$1.00$) on every model family, whereas base \ata{} executed unauthorized actions whenever the model
-attempted them. The \emph{forced-access} scenario---a read-side counterpart that directly instructs
-the agent to read a confidential node it is not authorized for---replicates the same $1.00$/$0.00$
-containment split on every model that engaged the task; on the two strongest hosted tiers
-(\texttt{flash}, \texttt{pro}) base \ata{} additionally \emph{executed} the unauthorized read and
-surfaced the canary, an observed (not only architectural) leak that \gcp{}'s role gate denied outright
-on the same tiers. \gcp{} also provided complete provenance by construction, while equivalent per-read
-traceability in \ata{} requires additional instrumentation. Behavioral experiments showed comparable
-task success and communication cost between approaches, while current canary-based leakage
-experiments in the non-adversarial scenarios showed no behavioral privacy advantage for either
-architecture. These results indicate that \gcp{} provides model-independent structural and governance
-benefits while maintaining comparable behavioral performance. \textbf{Limitations.} Open-weight
-behavioral results use 3--5 seeds rather than the 20--30 recommended for significance testing on the
-token/latency/success deltas; the hosted Gemini family closes part of this gap (30 seeds for
-\texttt{flash-lite}/\texttt{flash}, 15 for \texttt{pro}) but is one model family, evaluated once. This
-affects only the preliminary behavioral columns, not the deterministic/architectural results
-(coupling, discovery, tool-prompt, provenance, containment).
-\textbf{Contribution.} The contribution lies in integrating federated read-first access, role- and
-capability-based control, and native per-read provenance within a unified multi-agent coordination
-substrate, supported by a fairness-controlled, multi-model evaluation.
+Multi-agent systems based on large language models (LLMs) commonly rely on point-to-point
+message-passing, which can increase integration complexity and requires additional mechanisms for
+fine-grained access control and traceability. This study evaluates the Graph Context Protocol
+(\gcp{}), a read-first context-federation approach that integrates role- and capability-based access
+control with native per-read provenance. \gcp{} is compared with a base Agent2Agent (\ata{})
+implementation under a controlled design in which agent logic, models, tasks, and evaluation criteria
+are held constant while only the interoperability layer changes. The evaluation covers five scenarios
+using three locally hosted open-weight models and three hosted Gemini 2.5 variants. Structural results
+show that \gcp{} reduces integration-edge growth from $\bigoh(n^2)$ to $\bigoh(n)$ and maintains
+$\bigoh(1)$ per-request discovery and tool-description overhead compared with $\bigoh(n)$ for base
+\ata{}. In unauthorized delegation and forced-access scenarios, \gcp{} denied every attempted
+unauthorized operation, whereas base \ata{} allowed such operations whenever they were attempted; in
+the strongest hosted models, unauthorized reads additionally exposed confidential canary content under
+\ata{} while \gcp{} denied access. \gcp{} also provides per-read provenance by construction, whereas
+equivalent traceability requires additional instrumentation in base \ata{}. Behavioral experiments
+indicate comparable task success and communication cost, while non-adversarial canary experiments show
+no privacy advantage between approaches. Overall, the results support \gcp{}'s model-independent
+structural and governance benefits while positioning behavioral findings as preliminary.
 \end{abstract}
 
 \begin{IEEEkeywords}
