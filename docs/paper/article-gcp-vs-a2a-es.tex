@@ -35,6 +35,10 @@
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{xurl} % permite que las URL largas de referencias se corten entre lineas
 \usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
 
 \hyphenation{op-tical net-works semi-conduc-tor}
 
@@ -459,14 +463,51 @@ preliminares: las filas de peso abierto siguen con pocas semillas y alojadas loc
 r\'eplica alojada de frontera (mayor n\'umero de semillas, una sola familia de modelos) retira esa
 limitaci\'on parcial, no totalmente.
 
+La Figura~\ref{fig:pipeline} resume este procedimiento de extremo a extremo: una definici\'on de
+escenario y un modelo de chat inyectado instancian ambos brazos bajo la misma l\'ogica de agente, y el
+or\'aculo y el recolector de m\'etricas son compartidos, de modo que solo la capa de interoperabilidad
+difiere entre las dos corridas de una misma tripleta (modelo, escenario, semilla).
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=5mm and 4mm,
+  box/.style={draw, rounded corners, align=center, font=\scriptsize, minimum width=2.75cm,
+    minimum height=8mm, fill=gray!5, inner sep=2pt},
+  arrow/.style={-{Stealth[length=1.8mm]}, thick}
+]
+\node[box, minimum width=6cm] (def) {Un \texttt{ScenarioDef} + un modelo de chat inyectado (fijo por corrida)};
+\node[box, below left=of def, xshift=6mm] (gcp) {Brazo \gcp{}: nodos en proceso,\\compuerta de pol\'itica, sumidero de auditor\'ia};
+\node[box, below right=of def, xshift=-6mm] (a2a) {Brazo \ata{}: servidores A2A\\en localhost, punto a punto};
+\node[box, below=12mm of def, minimum width=6cm] (brain) {Mismo cerebro ReAct, prompt de sistema, meta y semilla};
+\node[box, below=of brain, minimum width=6cm] (oracle) {Or\'aculo: \'exito de tarea / verificaci\'on de contenci\'on};
+\node[box, below=of oracle, minimum width=6cm] (metrics) {M\'etricas: tokens, mensajes, latencia,\\completitud de procedencia, contenci\'on};
+\node[box, below=of metrics, minimum width=6cm] (agg) {Agregado por familia de modelo $\times$ escenario $\times$ brazo $\times$ semilla};
+\draw[arrow] (def) -- (gcp);
+\draw[arrow] (def) -- (a2a);
+\draw[arrow] (gcp) |- (brain);
+\draw[arrow] (a2a) |- (brain);
+\draw[arrow] (brain) -- (oracle);
+\draw[arrow] (oracle) -- (metrics);
+\draw[arrow] (metrics) -- (agg);
+\end{tikzpicture}%
+}
+\caption{Procedimiento de evaluaci\'on por corrida. Solo la f\'abrica de herramientas por par y el
+alojamiento de nodos difieren entre los brazos \gcp{} y \ata{}; la l\'ogica de agente, el modelo, la
+tarea y la semilla se mantienen fijos.}
+\label{fig:pipeline}
+\end{figure}
+
 \section{Resultados}
 \label{sec:results}
 
 \subsection{Acoplamiento: $\bigoh(n)$ vs.\ $\bigoh(n^2)$ (determinista)}
-La Tabla~\ref{tab:struct} muestra la curva estructural: \gcp{} crece linealmente, \ata{}
-cuadr\'aticamente ---$9\times$ en $n{=}10$, $49\times$ en $n{=}50$. El esfuerzo de integraci\'on es
-constante $1$ para \gcp{} y $2n$ para \ata{}, de modo que la brecha se ampl\'ia con cada nodo.
-Id\'entico sin importar el modelo: la curva la fija la topolog\'ia, no el comportamiento del modelo.
+La Tabla~\ref{tab:struct} y la Figura~\ref{fig:coupling} muestran la curva estructural: \gcp{} crece
+linealmente, \ata{} cuadr\'aticamente ---$9\times$ en $n{=}10$, $49\times$ en $n{=}50$. El esfuerzo de
+integraci\'on es constante $1$ para \gcp{} y $2n$ para \ata{}, de modo que la brecha se ampl\'ia con
+cada nodo. Id\'entico sin importar el modelo: la curva la fija la topolog\'ia ---$C_{\gcp{}}(n)=n$ vs.\
+$C_{\ata{}}(n)=n(n{-}1)$--- no el comportamiento del modelo.
 
 \begin{table}[t]
 \centering
@@ -487,12 +528,36 @@ $n$ & \gcp{} $(n)$ & \ata{} $(n(n{-}1))$ & raz\'on \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=4.4cm,
+  xlabel={$n$ (pares)}, ylabel={aristas de integraci\'on},
+  xmin=2, xmax=50, ymin=0,
+  legend pos=north west, legend style={font=\scriptsize, draw=none, fill=none},
+  grid=both, major grid style={gray!25}, minor grid style={gray!10},
+  label style={font=\footnotesize}, tick label style={font=\footnotesize}
+]
+\addplot[thick, blue, domain=2:50, samples=100] {x};
+\addlegendentry{\gcp{} $\bigoh(n)$}
+\addplot[thick, red, dashed, domain=2:50, samples=100] {x*(x-1)};
+\addlegendentry{\ata{} $\bigoh(n^2)$}
+\addplot[only marks, mark=*, blue] coordinates {(2,2)(3,3)(5,5)(10,10)(20,20)(50,50)};
+\addplot[only marks, mark=square*, red] coordinates {(2,2)(3,6)(5,20)(10,90)(20,380)(50,2450)};
+\end{axis}
+\end{tikzpicture}
+\caption{Aristas de integraci\'on vs.\ n\'umero de pares $n$. Las curvas son la forma cerrada
+$C_{\gcp{}}(n)=n$ y $C_{\ata{}}(n)=n(n{-}1)$; los marcadores son los valores de la Tabla~\ref{tab:struct}.}
+\label{fig:coupling}
+\end{figure}
+
 \subsection{Sobrecosto por solicitud: $\bigoh(1)$ vs.\ $\bigoh(n)$ (determinista)}
 El impuesto de acoplamiento se paga en \emph{cada solicitud} v\'ia mensajes de descubrimiento y el
-presupuesto de prompt de herramientas (Tabla~\ref{tab:disc}). \gcp{} mantiene ambos planos ($1$
-mensaje, $72$ tokens); \ata{} base llega a $32$ mensajes y $1782$ tokens de prompt de herramientas en
-$n{=}32$, una brecha de $25\times$ en el prompt. Id\'entico sin importar el modelo, ya que estos
-valores los fija la construcci\'on del prompt, no el comportamiento del modelo.
+presupuesto de prompt de herramientas (Tabla~\ref{tab:disc}, Figura~\ref{fig:overhead}). \gcp{}
+mantiene ambos planos ($1$ mensaje, $72$ tokens); \ata{} base llega a $32$ mensajes y $1782$ tokens de
+prompt de herramientas en $n{=}32$, una brecha de $25\times$ en el prompt. Id\'entico sin importar el
+modelo, ya que estos valores los fija la construcci\'on del prompt, no el comportamiento del modelo.
 
 \begin{table}[t]
 \centering
@@ -514,6 +579,47 @@ $n$ & \gcp{} & \ata{} & \gcp{} & \ata{} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=3.6cm,
+  xlabel={$n$ (pares)}, ylabel={msjs. de descubrim.},
+  xmin=2, xmax=32, ymin=0,
+  legend pos=north west, legend style={font=\scriptsize, draw=none, fill=none},
+  grid=both, major grid style={gray!25}, minor grid style={gray!10},
+  label style={font=\footnotesize}, tick label style={font=\footnotesize}
+]
+\addplot[thick, blue, domain=2:32, samples=50] {1};
+\addlegendentry{\gcp{} $\bigoh(1)$}
+\addplot[thick, red, dashed, domain=2:32, samples=50] {x};
+\addlegendentry{\ata{} $\bigoh(n)$}
+\addplot[only marks, mark=*, blue] coordinates {(2,1)(4,1)(8,1)(16,1)(32,1)};
+\addplot[only marks, mark=square*, red] coordinates {(2,2)(4,4)(8,8)(16,16)(32,32)};
+\end{axis}
+\end{tikzpicture}
+\\[2mm]
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=3.6cm,
+  xlabel={$n$ (pares)}, ylabel={tokens de prompt-herr.},
+  xmin=2, xmax=32, ymin=0,
+  legend pos=north west, legend style={font=\scriptsize, draw=none, fill=none},
+  grid=both, major grid style={gray!25}, minor grid style={gray!10},
+  label style={font=\footnotesize}, tick label style={font=\footnotesize}
+]
+\addplot[thick, blue, mark=*] coordinates {(2,72)(4,72)(8,72)(16,72)(32,72)};
+\addlegendentry{\gcp{} (plano)}
+\addplot[thick, red, dashed, mark=square*] coordinates {(2,110)(4,220)(8,440)(16,886)(32,1782)};
+\addlegendentry{\ata{} (medido)}
+\end{axis}
+\end{tikzpicture}
+\caption{Sobrecosto por solicitud vs.\ n\'umero de pares $n$. Arriba: mensajes de descubrimiento,
+forma cerrada $1$ (\gcp{}) vs.\ $n$ (\ata{}). Abajo: tokens de prompt de herramientas (barrido de
+marketplace), \gcp{} plano vs.\ \ata{} medido (Tabla~\ref{tab:disc}).}
+\label{fig:overhead}
+\end{figure}
 
 \subsection{Procedencia: nativa en \gcp{}, instrumentaci\'on a\~nadida en \ata{} base
 (arquitect\'onico)}

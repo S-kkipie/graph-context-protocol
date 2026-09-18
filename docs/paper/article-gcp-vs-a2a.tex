@@ -41,6 +41,10 @@
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{xurl} % allow long reference URLs to break across lines
 \usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
 
 \hyphenation{op-tical net-works semi-conduc-tor}
 
@@ -421,14 +425,49 @@ established (deterministic or architectural) and token/latency/leakage/success a
 open-weight rows remain low-seed and locally hosted, and the hosted-frontier replication (higher seed
 count, one model family) partially, not fully, retires that limitation.
 
+Figure~\ref{fig:pipeline} summarizes this procedure end-to-end: one scenario definition and one
+injected chat model instantiate both arms under identical agent logic, and the oracle and metrics
+collector are shared, so only the interoperability layer differs between the two runs of a given
+(model, scenario, seed) triple.
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=5mm and 4mm,
+  box/.style={draw, rounded corners, align=center, font=\scriptsize, minimum width=2.75cm,
+    minimum height=8mm, fill=gray!5, inner sep=2pt},
+  arrow/.style={-{Stealth[length=1.8mm]}, thick}
+]
+\node[box, minimum width=6cm] (def) {One \texttt{ScenarioDef} + one injected chat model (fixed per run)};
+\node[box, below left=of def, xshift=6mm] (gcp) {\gcp{} arm: in-process nodes,\\policy gate, audit sink};
+\node[box, below right=of def, xshift=-6mm] (a2a) {\ata{} arm: localhost A2A\\servers, point-to-point};
+\node[box, below=12mm of def, minimum width=6cm] (brain) {Identical ReAct brain, system prompt, goal, and seed};
+\node[box, below=of brain, minimum width=6cm] (oracle) {Oracle: task success / containment check};
+\node[box, below=of oracle, minimum width=6cm] (metrics) {Metrics: tokens, messages, latency,\\provenance completeness, containment};
+\node[box, below=of metrics, minimum width=6cm] (agg) {Aggregated per model family $\times$ scenario $\times$ arm $\times$ seed};
+\draw[arrow] (def) -- (gcp);
+\draw[arrow] (def) -- (a2a);
+\draw[arrow] (gcp) |- (brain);
+\draw[arrow] (a2a) |- (brain);
+\draw[arrow] (brain) -- (oracle);
+\draw[arrow] (oracle) -- (metrics);
+\draw[arrow] (metrics) -- (agg);
+\end{tikzpicture}%
+}
+\caption{Evaluation procedure per run. Only the per-peer tool factory and node hosting differ between
+the \gcp{} and \ata{} arms; agent logic, model, task, and seed are held fixed.}
+\label{fig:pipeline}
+\end{figure}
+
 \section{Results}
 \label{sec:results}
 
 \subsection{Coupling: $\bigoh(n)$ vs.\ $\bigoh(n^2)$ (deterministic)}
-Table~\ref{tab:struct} shows the structural curve: \gcp{} grows linearly, \ata{} quadratically---
-$9\times$ at $n{=}10$, $49\times$ at $n{=}50$. Integration effort is constant $1$ for \gcp{} and $2n$
-for \ata{}, so the gap widens with every node. Identical regardless of model: the curve is set by
-topology, not by model behavior.
+Table~\ref{tab:struct} and Fig.~\ref{fig:coupling} show the structural curve: \gcp{} grows linearly,
+\ata{} quadratically---$9\times$ at $n{=}10$, $49\times$ at $n{=}50$. Integration effort is constant
+$1$ for \gcp{} and $2n$ for \ata{}, so the gap widens with every node. Identical regardless of model:
+the curve is set by topology---$C_{\gcp{}}(n)=n$ vs.\ $C_{\ata{}}(n)=n(n{-}1)$---not by model behavior.
 
 \begin{table}[t]
 \centering
@@ -448,11 +487,35 @@ $n$ & \gcp{} $(n)$ & \ata{} $(n(n{-}1))$ & ratio \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=4.4cm,
+  xlabel={$n$ (peers)}, ylabel={integration edges},
+  xmin=2, xmax=50, ymin=0,
+  legend pos=north west, legend style={font=\scriptsize, draw=none, fill=none},
+  grid=both, major grid style={gray!25}, minor grid style={gray!10},
+  label style={font=\footnotesize}, tick label style={font=\footnotesize}
+]
+\addplot[thick, blue, domain=2:50, samples=100] {x};
+\addlegendentry{\gcp{} $\bigoh(n)$}
+\addplot[thick, red, dashed, domain=2:50, samples=100] {x*(x-1)};
+\addlegendentry{\ata{} $\bigoh(n^2)$}
+\addplot[only marks, mark=*, blue] coordinates {(2,2)(3,3)(5,5)(10,10)(20,20)(50,50)};
+\addplot[only marks, mark=square*, red] coordinates {(2,2)(3,6)(5,20)(10,90)(20,380)(50,2450)};
+\end{axis}
+\end{tikzpicture}
+\caption{Integration edges vs.\ peer count $n$. Curves are the closed-form
+$C_{\gcp{}}(n)=n$ and $C_{\ata{}}(n)=n(n{-}1)$; markers are the Table~\ref{tab:struct} values.}
+\label{fig:coupling}
+\end{figure}
+
 \subsection{Per-request overhead: $\bigoh(1)$ vs.\ $\bigoh(n)$ (deterministic)}
 The coupling tax is paid on \emph{every request} via discovery messages and the tool-prompt budget
-(Table~\ref{tab:disc}). \gcp{} holds both flat ($1$ message, $72$ tokens); base \ata{} reaches $32$
-messages and $1782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap. Identical regardless of
-model, since these are set by prompt construction, not model behavior.
+(Table~\ref{tab:disc}, Fig.~\ref{fig:overhead}). \gcp{} holds both flat ($1$ message, $72$ tokens);
+base \ata{} reaches $32$ messages and $1782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap.
+Identical regardless of model, since these are set by prompt construction, not model behavior.
 
 \begin{table}[t]
 \centering
@@ -474,6 +537,47 @@ $n$ & \gcp{} & \ata{} & \gcp{} & \ata{} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=3.6cm,
+  xlabel={$n$ (peers)}, ylabel={discovery msgs},
+  xmin=2, xmax=32, ymin=0,
+  legend pos=north west, legend style={font=\scriptsize, draw=none, fill=none},
+  grid=both, major grid style={gray!25}, minor grid style={gray!10},
+  label style={font=\footnotesize}, tick label style={font=\footnotesize}
+]
+\addplot[thick, blue, domain=2:32, samples=50] {1};
+\addlegendentry{\gcp{} $\bigoh(1)$}
+\addplot[thick, red, dashed, domain=2:32, samples=50] {x};
+\addlegendentry{\ata{} $\bigoh(n)$}
+\addplot[only marks, mark=*, blue] coordinates {(2,1)(4,1)(8,1)(16,1)(32,1)};
+\addplot[only marks, mark=square*, red] coordinates {(2,2)(4,4)(8,8)(16,16)(32,32)};
+\end{axis}
+\end{tikzpicture}
+\\[2mm]
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=3.6cm,
+  xlabel={$n$ (peers)}, ylabel={tool-prompt tokens},
+  xmin=2, xmax=32, ymin=0,
+  legend pos=north west, legend style={font=\scriptsize, draw=none, fill=none},
+  grid=both, major grid style={gray!25}, minor grid style={gray!10},
+  label style={font=\footnotesize}, tick label style={font=\footnotesize}
+]
+\addplot[thick, blue, mark=*] coordinates {(2,72)(4,72)(8,72)(16,72)(32,72)};
+\addlegendentry{\gcp{} (flat)}
+\addplot[thick, red, dashed, mark=square*] coordinates {(2,110)(4,220)(8,440)(16,886)(32,1782)};
+\addlegendentry{\ata{} (measured)}
+\end{axis}
+\end{tikzpicture}
+\caption{Per-request overhead vs.\ peer count $n$. Top: discovery messages, closed-form
+$1$ (\gcp{}) vs.\ $n$ (\ata{}). Bottom: tool-prompt tokens (marketplace sweep), \gcp{} flat vs.\
+\ata{} measured (Table~\ref{tab:disc}).}
+\label{fig:overhead}
+\end{figure}
 
 \subsection{Provenance: native to \gcp{}, added instrumentation for base \ata{} (architectural)}
 Across the four non-marketplace scenarios, all four model families, every seed, provenance
