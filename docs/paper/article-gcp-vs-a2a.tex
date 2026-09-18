@@ -68,11 +68,11 @@
 
 \begin{document}
 
-\title{Read-First, Role-Gated Context Federation for Multi-Agent LLM
-Systems: A Fairness-Controlled, Multi-Model Evaluation Against
-Point-to-Point Message-Passing}
+\title{Read-First \textbf{and} Role-Gated Context Federation for Multi-Agent LLM
+Systems: \textit{A Controlled Multi-Model Comparison with Point-to-Point
+Messaging}}
 
-\author{\IEEEauthorblockN{Adrian Issac Mamani Quispe\IEEEauthorrefmark{1}, Ryan Fabian Valdivia Segovia\IEEEauthorrefmark{1},\\ Karim Guevara Puente de la Vega\IEEEauthorrefmark{1}, Norka Norali Bedregal Alpaca\IEEEauthorrefmark{1}}
+\author{\IEEEauthorblockN{Adrian Mamani-Quispe\IEEEauthorrefmark{1}, Ryan Valdivia-Segovia\IEEEauthorrefmark{1},\\ Karim Guevara-Puente de la Vega\IEEEauthorrefmark{1}, Norka Bedregal-Alpaca\IEEEauthorrefmark{1}}
 \IEEEauthorblockA{\IEEEauthorrefmark{1}Universidad Nacional de San Agust\'in de Arequipa, Arequipa, Peru\\
 admamaniq@unsa.edu.pe, rvaldiviase@unsa.edu.pe,\\ kguevarap@unsa.edu.pe, nbedregal@unsa.edu.pe}
 }
@@ -85,12 +85,14 @@ message-passing, which can increase integration complexity and requires addition
 fine-grained access control and traceability. This study evaluates the Graph Context Protocol
 (\gcp{}), a read-first context-federation approach that integrates role- and capability-based access
 control with native per-read provenance. \gcp{} is compared with a base Agent2Agent (\ata{})
-implementation under a controlled design in which agent logic, models, tasks, and evaluation criteria
-are held constant while only the interoperability layer changes. The evaluation covers five scenarios
-using three locally hosted open-weight models and three hosted Gemini 2.5 variants. Structural results
-show that \gcp{} reduces integration-edge growth from $\bigoh(n^2)$ to $\bigoh(n)$ and maintains
-$\bigoh(1)$ per-request discovery and tool-description overhead compared with $\bigoh(n)$ for base
-\ata{}. In unauthorized delegation and forced-access scenarios, \gcp{} denied every attempted
+implementation that performs the same coordination tasks through direct point-to-point messaging,
+without role gating or native provenance, under a controlled design in which agent logic, models,
+tasks, and evaluation criteria are held constant while only the interoperability layer changes. The
+evaluation covers five scenarios using three locally hosted open-weight models and three hosted
+Gemini 2.5 variants. Structural analysis of the integration topology---not of runtime
+execution---shows that \gcp{} reduces the number of required integration edges from
+$\bigoh(n^2)$ to $\bigoh(n)$ and holds per-request discovery and tool-description overhead at
+$\bigoh(1)$, compared with $\bigoh(n)$ for base \ata{}. In unauthorized delegation and forced-access scenarios, \gcp{} denied every attempted
 unauthorized operation, whereas base \ata{} allowed such operations whenever they were attempted; in
 the strongest hosted models, unauthorized reads additionally exposed confidential canary content under
 \ata{} while \gcp{} denied access. \gcp{} also provides per-read provenance by construction, whereas
@@ -101,20 +103,19 @@ structural and governance benefits while positioning behavioral findings as prel
 \end{abstract}
 
 \begin{IEEEkeywords}
-context federation; multi-agent systems; large language models; access control; least privilege;
-provenance; agent containment; software coupling; agent communication protocols
+large language models; access control; provenance; agent containment; software coupling
 \end{IEEEkeywords}
 
 \section{Introduction}
 
-The dominant coordination pattern for LLM-based multi-agent systems is direct message-passing.
-Frameworks such as AutoGen~\citep{wu2023autogen}, ChatDev~\citep{qian2024chatdev}, and
-MetaGPT~\citep{hong2024metagpt} compose applications from agents that send and receive messages,
-and the Agent2Agent (A2A) protocol~\citep{a2a2025} standardizes exactly this: a client agent
-advertises and delegates tasks to named remote agents over JSON-RPC. This paradigm descends from
-the classical agent communication languages KQML~\citep{finin1994} and FIPA-ACL~\citep{fipa2002},
-which already assumed pairwise connections and shared, pre-negotiated protocols between every
-interacting pair.
+Direct message-passing is the predominant coordination pattern in multi-agent systems based on
+large language models (LLMs). Frameworks such as AutoGen~\citep{wu2023autogen},
+ChatDev~\citep{qian2024chatdev}, and MetaGPT~\citep{hong2024metagpt} organize applications around
+agents that communicate through messages. The Agent2Agent (A2A) protocol~\citep{a2a2025}, in turn,
+standardizes inter-agent communication: a client agent advertises and delegates tasks to named
+remote agents over JSON-RPC. This paradigm descends from the classical agent communication
+languages KQML~\citep{finin1994} and FIPA-ACL~\citep{fipa2002}, which already assumed pairwise
+connections and shared, pre-negotiated protocols between every interacting pair.
 
 Message-passing has a structural cost the software-engineering literature has understood for fifty
 years. Connecting $n$ components pairwise requires on the order of $n^2$ links; a shared
@@ -123,30 +124,31 @@ spaghetti'' the Enterprise Integration Patterns~\citep{hohpe2003} catalog addres
 and hubs, and the phenomenon coupling theory~\citep{parnas1972,stevens1974,briand1999} formalizes:
 modifiability is governed by the number and strength of inter-component dependencies.
 
-We study an alternative substrate, the Graph Context Protocol (\gcp{}). \gcp{} is
-\emph{read-first}: an agent obtains what it needs by reading context from independently owned
-knowledge nodes rather than receiving pushed messages. It is \emph{role-gated}: every read passes
-through a policy gate that authorizes the request by role and required capabilities, defaulting to
-deny~\citep{saltzer1975,sandhu1996}. And it is \emph{audited}: every read or delegation
-decision---grant or deny---produces a structured provenance record.
+An alternative infrastructure for agent coordination is studied here: the Graph Context Protocol
+(\gcp{}). This protocol prioritizes reading: an agent obtains what it needs by reading context from
+independently owned knowledge nodes rather than receiving pushed messages. It is \emph{role-gated}:
+every read passes through a policy gate that authorizes the request by role and required
+capabilities, defaulting to deny~\citep{saltzer1975,sandhu1996}. \gcp{} also provides
+auditability: every read or delegation decision---grant or deny---produces a structured provenance
+record.
 
 \paragraph{Thesis (measured form).} At equal task success, read-first role-gated context federation
 offers \emph{structural} advantages over point-to-point message-passing in coupling and
-traceability, and \emph{preliminary} evidence of lower or equal cost under certain scenarios. We
-state the structural claims as strong (they are deterministic or architectural) and the behavioral
+traceability, and \emph{preliminary} evidence of lower or equal cost under certain scenarios. The
+structural claims are stated as strong (they are deterministic or architectural) and the behavioral
 claims as preliminary (open-weight models, few seeds).
 
-\paragraph{Scope of the comparison.} We are explicit about what the A2A arm represents. We do not
-claim message-passing \emph{cannot} be audited: logs, middleware, proxies, or gateways can add an
-access trail. Our comparison is against \emph{base} A2A---the protocol as shipped, without such
-instrumentation---and its purpose is to show that \gcp{} makes provenance and role gating
-\emph{native primitives} rather than optional add-ons. Where useful we discuss a second reference
-point, A2A augmented with minimal read logging (Section~\ref{sec:metrics}).
+\paragraph{Scope of the comparison.} The scope of the A2A arm is stated explicitly. Message-passing
+is not claimed to be inherently unauditable: logs, middleware, proxies, or gateways can add an
+access trail. The comparison targets \emph{base} A2A---the protocol as shipped, without such
+instrumentation---to show that \gcp{} makes provenance and role gating
+\emph{native primitives} rather than optional add-ons. A second reference point, A2A augmented with
+minimal read logging, is discussed where useful (Section~\ref{sec:metrics}).
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item \textbf{Architecture and a reproducible specification.} We describe \gcp{} (read-first,
-  role-gated, audited, with a stricter-capability delegation gate) precisely enough to reimplement:
+  \item \textbf{Architecture and a reproducible specification.} \gcp{} (read-first,
+  role-gated, audited, with a stricter-capability delegation gate) is described precisely enough to reimplement:
   query format, node and policy structure, role credential, provenance record, and the
   authorization algorithm (Section~\ref{sec:arch}).
   \item \textbf{A fairness-controlled benchmark method.} One scenario definition and one injected
@@ -172,12 +174,12 @@ AutoGen~\citep{wu2023autogen} programs applications as conversations; ChatDev~\c
 arranges role-pairs in a fixed ``chat chain''; surveys~\citep{guo2024survey} taxonomize communication
 into peer-to-peer, centralized, layered, and shared-pool variants. The Model Context
 Protocol~\citep{mcp2024} standardizes agent-to-tool context access (an early read-first form), while
-A2A~\citep{a2a2025} standardizes agent-to-agent task delegation---the baseline we benchmark against.
-\citet{zhang2024agentprune} report 28--73\% excess tokens in inter-agent communication graphs and
-recover most by pruning topology; \citet{mao2026delm} replace both centralized orchestration and
-peer-to-peer routing with a shared verified context at roughly half the cost. We add role-gated
-authorization, audited per-read provenance, an agency-containment gate, and a multi-model
-fairness-controlled comparison.
+A2A~\citep{a2a2025} standardizes agent-to-agent task delegation---the baseline benchmarked against
+here. \citet{zhang2024agentprune} report 28--73\% excess tokens in inter-agent communication graphs
+and recover most by pruning topology. \citet{mao2026delm} replace both centralized orchestration and
+peer-to-peer routing with a shared verified context at roughly half the cost. This work adds
+role-gated authorization, audited per-read provenance, an agency-containment gate, and a
+multi-model fairness-controlled comparison.
 
 \subsection{Coupling and the $n^2$ problem}
 That fewer inter-component links yield more maintainable systems is among the oldest results in
@@ -209,7 +211,7 @@ property~\citep{evertz2024whispers}; inter-agent message channels are the domina
 largely invisible to output-only auditing~\citep{elyagoubi2026agentleak}; and restricting what an
 agent can \emph{see} is more robust than filtering what it can \emph{say}~\citep{bagdasarian2024airgap}.
 The OWASP Top 10 for LLM applications~\citep{owasp2025} names Sensitive Information Disclosure and
-Excessive Agency as primary risks---the latter is exactly what our delegation scenario probes.
+Excessive Agency as primary risks---the latter is exactly what the delegation scenario probes.
 Deterministic privilege control at the tool boundary~\citep{shi2025progent}, authenticated
 delegation of authority~\citep{south2025delegation}, and audit trails~\citep{ojewale2025audit} argue
 for tamper-evident records of system actions.
@@ -217,16 +219,17 @@ for tamper-evident records of system actions.
 \paragraph{Delta / defensible novelty.} Prior work supplies the pieces---read-first access (MCP),
 role/attribute gating (RBAC/ABAC, access-controlled RAG), audited delegation, and audit logs---but
 not their conjunction, and not a fairness-controlled, multi-model head-to-head against a real
-message-passing baseline. Our claim to novelty is precisely the \emph{integration}: federated read
-$+$ role control $+$ per-read provenance, evaluated against \ata{}. Read-first alone, RBAC alone, or
-auditing alone would not be a contribution.
+message-passing baseline. The novelty claimed here is precisely the \emph{integration}: federated
+read $+$ role control $+$ per-read provenance, evaluated against \ata{}. Read-first alone, RBAC
+alone, or auditing alone would not be a contribution.
 
 \section{The Graph Context Protocol: Specification}
 \label{sec:arch}
 
 \gcp{} models an ecosystem as independently owned \emph{knowledge nodes} and \emph{agent nodes}.
 Coordination is read-first: an agent issues a \emph{context query} to a peer node, which returns
-context the caller is authorized to read. We specify the substrate precisely enough to reimplement.
+context the caller is authorized to read. The substrate is specified precisely enough to
+reimplement.
 
 \subsection{Data structures}
 A \textbf{knowledge node} carries an id, a kind, an adapter that produces content, and an access
@@ -338,13 +341,14 @@ stricter-capability delegation         & not nat. & n/a & yes \\
 \section{Metric Definitions}
 \label{sec:metrics}
 
-We report metrics in four families and separate deterministic from model-dependent throughout.
+Metrics are reported in four families. Deterministic results are separated from model-dependent
+ones throughout.
 
 \paragraph{Structural coupling (deterministic).} For $n$ peers, \emph{pairwise connections} are the
 integration edges the topology requires: $C_{\ata{}}(n)=n(n{-}1)$ vs.\ $C_{\gcp{}}(n)=n$.
 \emph{Integration effort} is the marginal cost $C(n{+}1)-C(n)$: constant $1$ for \gcp{}, $2n$ for
-\ata{}. Computed exactly. We count \emph{directed} integration edges; therefore each bidirectional
-peer relationship contributes two directed edges. Under an undirected channel definition the
+\ata{}. Computed exactly. Integration edges are counted as \emph{directed}; each bidirectional
+peer relationship therefore contributes two directed edges. Under an undirected channel definition the
 corresponding count is $n(n{-}1)/2$; the asymptotic conclusion remains $\bigoh(n^2)$.
 
 \paragraph{Discovery and tool-prompt overhead (per request).} \emph{Discovery messages}: round-trips
@@ -360,15 +364,15 @@ read logging is the natural second reference point and would raise its completen
 the very instrumentation \gcp{} makes native. \emph{Delegation containment}: fraction of
 \emph{unauthorized} delegation attempts refused (denied and logged) rather than executed.
 
-\paragraph{Leakage and agency (four-way taxonomy).} We separate: (a) \emph{attempted unauthorized
-access}---the agent tried to reach a node/action it lacks rights to; (b) \emph{granted unauthorized
-access}---the substrate served it; (c) \emph{transcript leakage}---a canary appears anywhere in the
-tool transcript; (d) \emph{final-answer leakage}---a canary appears in the answer. Canary scanning is
-exact-match (a lower bound; paraphrase and semantic leakage are not counted). We report (a) and (b)
-directly from the delegation scenario; the transcript/answer split and a semantic-similarity leakage
-metric are instrumentation we flag as future work (Section~\ref{sec:threats}). We distinguish
-\emph{architectural guarantee} (what the gate provably prevents) from \emph{observed leakage} (what a
-given model exercised).
+\paragraph{Leakage and agency (four-way taxonomy).} Four categories are distinguished: (a)
+\emph{attempted unauthorized access}---the agent tried to reach a node/action it lacks rights to; (b)
+\emph{granted unauthorized access}---the substrate served it; (c) \emph{transcript leakage}---a
+canary appears anywhere in the tool transcript; (d) \emph{final-answer leakage}---a canary appears in
+the answer. Canary scanning is exact-match (a lower bound; paraphrase and semantic leakage are not
+counted). (a) and (b) are reported directly from the delegation scenario; the transcript/answer split
+and a semantic-similarity leakage metric are instrumentation flagged as future work
+(Section~\ref{sec:threats}). The \emph{architectural guarantee} (what the gate provably prevents) is
+distinguished from \emph{observed leakage} (what a given model exercised).
 
 \paragraph{Behavioral cost and success.} Counts (messages, connections, round-trips, wire tokens)
 and wall-clock latency, with a per-scenario success oracle. Counts are the primary cost signal; local
@@ -402,15 +406,17 @@ arms (Section~\ref{sec:threats}).
 per arm), \texttt{qwen3:4b} (3 seeds per arm, two independent run sets, labeled (a) and (b) below),
 \texttt{qwen2.5:32b} (3 seeds per arm)---three distinct models, four independent run sets in total,
 since (a) and (b) are two separate executions of the identical \texttt{qwen3:4b} configuration, not
-two different models. We additionally evaluate one hosted frontier family through the native Gemini
-API (\texttt{EVAL\_ADAPTER=google}, parallel-tool-call sanitizer, non-streaming): \texttt{gemini-2.5-flash-lite}
+two different models. One hosted frontier family is additionally evaluated through the native
+Gemini API (\texttt{EVAL\_ADAPTER=google}, parallel-tool-call sanitizer, non-streaming): \texttt{gemini-2.5-flash-lite}
 and \texttt{gemini-2.5-flash} (30 seeds per arm) and \texttt{gemini-2.5-pro} (15 seeds per arm, run
 through an incremental JSONL-per-run writer after an initial 30-seed attempt exceeded the harness's
 60-minute test timeout)---four model families in total across seven run configurations. The harness is
-CI-gated, throttles, and retries on transient errors. We report mean $\pm$
-population s.d.; where a 95\% normal-approximation interval is informative we give $\pm1.96\,s/\sqrt{k}$.
+CI-gated, throttles, and retries on transient errors. Mean $\pm$ population s.d.\ is reported; where
+a 95\% normal-approximation interval is informative $\pm1.96\,s/\sqrt{k}$ is given, and where both
+arms' means and standard deviations are available Cohen's $d$ (mean difference over the pooled
+standard deviation) is additionally reported to gauge effect size independently of sample size.
 Structural curves are computed for $n=2,\dots,50$; discovery/tool-prompt curves are measured over
-$n\in\{2,4,8,16,32\}$. We treat coupling/discovery/tool-prompt/provenance/containment as
+$n\in\{2,4,8,16,32\}$. Coupling/discovery/tool-prompt/provenance/containment are treated as
 established (deterministic or architectural) and token/latency/leakage/success as preliminary: the
 open-weight rows remain low-seed and locally hosted, and the hosted-frontier replication (higher seed
 count, one model family) partially, not fully, retires that limitation.
@@ -615,30 +621,35 @@ Table~\ref{tab:deleg}.
 \end{table}
 
 \subsection{Cost and success: parity (preliminary)}
+\label{sec:results-cost}
 Wire tokens and task success are within seed variance between arms wherever the model could do the
 task. On \texttt{llama3.1:8b} software-org, tokens are $500.6{\pm}16.9$ vs.\ $502.4{\pm}18.9$ (95\%
-CI $\pm14.8$ vs.\ $\pm16.6$, $k{=}5$); on \texttt{qwen2.5:32b} software-org, $669.7{\pm}0.9$ vs.\
-$668.7{\pm}3.3$. Absolute counts differ by an order of magnitude across models, but the between-arm
-gap stays inside the interval in every scenario. The base \ata{} arm's \emph{wire}-token count is
+CI $\pm14.8$ vs.\ $\pm16.6$, $k{=}5$; \gcp{} $-$\ata{} mean difference $-1.8$ tokens, Cohen's
+$d{=}-0.10$, a negligible effect); on \texttt{qwen2.5:32b} software-org, $669.7{\pm}0.9$ vs.\
+$668.7{\pm}3.3$ (mean difference $+1.0$ token, $0.15\%$, Cohen's $d{=}0.41$, small-to-moderate but on
+a $3$-seed sample). Absolute counts differ by an order of magnitude across models, but the between-arm
+gap stays inside the interval in every scenario, and the effect sizes above confirm the gap is small
+relative to run-to-run variance rather than a consistent directional cost. The base \ata{} arm's \emph{wire}-token count is
 often marginally \emph{lower} (it omits \gcp{}'s query envelope); the tax \ata{} pays is the
-per-request tool-prompt budget (Table~\ref{tab:disc}), not the payload. We therefore make no claim
+per-request tool-prompt budget (Table~\ref{tab:disc}), not the payload. No claim is therefore made
 that \gcp{} sends fewer wire tokens---only that it does not cost meaningfully more while removing the
-$\bigoh(n)$ prompt overhead. We present these as \emph{preliminary}, pending 20--30 seeds and
-significance testing.
+$\bigoh(n)$ prompt overhead. These results are presented as \emph{preliminary}, pending 20--30 seeds
+and significance testing.
 
 \subsection{Leakage: ties in the canary scenarios (observed), guarantee holds (architectural)}
-We report the leakage picture plainly. In \emph{software-org}, observed leakage was $0.0$ on both arms
-across all models---but because the agent satisfied the public-summary task without ever requesting the
-confidential node, so the leaky path was \emph{not exercised}; the architectural leak is latent, not
-observed. In \emph{supply-chain}, both arms are authorized to read both owners' nodes, so both surfaced
-the canaries equally (leakage $1.0$ on both, every model): a genuine \emph{tie}, because the leak is not
-a gating decision. We therefore claim no observed behavioral leakage advantage. The leakage advantage of
+The leakage picture is reported plainly. In \emph{software-org}, observed leakage was $0.0$ on both
+arms across all models, because the agent satisfied the public-summary task without ever requesting
+the confidential node, so the leaky path was \emph{not exercised}; the architectural leak is latent,
+not observed. In \emph{supply-chain}, both arms are authorized to read both owners' nodes, so both
+surfaced the canaries equally (leakage $1.0$ on both, every model): a genuine \emph{tie}, because the
+leak is not a gating decision. No observed behavioral leakage advantage is therefore claimed. The
+leakage advantage of
 \gcp{} is the \emph{architectural} deny-by-default-plus-audit guarantee, exercised directly by the
 delegation and provenance results, not by these canary counts.
 
 \subsection{Architectural guarantee: executable no-leak property}
-The distinction above rests on a proof, not only measurement. Over the shipped read/authorize path we
-run property-based tests (\texttt{fast-check}) against fixed, finite pools: five capabilities and four
+The distinction above rests on a proof, not only measurement. Over the shipped read/authorize path,
+property-based tests (\texttt{fast-check}) are run against fixed, finite pools: five capabilities and four
 roles, one of which (\texttt{role:child}) inherits from another (\texttt{role:a}) so effective-capability
 computation is exercised, not only direct grants. Each random \emph{policy} independently samples a
 subset of the role pool for \texttt{readableByRoles}, a subset of the capability pool for
@@ -658,9 +669,58 @@ debugging). The canary metric \emph{measures} leakage in scenarios; the property
 the gate is sound over the input space. Together: the property shows the gate is correct; the canary
 confirms it is on the hot path.
 
-\section{Discussion and Threats to Validity}
+\section{Discussion, Limitations, and Threats to Validity}
 \label{sec:threats}
 
+\subsection{Interpretation of principal findings}
+In the forced-access scenario, \gcp{} blocked all 11 unauthorized read requests issued by
+\texttt{gemini-2.5-pro} across the 15 evaluated runs, whereas the base \ata{} implementation granted
+the 12 requests issued in its corresponding runs (Table~\ref{tab:forced}). This result is consistent
+with Saltzer and Schroeder's principles of least privilege and complete
+mediation~\citep{saltzer1975} and with Sandhu et al.'s role-based access
+control~\citep{sandhu1996}, since authorization is verified before content is admitted into the
+agent's context rather than relying on the agent's discretion to refrain from requesting it. It also
+aligns with Evertz et al.'s view that confidentiality is a system-level property rather than a purely
+model-level one~\citep{evertz2024whispers}, and with AirGapAgent's approach of restricting what an
+agent can access~\citep{bagdasarian2024airgap}. In relation to Progent, the finding supports the
+value of enforcing explicit privilege controls at the tool-access boundary~\citep{shi2025progent};
+\gcp{}'s evaluated contribution is to integrate that control with federated context reading and
+per-decision provenance. In practical terms, the results suggest that this integration can contain
+unauthorized requests even when the model attempts to issue them. The observed gap, however,
+corresponds to a base \ata{} implementation without equivalent controls, and does not demonstrate an
+inherent limitation of the protocol nor superiority over the cited protection systems, which were not
+evaluated directly. The same reading applies to the delegation results (Table~\ref{tab:deleg}):
+containment is architectural for \gcp{} and absent for base \ata{} regardless of whether a given
+model happens to attempt the unauthorized action.
+
+\subsection{Relation to prior work, by theme}
+Three threads from Section~\ref{sec:related} converge in the results. On \emph{coupling}, the
+measured $\bigoh(n)$ vs.\ $\bigoh(n^2)$ integration-edge growth (Table~\ref{tab:struct}) and the
+$\bigoh(1)$ vs.\ $\bigoh(n)$ discovery/tool-prompt overhead (Table~\ref{tab:disc}) instantiate, for
+LLM agent topologies, the same edge-count argument that
+\citet{parnas1972,stevens1974,briand1999,hohpe2003} established for software and integration
+architectures. On \emph{least privilege and access control}, the containment and provenance results
+operationalize \citet{saltzer1975} and \citet{sandhu1996} at the level of individual context reads
+rather than at the level of a system boundary. On \emph{leakage and governance}, the tie observed in
+the non-adversarial canary scenarios and the gap observed under forced access together support
+\citet{evertz2024whispers} and \citet{elyagoubi2026agentleak}: confidentiality outcomes depend on
+whether the unauthorized path is exercised, not only on whether a gate exists in principle, which is
+why the forced-access probe (Section~\ref{sec:forced}) is more informative than the non-adversarial
+scenarios alone.
+
+\subsection{Practical implications and conditions of applicability}
+For deployments that must support cross-owner context sharing under least-privilege and audit
+requirements---e.g.\ regulated data-minimization obligations~\citep{gdpr2016} or the OWASP LLM Top
+10's Excessive Agency and Sensitive Information Disclosure risks~\citep{owasp2025}---the results
+indicate that a read-first, role-gated substrate can provide native containment and provenance
+without added instrumentation, and that this benefit does not depend on model strength: it held
+across four model families of very different capability. The caveat is that these benefits are
+demonstrated against a \emph{base} A2A baseline; systems that already wrap A2A with policy
+middleware, logging proxies, or gateways may recover some of the same governance properties, at the
+cost of that added instrumentation. \gcp{} is therefore best read as removing the need for such
+instrumentation, not as the only way to obtain it.
+
+\subsection{Limitations and threats to validity}
 \paragraph{Four model families, seven run sets, but open-weight seed counts stay low.} The behavioral
 results now span three open-weight models over two size classes ($4$B--$32$B), locally hosted, across
 four independent run sets (\texttt{qwen3:4b} was run twice, as an internal replication check, not as a
@@ -670,8 +730,8 @@ uneven across the two groups: the open-weight arm stays at 3--5 seeds, the wall-
 every seed as a full multi-step ReAct agent loop against a locally hosted LLM server, repeated per
 model, per scenario, and per arm, making 20--30 seeds roughly an order of magnitude more expensive
 there. The hosted Gemini arm closes this gap for two of its three tiers (30 seeds for
-\texttt{flash-lite}/\texttt{flash}, meeting the significance-testing convention we could not afford
-locally) and partially for the third (\texttt{gemini-2.5-pro}, 15 seeds---a first 30-seed attempt was
+\texttt{flash-lite}/\texttt{flash}, meeting the significance-testing convention that was not
+affordable locally) and partially for the third (\texttt{gemini-2.5-pro}, 15 seeds---a first 30-seed attempt was
 killed by the harness's 60-minute test timeout before writing a report; the incremental writer used for
 the reported run avoids that failure mode but the timeout itself has not yet been raised to let a
 30-seed \texttt{pro} run complete). This constraint does not affect the deterministic/architectural
@@ -682,8 +742,16 @@ second hosted frontier family, and 20--30 seeds on \texttt{pro}, remain the natu
 step.
 
 \paragraph{Provenance is a base-implementation property.} The $0.0$ for \ata{} is a property of base
-message-passing, not a proof that A2A cannot audit. We frame it as ``no per-read traceability without
-added instrumentation'' and identify instrumented A2A as the fair second baseline.
+message-passing, not a proof that A2A cannot audit. It is framed as ``no per-read traceability
+without added instrumentation,'' with instrumented A2A identified as the fair second baseline.
+
+\paragraph{Effect-size and proportion statistics.} Section~\ref{sec:results-cost} reports Cohen's $d$
+and percent change for the two token comparisons that have complete mean/s.d./seed-count triples in
+the text. A full effect-size and mean-difference table across all scenarios, and a difference-of-
+proportions statistic for task success, would additionally require the per-run message and
+success records for every model/scenario/arm combination to be tabulated alongside tokens, which the
+current manuscript reports only in aggregate for most rows; producing that table is listed under
+Limitations and Future Work.
 
 \paragraph{Leakage measurement is limited.} Exact-match canary scanning misses paraphrase and semantic
 leakage, and behavioral leakage in the non-adversarial scenarios depends on the agent exercising the
@@ -699,9 +767,9 @@ forced-action probes and both show the gate engaging.
 
 \paragraph{Marketplace used for structure only.} Marketplace task success was low on \emph{both} arms
 (e.g.\ falling to $0.0$--$0.4$ at $n{=}16,32$ on \texttt{llama3.1:8b}); the model often failed to pick
-the cheapest seller. Because the failure is equal across arms it does not threaten fairness, but per
-reviewer guidance we use the marketplace \emph{only} for its deterministic structural, discovery, and
-tool-prompt curves, and exclude its behavioral rows from the main claims.
+the cheapest seller. Because the failure is equal across arms it does not threaten fairness, but the
+marketplace is used \emph{only} for its deterministic structural, discovery, and
+tool-prompt curves, and its behavioral rows are excluded from the main claims.
 
 \paragraph{Construct validity of the baseline.} The \ata{} arm runs real servers, the same brain, and
 the same task, built with equal care; its disadvantages (no read gate, no delegation gate, no native
@@ -713,22 +781,25 @@ deltas, raise the harness timeout so \texttt{gemini-2.5-pro} can complete a full
 a second hosted frontier family beyond Gemini; add the instrumented-A2A second baseline; add the
 adversarial-prompt and semantic-leakage scenarios and split transcript vs.\ final-answer leakage; and
 design a privacy testbed that removes the authorized-read confound of the current supply-chain
-scenario so the gating advantage can be \emph{observed}, not only argued, in that scenario too.
+scenario so the gating advantage can be \emph{observed}, not only argued, in that scenario too;
+and tabulate per-run message and success records across all model/scenario/arm combinations to
+support a full effect-size and difference-of-proportions analysis (Section~\ref{sec:threats}).
 Bridging \gcp{} to MCP and A2A as first-class interop is the natural deployment path.
 
 \section{Conclusion}
-We presented \gcp{}---read-first, role-gated, audited context federation with a stricter-capability
-delegation gate---and a fairness-controlled comparison against base A2A message-passing across four
-model families: three open-weight local models and one hosted frontier family (Gemini 2.5, three
-tiers). The \emph{structural} advantages are strong and model-independent: coupling improves from
-$\bigoh(n^2)$ to $\bigoh(n)$ in integration edges and from $\bigoh(n)$ to $\bigoh(1)$ in per-request
-discovery and tool-prompt overhead; provenance is native rather than added instrumentation; and in
-both agency scenarios---delegation (write-side) and forced-access (read-side)---\gcp{} contained every
-unauthorized action while base \ata{} contained none, on every model family that engaged the task. The
-forced-access results additionally turn the architectural guarantee into an \emph{observed} one on the
-two strongest hosted tiers, where base \ata{} did not just risk but actually executed the unauthorized
-read and surfaced the canary. Cost and success are at parity in preliminary behavioral runs, and canary
-leakage \emph{ties} on the current non-adversarial testbed, so we claim no privacy advantage there yet.
+This work presented \gcp{}---read-first, role-gated, audited context federation with a
+stricter-capability delegation gate---and a fairness-controlled comparison against base A2A
+message-passing across four model families: three open-weight local models and one hosted frontier
+family (Gemini 2.5, three tiers). The \emph{structural} advantages are strong and model-independent:
+coupling improves from $\bigoh(n^2)$ to $\bigoh(n)$ in integration edges and from $\bigoh(n)$ to
+$\bigoh(1)$ in per-request discovery and tool-prompt overhead; provenance is native rather than
+added instrumentation; and in both agency scenarios---delegation (write-side) and forced-access
+(read-side)---\gcp{} contained every unauthorized action while base \ata{} contained none, on every
+model family that engaged the task. The forced-access results additionally turn the architectural
+guarantee into an \emph{observed} one on the two strongest hosted tiers, where base \ata{} did not
+just risk but actually executed the unauthorized read and surfaced the canary. Cost and success are
+at parity in preliminary behavioral runs, and canary leakage \emph{ties} on the current
+non-adversarial testbed, so no privacy advantage is claimed there yet.
 The defensible contribution is the \emph{integration}---federated read, role control, and per-read
 provenance---plus its measured comparison; the behavioral results are a multi-model pilot, now spanning
 one hosted frontier family alongside three open-weight models, that invites replication with more

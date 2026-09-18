@@ -68,11 +68,11 @@
 
 \begin{document}
 
-\title{Federaci\'on de Contexto de Lectura Primero y Control por Rol para Sistemas
-Multiagente Basados en LLM: una Evaluaci\'on Multi-Modelo Controlada por Equidad
-Frente al Paso de Mensajes Punto a Punto}
+\title{Federaci\'on de Contexto de Lectura Primero \textbf{y} Control por Rol para Sistemas
+Multiagente Basados en LLM: \textit{una Comparaci\'on Multi-Modelo Controlada Frente al Paso de
+Mensajes Punto a Punto}}
 
-\author{\IEEEauthorblockN{Adrian Issac Mamani Quispe\IEEEauthorrefmark{1}, Ryan Fabian Valdivia Segovia\IEEEauthorrefmark{1},\\ Karim Guevara Puente de la Vega\IEEEauthorrefmark{1}, Norka Norali Bedregal Alpaca\IEEEauthorrefmark{1}}
+\author{\IEEEauthorblockN{Adrian Mamani-Quispe\IEEEauthorrefmark{1}, Ryan Valdivia-Segovia\IEEEauthorrefmark{1},\\ Karim Guevara-Puente de la Vega\IEEEauthorrefmark{1}, Norka Bedregal-Alpaca\IEEEauthorrefmark{1}}
 \IEEEauthorblockA{\IEEEauthorrefmark{1}Universidad Nacional de San Agust\'in de Arequipa, Arequipa, Per\'u\\
 admamaniq@unsa.edu.pe, rvaldiviase@unsa.edu.pe,\\ kguevarap@unsa.edu.pe, nbedregal@unsa.edu.pe}
 }
@@ -85,13 +85,15 @@ mensajes punto a punto, lo que puede aumentar la complejidad de integraci\'on y 
 adicionales de control de acceso granular y trazabilidad. Este estudio eval\'ua el Graph Context
 Protocol (\gcp{}), un enfoque de federaci\'on de contexto de lectura primero que integra control de
 acceso por rol y por capacidad con procedencia nativa por cada lectura. \gcp{} se compara con una
-implementaci\'on base de Agent2Agent (\ata{}) bajo un dise\~no controlado en el que la l\'ogica del
-agente, los modelos, las tareas y los criterios de evaluaci\'on se mantienen constantes mientras solo
-cambia la capa de interoperabilidad. La evaluaci\'on cubre cinco escenarios usando tres modelos de
-peso abierto alojados localmente y tres variantes de Gemini 2.5 alojadas en la nube. Los resultados
-estructurales muestran que \gcp{} reduce el crecimiento de aristas de integraci\'on de $\bigoh(n^2)$ a
-$\bigoh(n)$ y mantiene un sobrecosto de descubrimiento y de descripci\'on de herramientas por
-solicitud de $\bigoh(1)$, frente a $\bigoh(n)$ en \ata{} base. En los escenarios de delegaci\'on no
+implementaci\'on base de Agent2Agent (\ata{}) que realiza las mismas tareas de coordinaci\'on mediante
+paso de mensajes directo punto a punto, sin control por rol ni procedencia nativa, bajo un dise\~no
+controlado en el que la l\'ogica del agente, los modelos, las tareas y los criterios de evaluaci\'on se
+mantienen constantes mientras solo cambia la capa de interoperabilidad. La evaluaci\'on cubre cinco
+escenarios usando tres modelos de peso abierto alojados localmente y tres variantes de Gemini 2.5
+alojadas en la nube. El an\'alisis estructural de la topolog\'ia de integraci\'on ---no de la
+ejecuci\'on en tiempo de corrida--- muestra que \gcp{} reduce el n\'umero de aristas de integraci\'on
+requeridas de $\bigoh(n^2)$ a $\bigoh(n)$ y mantiene el sobrecosto de descubrimiento y de
+descripci\'on de herramientas por solicitud en $\bigoh(1)$, frente a $\bigoh(n)$ en \ata{} base. En los escenarios de delegaci\'on no
 autorizada y de acceso forzado, \gcp{} deneg\'o toda operaci\'on no autorizada intentada, mientras que
 \ata{} base permiti\'o dichas operaciones siempre que fueron intentadas; en los modelos alojados m\'as
 fuertes, las lecturas no autorizadas ademas expusieron contenido canario confidencial bajo \ata{},
@@ -104,19 +106,19 @@ independientes del modelo, mientras se posicionan los hallazgos conductuales com
 \end{abstract}
 
 \begin{IEEEkeywords}
-federaci\'on de contexto; sistemas multiagente; modelos de lenguaje grandes; control de acceso;
-m\'inimo privilegio; procedencia; contenci\'on de agentes; acoplamiento de software; protocolos de
-comunicaci\'on entre agentes
+modelos de lenguaje grandes; control de acceso; procedencia; contenci\'on de agentes; acoplamiento
+de software
 \end{IEEEkeywords}
 
 \section{Introducci\'on}
 
-El patr\'on de coordinaci\'on dominante para los sistemas multiagente basados en LLM es el paso de
-mensajes directo. Marcos como AutoGen~\citep{wu2023autogen}, ChatDev~\citep{qian2024chatdev} y
-MetaGPT~\citep{hong2024metagpt} componen aplicaciones a partir de agentes que env\'ian y reciben
-mensajes, y el protocolo Agent2Agent (A2A)~\citep{a2a2025} estandariza exactamente esto: un agente
-cliente anuncia y delega tareas a agentes remotos con nombre mediante JSON-RPC. Este paradigma
-desciende de los lenguajes cl\'asicos de comunicaci\'on entre agentes KQML~\citep{finin1994} y
+El paso de mensajes directo es el patr\'on de coordinaci\'on predominante en los sistemas
+multiagente basados en modelos de lenguaje grandes (LLM). Marcos como AutoGen~\citep{wu2023autogen},
+ChatDev~\citep{qian2024chatdev} y MetaGPT~\citep{hong2024metagpt} organizan aplicaciones en torno a
+agentes que se comunican mediante mensajes. El protocolo Agent2Agent (A2A)~\citep{a2a2025}, a su vez,
+estandariza la comunicaci\'on entre agentes: un agente cliente anuncia y delega tareas a agentes
+remotos con nombre mediante JSON-RPC. Este paradigma desciende de los lenguajes cl\'asicos de
+comunicaci\'on entre agentes KQML~\citep{finin1994} y
 FIPA-ACL~\citep{fipa2002}, que ya asum\'ian conexiones por pares y protocolos compartidos y
 pre-negociados entre cada par que interact\'ua.
 
@@ -128,32 +130,34 @@ Patterns~\citep{hohpe2003} aborda con brokers y hubs, y que la teor\'ia del
 acoplamiento~\citep{parnas1972,stevens1974,briand1999} formaliza: la modificabilidad est\'a gobernada
 por el n\'umero y la fuerza de las dependencias entre componentes.
 
-Estudiamos un sustrato alternativo, el Graph Context Protocol (\gcp{}). \gcp{} es \emph{de lectura
-primero}: un agente obtiene lo que necesita leyendo contexto desde nodos de conocimiento de propiedad
-independiente en lugar de recibir mensajes empujados. Es \emph{controlado por rol}: cada lectura pasa
+Se estudia aqu\'i una infraestructura alternativa para la coordinaci\'on de agentes: el Graph Context
+Protocol (\gcp{}). Este protocolo prioriza la lectura: un agente obtiene lo que necesita leyendo
+contexto desde nodos de conocimiento de propiedad independiente en lugar de recibir mensajes
+empujados. Es \emph{controlado por rol}: cada lectura pasa
 por una compuerta de pol\'itica que autoriza la solicitud seg\'un el rol y las capacidades requeridas,
-denegando por defecto~\citep{saltzer1975,sandhu1996}. Y es \emph{auditado}: cada decisi\'on de lectura
-o delegaci\'on ---conceder o denegar--- produce un registro de procedencia estructurado.
+denegando por defecto~\citep{saltzer1975,sandhu1996}. \gcp{} tambi\'en provee auditabilidad: cada
+decisi\'on de lectura o delegaci\'on ---conceder o denegar--- produce un registro de procedencia
+estructurado.
 
 \paragraph{Tesis (forma medida).} A igual \'exito de tarea, la federaci\'on de contexto de lectura
 primero y controlada por rol ofrece ventajas \emph{estructurales} sobre el paso de mensajes punto a
 punto en acoplamiento y trazabilidad, y evidencia \emph{preliminar} de costo menor o igual bajo
-ciertos escenarios. Presentamos las afirmaciones estructurales como fuertes (son deterministas o
+ciertos escenarios. Las afirmaciones estructurales se presentan como fuertes (son deterministas o
 arquitect\'onicas) y las conductuales como preliminares (modelos de peso abierto, pocas semillas).
 
-\paragraph{Alcance de la comparaci\'on.} Somos expl\'icitos sobre lo que representa el brazo A2A. No
-afirmamos que el paso de mensajes \emph{no pueda} auditarse: registros, middleware, proxies o
-gateways pueden a\~nadir un rastro de acceso. Nuestra comparaci\'on es contra \ata{} \emph{base} ---el
-protocolo tal como se distribuye, sin dicha instrumentaci\'on--- y su prop\'osito es mostrar que
+\paragraph{Alcance de la comparaci\'on.} El alcance del brazo A2A se establece expl\'icitamente. No se
+afirma que el paso de mensajes \emph{no pueda} auditarse: registros, middleware, proxies o
+gateways pueden a\~nadir un rastro de acceso. La comparaci\'on se dirige contra \ata{} \emph{base}
+---el protocolo tal como se distribuye, sin dicha instrumentaci\'on--- para mostrar que
 \gcp{} convierte la procedencia y el control por rol en \emph{primitivas nativas} en lugar de
-extensiones opcionales. Donde resulta \'util discutimos un segundo punto de referencia, A2A aumentado
-con registro m\'inimo de lecturas (Secci\'on~\ref{sec:metrics}).
+extensiones opcionales. Un segundo punto de referencia, A2A aumentado con registro m\'inimo de
+lecturas, se discute donde resulta \'util (Secci\'on~\ref{sec:metrics}).
 
 \paragraph{Contribuciones.}
 \begin{enumerate}
-  \item \textbf{Arquitectura y una especificaci\'on reproducible.} Describimos \gcp{} (de lectura
+  \item \textbf{Arquitectura y una especificaci\'on reproducible.} \gcp{} (de lectura
   primero, controlado por rol, auditado, con una compuerta de delegaci\'on de capacidad m\'as
-  estricta) con precisi\'on suficiente para reimplementarlo: formato de consulta, estructura de nodo
+  estricta) se describe con precisi\'on suficiente para reimplementarlo: formato de consulta, estructura de nodo
   y pol\'itica, credencial de rol, registro de procedencia y el algoritmo de autorizaci\'on
   (Secci\'on~\ref{sec:arch}).
   \item \textbf{Un m\'etodo de benchmark controlado por equidad.} Una \'unica definici\'on de
@@ -183,12 +187,13 @@ aplicaciones como conversaciones; ChatDev~\citep{qian2024chatdev} organiza pares
 en variantes de igual a igual, centralizada, en capas y de conjunto compartido. El Model Context
 Protocol~\citep{mcp2024} estandariza el acceso a contexto de agente a herramienta (una forma temprana
 de lectura primero), mientras que A2A~\citep{a2a2025} estandariza la delegaci\'on de tareas de agente
-a agente ---la l\'inea base contra la que hacemos benchmark. \citet{zhang2024agentprune} reportan un
-28--73\% de tokens excedentes en grafos de comunicaci\'on entre agentes y recuperan la mayor\'ia
-podando la topolog\'ia; \citet{mao2026delm} reemplazan tanto la orquestaci\'on centralizada como el
-enrutamiento de igual a igual por un contexto verificado compartido a aproximadamente la mitad del
-costo. Nosotros a\~nadimos autorizaci\'on controlada por rol, procedencia auditada por lectura, una
-compuerta de contenci\'on de agencia y una comparaci\'on multi-modelo controlada por equidad.
+a agente ---la l\'inea base contra la que se hace benchmark aqu\'i. \citet{zhang2024agentprune}
+reportan un 28--73\% de tokens excedentes en grafos de comunicaci\'on entre agentes y recuperan la
+mayor\'ia podando la topolog\'ia. \citet{mao2026delm} reemplazan tanto la orquestaci\'on centralizada
+como el enrutamiento de igual a igual por un contexto verificado compartido a aproximadamente la
+mitad del costo. Este trabajo a\~nade autorizaci\'on controlada por rol, procedencia auditada por
+lectura, una compuerta de contenci\'on de agencia y una comparaci\'on multi-modelo controlada por
+equidad.
 
 \subsection{El acoplamiento y el problema de $n^2$}
 Que menos enlaces entre componentes produzcan sistemas m\'as mantenibles es uno de los resultados
@@ -223,7 +228,7 @@ dominante, en gran medida invisible para la auditor\'ia basada solo en la salida
 ~\citep{elyagoubi2026agentleak}; y restringir lo que un agente puede \emph{ver} es m\'as robusto que
 filtrar lo que puede \emph{decir}~\citep{bagdasarian2024airgap}. El OWASP Top 10 para aplicaciones LLM
 ~\citep{owasp2025} nombra la Divulgaci\'on de Informaci\'on Sensible y la Agencia Excesiva como
-riesgos primarios ---esta \'ultima es exactamente lo que sondea nuestro escenario de delegaci\'on. El
+riesgos primarios ---esta \'ultima es exactamente lo que sondea el escenario de delegaci\'on. El
 control determinista de privilegios en el l\'imite de la herramienta~\citep{shi2025progent}, la
 delegaci\'on autenticada de autoridad~\citep{south2025delegation} y los rastros de
 auditor\'ia~\citep{ojewale2025audit} abogan por registros a prueba de manipulaci\'on de las acciones
@@ -232,8 +237,8 @@ del sistema.
 \paragraph{Delta / novedad defendible.} El trabajo previo aporta las piezas ---acceso de lectura
 primero (MCP), control por rol/atributo (RBAC/ABAC, RAG con control de acceso), delegaci\'on auditada
 y registros de auditor\'ia--- pero no su conjunci\'on, ni una comparaci\'on directa multi-modelo
-controlada por equidad contra una l\'inea base real de paso de mensajes. Nuestra pretensi\'on de
-novedad es precisamente la \emph{integraci\'on}: lectura federada $+$ control por rol $+$ procedencia
+controlada por equidad contra una l\'inea base real de paso de mensajes. La novedad reivindicada aqu\'i
+es precisamente la \emph{integraci\'on}: lectura federada $+$ control por rol $+$ procedencia
 por lectura, evaluados contra \ata{}. La lectura primero sola, RBAC solo, o la auditor\'ia sola no
 ser\'ian una contribuci\'on.
 
@@ -243,7 +248,7 @@ ser\'ian una contribuci\'on.
 \gcp{} modela un ecosistema como \emph{nodos de conocimiento} y \emph{nodos de agente} de propiedad
 independiente. La coordinaci\'on es de lectura primero: un agente emite una \emph{consulta de
 contexto} a un nodo par, que devuelve el contexto que el solicitante est\'a autorizado a leer.
-Especificamos el sustrato con precisi\'on suficiente para reimplementarlo.
+El sustrato se especifica con precisi\'on suficiente para reimplementarlo.
 
 \subsection{Estructuras de datos}
 Un \textbf{nodo de conocimiento} lleva un id, un tipo, un adaptador que produce contenido y una
@@ -360,14 +365,14 @@ delegaci\'on de capacidad m\'as estricta & no nat. & n/a & s\'i \\
 \section{Definici\'on de M\'etricas}
 \label{sec:metrics}
 
-Reportamos m\'etricas en cuatro familias y separamos lo determinista de lo dependiente del modelo en
-todo momento.
+Las m\'etricas se reportan en cuatro familias. Lo determinista se separa de lo dependiente del modelo
+en todo momento.
 
 \paragraph{Acoplamiento estructural (determinista).} Para $n$ pares, las \emph{conexiones por pares}
 son las aristas de integraci\'on que la topolog\'ia requiere: $C_{\ata{}}(n)=n(n{-}1)$ vs.\
 $C_{\gcp{}}(n)=n$. El \emph{esfuerzo de integraci\'on} es el costo marginal $C(n{+}1)-C(n)$: constante
-$1$ para \gcp{}, $2n$ para \ata{}. Calculado exactamente. Contamos aristas de integraci\'on
-\emph{dirigidas}; por lo tanto cada relaci\'on bidireccional entre pares contribuye dos aristas
+$1$ para \gcp{}, $2n$ para \ata{}. Calculado exactamente. Las aristas de integraci\'on se cuentan como
+\emph{dirigidas}; cada relaci\'on bidireccional entre pares contribuye por lo tanto dos aristas
 dirigidas. Bajo una definici\'on de canal no dirigido el conteo correspondiente es $n(n{-}1)/2$; la
 conclusi\'on asint\'otica se mantiene en $\bigoh(n^2)$.
 
@@ -386,16 +391,17 @@ y elevar\'ia su completitud al costo de la misma instrumentaci\'on que \gcp{} ha
 \emph{Contenci\'on de delegaci\'on}: fracci\'on de intentos de delegaci\'on \emph{no autorizados}
 rechazados (denegados y registrados) en lugar de ejecutados.
 
-\paragraph{Fuga y agencia (taxonom\'ia de cuatro v\'ias).} Separamos: (a) \emph{acceso no autorizado
-intentado} ---el agente intent\'o alcanzar un nodo/acci\'on sobre el que no tiene derechos; (b)
-\emph{acceso no autorizado concedido} ---el sustrato lo sirvi\'o; (c) \emph{fuga en la transcripci\'on}
----un canario aparece en cualquier parte de la transcripci\'on de herramientas; (d) \emph{fuga en la
-respuesta final} ---un canario aparece en la respuesta. El escaneo de canarios es de coincidencia
-exacta (una cota inferior; la par\'afrasis y la fuga sem\'antica no se cuentan). Reportamos (a) y (b)
-directamente desde el escenario de delegaci\'on; la separaci\'on transcripci\'on/respuesta y una
-m\'etrica de fuga por similitud sem\'antica son instrumentaci\'on que se\~nalamos como trabajo futuro
-(Secci\'on~\ref{sec:threats}). Distinguimos la \emph{garant\'ia arquitect\'onica} (lo que la compuerta
-demostrablemente previene) de la \emph{fuga observada} (lo que un modelo dado ejerci\'o).
+\paragraph{Fuga y agencia (taxonom\'ia de cuatro v\'ias).} Se distinguen cuatro categor\'ias: (a)
+\emph{acceso no autorizado intentado} ---el agente intent\'o alcanzar un nodo/acci\'on sobre el que no
+tiene derechos; (b) \emph{acceso no autorizado concedido} ---el sustrato lo sirvi\'o; (c) \emph{fuga
+en la transcripci\'on} ---un canario aparece en cualquier parte de la transcripci\'on de herramientas;
+(d) \emph{fuga en la respuesta final} ---un canario aparece en la respuesta. El escaneo de canarios es
+de coincidencia exacta (una cota inferior; la par\'afrasis y la fuga sem\'antica no se cuentan). (a) y
+(b) se reportan directamente desde el escenario de delegaci\'on; la separaci\'on
+transcripci\'on/respuesta y una m\'etrica de fuga por similitud sem\'antica son instrumentaci\'on que
+se se\~nala como trabajo futuro (Secci\'on~\ref{sec:threats}). La \emph{garant\'ia arquitect\'onica}
+(lo que la compuerta demostrablemente previene) se distingue de la \emph{fuga observada} (lo que un
+modelo dado ejerci\'o).
 
 \paragraph{Costo y \'exito conductual.} Conteos (mensajes, conexiones, viajes de ida y vuelta, tokens
 en el cable) y latencia de reloj de pared, con un or\'aculo de \'exito por escenario. Los conteos son
@@ -434,18 +440,21 @@ se excluyen de las afirmaciones principales porque el \'exito de tarea fue bajo 
 ejecuci\'on independientes, etiquetados (a) y (b) abajo), \texttt{qwen2.5:32b} (3 semillas por
 brazo) ---tres modelos distintos, cuatro conjuntos de ejecuci\'on independientes en total, ya que (a)
 y (b) son dos ejecuciones separadas de la configuraci\'on id\'entica \texttt{qwen3:4b}, no dos modelos
-diferentes. Adicionalmente evaluamos una familia alojada de frontera a trav\'es de la API nativa de
+diferentes. Adicionalmente se eval\'ua una familia alojada de frontera a trav\'es de la API nativa de
 Gemini (\texttt{EVAL\_ADAPTER=google}, saneador de llamadas paralelas a herramientas, sin streaming):
 \texttt{gemini-2.5-flash-lite} y \texttt{gemini-2.5-flash} (30 semillas por brazo) y
 \texttt{gemini-2.5-pro} (15 semillas por brazo, ejecutado mediante un escritor incremental JSONL por
 corrida despu\'es de que un primer intento de 30 semillas excediera el l\'imite de 60 minutos del
 arn\'es) ---cuatro familias de modelos en total, en siete configuraciones de ejecuci\'on. El arn\'es
 est\'a controlado por CI, regula la tasa de solicitudes y reintenta ante errores transitorios.
-Reportamos media $\pm$ desviaci\'on est\'andar poblacional; donde un intervalo de aproximaci\'on
-normal al 95\% es informativo damos $\pm1.96\,s/\sqrt{k}$. Las curvas estructurales se calculan para
+Se reporta media $\pm$ desviaci\'on est\'andar poblacional; donde un intervalo de aproximaci\'on
+normal al 95\% es informativo se da $\pm1.96\,s/\sqrt{k}$, y donde se dispone de la media y la
+desviaci\'on est\'andar de ambos brazos se reporta adem\'as la $d$ de Cohen (diferencia de medias
+sobre la desviaci\'on est\'andar combinada) para estimar el tama\~no del efecto con independencia del
+tama\~no de muestra. Las curvas estructurales se calculan para
 $n=2,\dots,50$; las curvas de descubrimiento/prompt de herramientas se miden sobre
-$n\in\{2,4,8,16,32\}$. Tratamos acoplamiento/descubrimiento/prompt de herramientas/procedencia/
-contenci\'on como establecidos (deterministas o arquitect\'onicos) y tokens/latencia/fuga/\'exito como
+$n\in\{2,4,8,16,32\}$. Acoplamiento/descubrimiento/prompt de herramientas/procedencia/contenci\'on se
+tratan como establecidos (deterministas o arquitect\'onicos) y tokens/latencia/fuga/\'exito como
 preliminares: las filas de peso abierto siguen con pocas semillas y alojadas localmente, y la
 r\'eplica alojada de frontera (mayor n\'umero de semillas, una sola familia de modelos) retira esa
 limitaci\'on parcial, no totalmente.
@@ -664,33 +673,39 @@ $0.00$ por construcci\'on, siguiendo la misma convenci\'on de corrida degenerada
 \end{table}
 
 \subsection{Costo y \'exito: paridad (preliminar)}
+\label{sec:results-cost}
 Los tokens en el cable y el \'exito de tarea est\'an dentro de la varianza entre semillas entre brazos
 en todo caso en que el modelo pudo realizar la tarea. En software-org con \texttt{llama3.1:8b}, los
-tokens son $500.6{\pm}16.9$ vs.\ $502.4{\pm}18.9$ (IC 95\% $\pm14.8$ vs.\ $\pm16.6$, $k{=}5$); en
-software-org con \texttt{qwen2.5:32b}, $669.7{\pm}0.9$ vs.\ $668.7{\pm}3.3$. Los conteos absolutos
+tokens son $500.6{\pm}16.9$ vs.\ $502.4{\pm}18.9$ (IC 95\% $\pm14.8$ vs.\ $\pm16.6$, $k{=}5$;
+diferencia de medias \gcp{} $-$ \ata{} de $-1.8$ tokens, $d$ de Cohen $=-0.10$, un efecto
+despreciable); en software-org con \texttt{qwen2.5:32b}, $669.7{\pm}0.9$ vs.\ $668.7{\pm}3.3$
+(diferencia de medias $+1.0$ token, $0.15\%$, $d$ de Cohen $=0.41$, peque\~no a moderado pero sobre
+una muestra de $3$ semillas). Los conteos absolutos
 difieren en un orden de magnitud entre modelos, pero la brecha entre brazos permanece dentro del
-intervalo en cada escenario. El conteo de tokens \emph{en el cable} del brazo \ata{} base suele ser
+intervalo en cada escenario, y los tama\~nos de efecto anteriores confirman que la brecha es peque\~na
+en relaci\'on con la varianza entre corridas, no un costo direccional consistente. El conteo de tokens
+\emph{en el cable} del brazo \ata{} base suele ser
 marginalmente \emph{menor} (omite el sobre de consulta de \gcp{}); el impuesto que paga \ata{} es el
 presupuesto de prompt de herramientas por solicitud (Tabla~\ref{tab:disc}), no la carga \'util. Por lo
-tanto no afirmamos que \gcp{} env\'ie menos tokens en el cable ---solo que no cuesta significativamente
-m\'as mientras elimina el sobrecosto de prompt $\bigoh(n)$. Presentamos esto como \emph{preliminar},
+tanto no se afirma que \gcp{} env\'ie menos tokens en el cable ---solo que no cuesta significativamente
+m\'as mientras elimina el sobrecosto de prompt $\bigoh(n)$. Esto se presenta como \emph{preliminar},
 pendiente de 20--30 semillas y pruebas de significancia.
 
 \subsection{Fuga: empates en los escenarios canario (observado), la garant\'ia se sostiene
 (arquitect\'onico)}
-Reportamos el panorama de fuga sin rodeos. En \emph{software-org}, la fuga observada fue $0.0$ en
+El panorama de fuga se reporta sin rodeos. En \emph{software-org}, la fuga observada fue $0.0$ en
 ambos brazos en todos los modelos ---pero porque el agente satisfizo la tarea de resumen p\'ublico sin
 llegar a solicitar el nodo confidencial, la ruta con fuga \emph{no se ejerci\'o}; la fuga
 arquitect\'onica es latente, no observada. En \emph{supply-chain}, ambos brazos est\'an autorizados a
 leer los nodos de ambos due\~nos, de modo que ambos expusieron los canarios por igual (fuga $1.0$ en
 ambos, en todo modelo): un \emph{empate} genuino, porque la fuga no es una decisi\'on de compuerta. Por
-lo tanto no afirmamos ninguna ventaja de fuga conductual observada. La ventaja de fuga de \gcp{} es la
+lo tanto no se afirma ninguna ventaja de fuga conductual observada. La ventaja de fuga de \gcp{} es la
 garant\'ia \emph{arquitect\'onica} de denegar-por-defecto-m\'as-auditor\'ia, ejercida directamente por
 los resultados de delegaci\'on y procedencia, no por estos conteos de canarios.
 
 \subsection{Garant\'ia arquitect\'onica: propiedad ejecutable de no-fuga}
 La distinci\'on anterior descansa en una prueba, no solo en una medici\'on. Sobre la ruta de
-lectura/autorizaci\'on tal como se distribuye corremos pruebas basadas en propiedades
+lectura/autorizaci\'on tal como se distribuye se corren pruebas basadas en propiedades
 (\texttt{fast-check}) contra conjuntos fijos y finitos: cinco capacidades y cuatro roles, uno de los
 cuales (\texttt{role:child}) hereda de otro (\texttt{role:a}) de modo que el c\'alculo de capacidad
 efectiva se ejerce, no solo las concesiones directas. Cada \emph{pol\'itica} aleatoria muestrea de
@@ -714,9 +729,61 @@ depuraci\'on). La m\'etrica de canario \emph{mide} la fuga en los escenarios; la
 \emph{demuestra} que la compuerta es s\'olida sobre el espacio de entradas. Juntas: la propiedad
 muestra que la compuerta es correcta; el canario confirma que est\'a en la ruta caliente.
 
-\section{Discusi\'on y Amenazas a la Validez}
+\section{Discusi\'on, Limitaciones y Amenazas a la Validez}
 \label{sec:threats}
 
+\subsection{Interpretaci\'on de los principales hallazgos}
+En el escenario de acceso forzado, \gcp{} bloque\'o las 11 solicitudes de lectura no autorizada
+realizadas por \texttt{gemini-2.5-pro} en las 15 ejecuciones evaluadas, mientras que la
+implementaci\'on base \ata{} permiti\'o las 12 solicitudes efectuadas en sus corridas
+correspondientes (Tabla~\ref{tab:forced}). Este resultado es coherente con los principios de
+m\'inimo privilegio y mediaci\'on completa de Saltzer y Schroeder~\citep{saltzer1975}, as\'i como
+con el control de acceso basado en roles de Sandhu et al.~\citep{sandhu1996}, puesto que la
+autorizaci\'on se verifica antes de incorporar el contenido al contexto del agente, en lugar de
+depender de su discreci\'on para abstenerse de solicitarlo. Asimismo, coincide con la perspectiva de
+Evertz et al., que sit\'ua la confidencialidad como una propiedad del sistema y no exclusivamente del
+modelo~\citep{evertz2024whispers}, y con el enfoque de AirGapAgent, que prioriza restringir la
+informaci\'on accesible al agente~\citep{bagdasarian2024airgap}. En relaci\'on con Progent, el
+hallazgo respalda la utilidad de aplicar controles expl\'icitos de privilegios en el l\'imite de
+acceso a las herramientas~\citep{shi2025progent}; la contribuci\'on evaluada de \gcp{} consiste en
+integrar ese control con la lectura federada de contexto y el registro de procedencia por decisi\'on.
+En t\'erminos pr\'acticos, los resultados sugieren que esta integraci\'on permite contener
+solicitudes indebidas incluso cuando el modelo intenta ejecutarlas. La diferencia observada, sin
+embargo, corresponde a una implementaci\'on base \ata{} sin controles equivalentes y no demuestra una
+limitaci\'on inherente del protocolo ni una superioridad frente a los sistemas de protecci\'on
+citados, que no fueron evaluados directamente. La misma lectura aplica a los resultados de
+delegaci\'on (Tabla~\ref{tab:deleg}): la contenci\'on es arquitect\'onica para \gcp{} y ausente para
+\ata{} base, independientemente de si un modelo dado llega a intentar la acci\'on no autorizada.
+
+\subsection{Relaci\'on con el trabajo previo, por tema}
+Tres hilos de la Secci\'on~\ref{sec:related} convergen en los resultados. En \emph{acoplamiento}, el
+crecimiento medido de $\bigoh(n)$ vs.\ $\bigoh(n^2)$ en aristas de integraci\'on (Tabla~\ref{tab:struct})
+y el sobrecosto de $\bigoh(1)$ vs.\ $\bigoh(n)$ en descubrimiento/prompt de herramientas
+(Tabla~\ref{tab:disc}) instancian, para topolog\'ias de agentes LLM, el mismo argumento de conteo de
+aristas que \citet{parnas1972,stevens1974,briand1999,hohpe2003} establecieron para arquitecturas de
+software e integraci\'on. En \emph{m\'inimo privilegio y control de acceso}, los resultados de
+contenci\'on y procedencia operacionalizan a \citet{saltzer1975} y \citet{sandhu1996} a nivel de cada
+lectura de contexto individual, en lugar de a nivel de un l\'imite de sistema. En \emph{fuga y
+gobernanza}, el empate observado en los escenarios canario no adversariales y la brecha observada bajo
+acceso forzado respaldan en conjunto a \citet{evertz2024whispers} y \citet{elyagoubi2026agentleak}: los
+resultados de confidencialidad dependen de si la ruta no autorizada se ejerce, no solo de si existe una
+compuerta en principio, raz\'on por la cual la prueba de acceso forzado (Secci\'on~\ref{sec:forced}) es
+m\'as informativa que los escenarios no adversariales por s\'i solos.
+
+\subsection{Implicaciones pr\'acticas y condiciones de aplicabilidad}
+Para despliegues que deben soportar el intercambio de contexto entre propietarios bajo requisitos de
+m\'inimo privilegio y auditor\'ia ---p.\ ej.\ obligaciones regulatorias de minimizaci\'on de
+datos~\citep{gdpr2016} o los riesgos de Agencia Excesiva y Divulgaci\'on de Informaci\'on Sensible del
+OWASP LLM Top 10~\citep{owasp2025}--- los resultados indican que un sustrato de lectura primero
+controlado por rol puede ofrecer contenci\'on y procedencia nativas sin instrumentaci\'on a\~nadida, y
+que este beneficio no depende de la fortaleza del modelo: se sostuvo en cuatro familias de modelos de
+capacidades muy distintas. La salvedad es que estos beneficios se demuestran contra una l\'inea base
+A2A \emph{base}; sistemas que ya envuelven A2A con middleware de pol\'iticas, proxies de registro o
+gateways pueden recuperar parte de las mismas propiedades de gobernanza, al costo de esa
+instrumentaci\'on a\~nadida. \gcp{} se lee mejor entonces como algo que elimina la necesidad de esa
+instrumentaci\'on, no como la \'unica forma de obtenerla.
+
+\subsection{Limitaciones y amenazas a la validez}
 \paragraph{Cuatro familias de modelos, siete conjuntos de ejecuci\'on, pero el conteo de semillas de
 peso abierto se mantiene bajo.} Los resultados conductuales ahora abarcan tres modelos de peso
 abierto en dos clases de tama\~no ($4$B--$32$B), alojados localmente, en cuatro conjuntos de
@@ -729,7 +796,7 @@ semilla como un bucle completo de agente ReAct de m\'ultiples pasos contra un se
 localmente, repetido por modelo, por escenario y por brazo, lo que hace que 20--30 semillas resulten
 aproximadamente un orden de magnitud m\'as costosas ah\'i. El brazo alojado de Gemini cierra esta
 brecha para dos de sus tres niveles (30 semillas para \texttt{flash-lite}/\texttt{flash}, cumpliendo
-la convenci\'on de pruebas de significancia que no pod\'iamos costear localmente) y parcialmente para
+la convenci\'on de pruebas de significancia que no era costeable localmente) y parcialmente para
 el tercero (\texttt{gemini-2.5-pro}, 15 semillas ---un primer intento de 30 semillas fue interrumpido
 por el l\'imite de 60 minutos del arn\'es antes de escribir un reporte; el escritor incremental usado
 para la corrida reportada evita ese modo de falla, pero el l\'imite en s\'i a\'un no se ha elevado
@@ -741,9 +808,18 @@ absoluto del conteo de semillas; solo incide en las columnas preliminares de tok
 de frontera, y 20--30 semillas en \texttt{pro}, siguen siendo el pr\'oximo paso natural de r\'eplica.
 
 \paragraph{La procedencia es una propiedad de la implementaci\'on base.} El $0.0$ de \ata{} es una
-propiedad del paso de mensajes base, no una prueba de que A2A no pueda auditarse. Lo enmarcamos como
-``sin trazabilidad por lectura sin instrumentaci\'on a\~nadida'' e identificamos A2A instrumentado
+propiedad del paso de mensajes base, no una prueba de que A2A no pueda auditarse. Se enmarca como
+``sin trazabilidad por lectura sin instrumentaci\'on a\~nadida'', identificando a A2A instrumentado
 como el segundo baseline justo.
+
+\paragraph{Estad\'isticas de tama\~no de efecto y de proporciones.} La Secci\'on~\ref{sec:results-cost}
+reporta la $d$ de Cohen y el cambio porcentual para las dos comparaciones de tokens que cuentan con la
+tripleta completa de media/desviaci\'on est\'andar/n\'umero de semillas en el texto. Una tabla completa
+de tama\~nos de efecto y diferencias de medias en todos los escenarios, junto con un estad\'istico de
+diferencia de proporciones para el \'exito de tarea, requerir\'ian adem\'as tabular los registros de
+mensajes y \'exito por corrida para cada combinaci\'on modelo/escenario/brazo junto con los tokens, lo
+que el manuscrito actual solo reporta agregado en la mayor\'ia de las filas; producir esa tabla queda
+listado en Limitaciones y Trabajo Futuro.
 
 \paragraph{La medici\'on de fuga es limitada.} El escaneo de canarios por coincidencia exacta pasa por
 alto la par\'afrasis y la fuga sem\'antica, y la fuga conductual en los escenarios no adversariales
@@ -762,9 +838,9 @@ muestran a la compuerta actuando.
 \paragraph{El marketplace se usa solo para la estructura.} El \'exito de tarea del marketplace fue
 bajo en \emph{ambos} brazos (por ejemplo, cayendo a $0.0$--$0.4$ en $n{=}16,32$ con
 \texttt{llama3.1:8b}); el modelo frecuentemente no logr\'o elegir al vendedor m\'as barato. Como la
-falla es igual entre brazos no amenaza la equidad, pero siguiendo la gu\'ia de los revisores usamos el
-marketplace \emph{solo} para sus curvas deterministas de estructura, descubrimiento y prompt de
-herramientas, y excluimos sus filas conductuales de las afirmaciones principales.
+falla es igual entre brazos no amenaza la equidad, pero el marketplace se usa \emph{solo} para sus
+curvas deterministas de estructura, descubrimiento y prompt de herramientas, y sus filas conductuales
+se excluyen de las afirmaciones principales.
 
 \paragraph{Validez de constructo de la l\'inea base.} El brazo \ata{} corre servidores reales, el
 mismo cerebro y la misma tarea, construidos con igual cuidado; sus desventajas (sin compuerta de
@@ -779,14 +855,17 @@ adem\'as de Gemini; a\~nadir el segundo baseline de A2A instrumentado; a\~nadir 
 prompt adversarial y de fuga sem\'antica y separar la fuga de transcripci\'on de la de respuesta
 final; y dise\~nar un banco de pruebas de privacidad que elimine el factor de confusi\'on de lectura
 autorizada del escenario actual de supply-chain, de modo que la ventaja de la compuerta pueda
-\emph{observarse}, no solo argumentarse, tambi\'en en ese escenario. Conectar \gcp{} con MCP y A2A como
+\emph{observarse}, no solo argumentarse, tambi\'en en ese escenario; y tabular los registros de
+mensajes y \'exito por corrida en todas las combinaciones modelo/escenario/brazo para respaldar un
+an\'alisis completo de tama\~no de efecto y de diferencia de proporciones (Secci\'on~\ref{sec:threats}).
+Conectar \gcp{} con MCP y A2A como
 interoperabilidad de primera clase es la ruta natural de despliegue.
 
 \section{Conclusi\'on}
-Presentamos \gcp{} ---federaci\'on de contexto de lectura primero, controlada por rol y auditada, con
-una compuerta de delegaci\'on de capacidad m\'as estricta--- y una comparaci\'on controlada por
-equidad contra el paso de mensajes A2A base en cuatro familias de modelos: tres modelos locales de
-peso abierto y una familia alojada de frontera (Gemini 2.5, tres niveles). Las ventajas
+Este trabajo present\'o \gcp{} ---federaci\'on de contexto de lectura primero, controlada por rol y
+auditada, con una compuerta de delegaci\'on de capacidad m\'as estricta--- y una comparaci\'on
+controlada por equidad contra el paso de mensajes A2A base en cuatro familias de modelos: tres modelos
+locales de peso abierto y una familia alojada de frontera (Gemini 2.5, tres niveles). Las ventajas
 \emph{estructurales} son fuertes e independientes del modelo: el acoplamiento mejora de $\bigoh(n^2)$
 a $\bigoh(n)$ en aristas de integraci\'on y de $\bigoh(n)$ a $\bigoh(1)$ en el sobrecosto de
 descubrimiento y prompt de herramientas por solicitud; la procedencia es nativa en lugar de
@@ -797,7 +876,7 @@ de forced-access adem\'as convierten la garant\'ia arquitect\'onica en una \emph
 niveles alojados m\'as fuertes, donde \ata{} base no solo arriesg\'o sino que efectivamente ejecut\'o
 la lectura no autorizada y expuso el canario. El costo y el \'exito est\'an en paridad en las corridas
 conductuales preliminares, y la fuga de canarios \emph{empata} en el banco de pruebas no adversarial
-actual, por lo que a\'un no afirmamos ninguna ventaja de privacidad ah\'i. La contribuci\'on
+actual, por lo que a\'un no se afirma ninguna ventaja de privacidad ah\'i. La contribuci\'on
 defendible es la \emph{integraci\'on} ---lectura federada, control por rol y procedencia por
 lectura--- m\'as su comparaci\'on medida; los resultados conductuales son un piloto multi-modelo, que
 ahora abarca una familia alojada de frontera junto a tres modelos de peso abierto, que invita a la
