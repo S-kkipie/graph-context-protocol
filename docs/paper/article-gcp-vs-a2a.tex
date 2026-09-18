@@ -721,6 +721,23 @@ cost of that added instrumentation. \gcp{} is therefore best read as removing th
 instrumentation, not as the only way to obtain it.
 
 \subsection{Limitations and threats to validity}
+\paragraph{Resource constraints scope the evaluation.} This study received no external funding and
+was carried out as an independent initiative (see the Funding statement); the reported scope reflects
+that resource ceiling rather than a methodological choice. Locally hosted open-weight seeds are
+bounded by wall-clock and compute cost, since each seed requires a full multi-step ReAct agent loop
+against a locally served model, repeated per model, scenario, and arm---this keeps the open-weight arm
+at 3--5 seeds rather than the 20--30 used for two of the three hosted Gemini tiers. Hosted-model seeds
+are in turn bounded by paid API usage, which is why only one hosted frontier family was evaluated and
+why the third Gemini tier stops at 15 seeds rather than 30. These constraints do not threaten the
+deterministic/architectural claims (coupling, discovery, tool-prompt overhead, provenance,
+containment), which hold by construction independent of sample size; they do bound how strongly the
+preliminary behavioral columns (token, latency, leakage, success) can be read, and a replication run
+under a larger compute or API budget should be expected to narrow, not overturn, the small effect
+sizes already reported. Related work cited in Section~\ref{sec:related} (e.g.,
+\citet{zhang2024agentprune}, \citet{mao2026delm}) evaluates at production or larger-budget scale; the
+comparison offered here is a fairness-controlled but resource-bounded complement to that literature
+rather than a like-for-like replacement.
+
 \paragraph{Four model families, seven run sets, but open-weight seed counts stay low.} The behavioral
 results now span three open-weight models over two size classes ($4$B--$32$B), locally hosted, across
 four independent run sets (\texttt{qwen3:4b} was run twice, as an internal replication check, not as a

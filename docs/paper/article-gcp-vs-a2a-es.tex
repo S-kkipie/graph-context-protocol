@@ -784,6 +784,26 @@ instrumentaci\'on a\~nadida. \gcp{} se lee mejor entonces como algo que elimina 
 instrumentaci\'on, no como la \'unica forma de obtenerla.
 
 \subsection{Limitaciones y amenazas a la validez}
+\paragraph{Las limitaciones de recursos acotan el alcance de la evaluaci\'on.} Este estudio no recibi\'o
+financiamiento externo y se realiz\'o como una iniciativa independiente (v\'ease la declaraci\'on de
+Financiamiento); el alcance reportado refleja ese l\'imite de recursos y no una elecci\'on
+metodol\'ogica. Las semillas de los modelos de peso abierto, alojados localmente, est\'an acotadas por
+el costo de tiempo de c\'omputo (wall-clock), ya que cada semilla requiere un ciclo completo de agente
+ReAct de varios pasos contra un modelo servido localmente, repetido por modelo, escenario y brazo; esto
+mantiene al brazo de peso abierto en 3--5 semillas en lugar de las 20--30 usadas en dos de los tres
+niveles de Gemini alojados. Las semillas de los modelos alojados, a su vez, est\'an acotadas por el
+uso pagado de la API, raz\'on por la cual solo se evalu\'o una familia de frontera alojada y por la
+cual el tercer nivel de Gemini se detiene en 15 semillas en lugar de 30. Estas limitaciones no
+amenazan las afirmaciones deterministas/arquitect\'onicas (acoplamiento, descubrimiento, sobrecosto de
+prompt de herramientas, procedencia, contenci\'on), que se sostienen por construcci\'on
+independientemente del tama\~no de la muestra; s\'i acotan cu\'an fuertemente pueden leerse las
+columnas conductuales preliminares (tokens, latencia, fuga, \'exito), y una r\'eplica realizada con un
+presupuesto mayor de c\'omputo o de API deber\'ia esperarse que reduzca, no que revierta, los tama\~nos
+de efecto peque\~nos ya reportados. El trabajo relacionado citado en la Secci\'on~\ref{sec:related}
+(p.\ ej., \citet{zhang2024agentprune}, \citet{mao2026delm}) eval\'ua a escala de producci\'on o con un
+presupuesto mayor; la comparaci\'on ofrecida aqu\'i es un complemento controlado por equidad pero
+acotado por recursos frente a esa literatura, no un reemplazo equivalente.
+
 \paragraph{Cuatro familias de modelos, siete conjuntos de ejecuci\'on, pero el conteo de semillas de
 peso abierto se mantiene bajo.} Los resultados conductuales ahora abarcan tres modelos de peso
 abierto en dos clases de tama\~no ($4$B--$32$B), alojados localmente, en cuatro conjuntos de
