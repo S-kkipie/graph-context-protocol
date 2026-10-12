@@ -100,13 +100,13 @@ hub necesita $\bigoh(n)$ aristas de integración frente a $\bigoh(n^2)$ de una m
 pero \ata{} a través de un orquestador también es $\bigoh(n)$, de modo que esto refleja la topología y
 no el protocolo. \gcp{} denegó los 443 intentos no autorizados y \ata{} instrumentado los 408, mientras
 que \ata{} base ejecutó los 392; el brazo instrumentado igualó a \gcp{} en contención, procedencia y
-fuga en todos los modelos. La brecha de gobernanza refleja por tanto la presencia de un punto de
+fuga en todos los modelos, aunque una prueba hermética muestra que un llamante que omite su declaración
+de operación evade su regla de delegación. La brecha de gobernanza refleja por tanto la presencia de un punto de
 aplicación y un sumidero de auditoría, que \gcp{} provee de forma nativa y que \ata{} exige añadir en
 cada despliegue. El costo en tokens es comparable entre \gcp{} y \ata{} instrumentado; el éxito de
 tarea es indistinguible en cuatro de seis modelos y menor con \gcp{} para el modelo alojado más
 pequeño y, en un escenario, para \texttt{llama3.1:8b}. En el modelo alojado la causa es la redacción de
-la descripción de la herramienta: intercambiar las descripciones entre brazos invierte la tasa de
-respuestas finales vacías.
+la descripción de la herramienta.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -385,7 +385,9 @@ modelan.
   el mismo; el canal de inyección en sí no se evalúa.
   \item \emph{A3, agente que afirma otro rol}: derrotado por la vinculación de credenciales, ya que se
   ignoran las afirmaciones de rol en la solicitud; cubierto por pruebas unitarias del manejador, no por
-  una campaña adversarial.
+  una campaña adversarial. En el brazo \ata{} instrumentado la operación solicitada la declara el
+  llamante, de modo que un llamante que la omite no queda cubierto (véase la
+  Sección~\ref{sec:threats}).
   \item \emph{A4, agente comprometido o credencial robada}: no mitigado; poseer un token confiere su rol.
   \item \emph{A5, dueño de nodo malicioso}: un nodo puede devolver contenido arbitrario o registrar de
   forma selectiva; los nodos no se autentican ante los llamantes y el registro de auditoría no es
@@ -810,8 +812,10 @@ fallos en software-org son rechazos sin llamada a herramienta. Un experimento po
 causa (Sección~\ref{sec:swap}): es la redacción de la descripción de la herramienta, no el protocolo ni
 la compuerta. \texttt{llama3.1:8b} muestra una versión más leve, de un solo escenario: en software-org
 $4/30$ con \gcp{} frente a $14/30$ con \ata{} base ($p=0.010$) y $12/30$ con \ata{}+PEP ($p=0.039$), con
-paridad en supply-chain y useful-forbidden. Sus fallos son todos de un mismo tipo, responder con una
-cadena con forma de llamada a herramienta en lugar de un resumen, en todos los brazos. Estas cuatro
+paridad en supply-chain y useful-forbidden. En esta tarea responde casi
+siempre con pseudocódigo o una cadena con forma de llamada a herramienta en lugar de un resumen, en
+todos los brazos, y solo acierta cuando ese texto incluye por casualidad la salida de la herramienta; no
+se diagnosticó por qué a \gcp{} le va peor. Estas cuatro
 significancias nominales, entre $30$ comparaciones por par de brazos, no se corrigen por
 multiplicidad; las brechas de supply-chain y useful-forbidden de \texttt{gemini-2.5-flash-lite} son lo
 bastante grandes para sobrevivir a cualquier corrección estándar, las demás deben leerse como
@@ -964,8 +968,15 @@ se aplican a lecturas de contexto entre propietarios, mientras que un despliegue
 Una diferencia merece señalarse. En nuestro brazo \ata{}+PEP la operación solicitada (leer o delegar)
 la declara el llamante en los metadatos del mensaje, de modo que la regla de delegación es tan fuerte
 como la convención que vincula esa declaración a una habilidad o endpoint distinto; en \gcp{} la
-delegación es una operación distinta del protocolo y no puede solicitarse como lectura. No probamos un
-adversario que omita la declaración.
+delegación es una operación distinta del protocolo y no puede solicitarse como lectura. Una prueba hermética muestra
+lo que cuesta esa convención. Un llamante con un token legítimo que simplemente omite la declaración se
+trata como lector: su delegación se ejecuta en cada intento, y el registro de auditoría anota una
+lectura permitida en lugar de una delegación denegada. La delegación del mismo agente a través de \gcp{}
+es denegada. La equivalencia de \ata{}+PEP y \gcp{} se cumple por tanto para un llamante que declara su
+operación, y cerrar la brecha exige un PEP que vincule la operación a una habilidad o endpoint distinto
+en el servidor. El escenario de delegación no puede distinguir las operaciones por su efecto, porque su
+``ejecución'' se simula devolviendo contenido del nodo que el rol también puede leer; lo que difiere es
+si la operación de delegación está controlada y registrada.
 
 \subsection{Relación con el trabajo previo}
 Tres hilos de la Sección~\ref{sec:related} convergen en los resultados. En \emph{acoplamiento}, el
@@ -1013,9 +1024,9 @@ recursos a esa literatura.
 por los autores, en el mismo código base que \gcp{}, y aplica la misma regla de decisión. Por tanto,
 resultados iguales son esperables y muestran que la \emph{política}, no el protocolo, determina la
 contención; no muestran que todo gateway \ata{} de terceros sea igual de completo, ni que el PEP esté
-libre de evasiones (Sección~\ref{sec:threat-model}). Como se señaló en la
-Sección~\ref{sec:threat-model}, en este brazo la operación solicitada la declara el llamante en los
-metadatos del mensaje.
+libre de evasiones: lo evade un llamante que omite la declaración de operación
+(Sección~\ref{sec:threat-model} y la discusión anterior). El brazo no se reforzó tras descubrirlo, para
+que el brazo medido sea el reportado.
 
 \paragraph{Alcance de adversarios y credenciales.} Solo el adversario de modelo instruido se ejerce
 empíricamente, y las credenciales son tokens estáticos; las credenciales robadas, los dueños de nodo
@@ -1066,7 +1077,8 @@ instrumentado, por lo cual ese brazo es el comparador justo.
 Aislar qué rasgo de la descripción de la herramienta desencadena las respuestas vacías, repetir el
 intercambio en otros modelos y ejecutar de forma conductual el enlace de herramienta única; añadir una
 segunda familia alojada de frontera y replicar con un gateway \ata{} escrito de forma independiente;
-evaluar un adversario que omita o falsifique la declaración de operación, credenciales robadas e
+reforzar el punto de aplicación vinculando la operación a una habilidad o endpoint distinto y evaluar
+declaraciones falsificadas, credenciales robadas e
 inyección indirecta de prompt mediante contenido recuperado; sustituir el evaluador semántico basado en
 patrones por un juez de implicación validado contra etiquetas humanas; y diseñar un banco de pruebas de
 privacidad que elimine el factor de confusión de lectura autorizada del escenario supply-chain. Conectar
@@ -1085,14 +1097,16 @@ autorizada ($443$ de $443$) mientras que \ata{} base no contuvo ninguna ($0$ de 
 acudieron por su cuenta al contenido prohibido en el escenario useful-forbidden, filtrándolo a la
 transcripción bajo \ata{} base pero nunca bajo los brazos con compuerta. El brazo \ata{} instrumentado,
 sin embargo, igualó a \gcp{} en contención ($408$ de $408$), procedencia y fuga en todos los modelos y
-escenarios. La contribución defendible no es por tanto que \gcp{} asegure lo que \ata{} no puede, sino
+escenarios, para un llamante que declara su operación. La contribución defendible no es por tanto que \gcp{} asegure lo que \ata{} no puede, sino
 que hace nativos del protocolo el control por rol, la denegación por defecto, una regla de delegación y
 un registro por lectura, de modo que no necesiten ensamblarse en cada despliegue. Esto viene con un
 costo medido para dos modelos pequeños, que completaron las tareas autorizadas con menos frecuencia a
 través de \gcp{}; para el alojado, un experimento de intercambio de descripciones muestra que la
 redacción de la descripción de la herramienta, no el protocolo, causa las respuestas finales vacías.
-Queda abierta la pregunta de cuánta de la equivalencia restante sobrevive a un gateway construido de
-forma independiente y a adversarios más fuertes.
+Una prueba hermética muestra además que el brazo instrumentado es evadido por un llamante que omite su
+declaración de operación, algo que la operación de delegación distinta de \gcp{} no permite. Queda
+abierta la pregunta de cuánta de la equivalencia restante sobrevive a un gateway que vincule la
+operación en el servidor y a adversarios más fuertes.
 
 \section*{Disponibilidad de Código y Datos}
 \label{sec:availability}

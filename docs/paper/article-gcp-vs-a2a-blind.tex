@@ -87,13 +87,13 @@ semantic leakage of a useful but forbidden node, were run on six models (three l
 $\bigoh(n)$ integration edges against $\bigoh(n^2)$ for a full \ata{} mesh, but \ata{} through an
 orchestrator is also $\bigoh(n)$, so this reflects topology, not protocol. \gcp{} denied all 443
 unauthorized attempts and instrumented \ata{} all 408, whereas base \ata{} executed all 392; the
-instrumented arm matched \gcp{} on containment, provenance, and leakage in every model. The
+instrumented arm matched \gcp{} on containment, provenance, and leakage in every model, although a
+hermetic test shows that a caller omitting its operation declaration bypasses its delegation rule. The
 governance gap thus reflects the presence of an enforcement point and audit sink, which \gcp{}
 provides natively and \ata{} requires each deployment to add. Token cost is comparable between
 \gcp{} and instrumented \ata{}; task success is indistinguishable for four of six models and lower
 under \gcp{} for the smallest hosted model and, in one scenario, for \texttt{llama3.1:8b}. For the
-hosted model the cause is the wording of the tool description: swapping descriptions between arms
-reverses the rate of empty final answers.
+hosted model the cause is the wording of the tool description.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -350,7 +350,9 @@ sender-constraining are not modelled.
   The gate does not depend on model reasoning, so the outcome is the same; the injection channel
   itself is not evaluated.
   \item \emph{A3, agent asserting another role}: defeated by credential binding, since request-level
-  role claims are ignored; covered by handler unit tests, not by an adversarial campaign.
+  role claims are ignored; covered by handler unit tests, not by an adversarial campaign. In the instrumented \ata{} arm the
+requested operation is declared by the caller, so a caller that omits it is not covered (see
+Section~\ref{sec:threats}).
   \item \emph{A4, compromised agent or stolen credential}: not mitigated; possession of a token
   confers its role.
   \item \emph{A5, malicious node owner}: a node can return arbitrary content or log selectively;
@@ -736,8 +738,10 @@ $150$ on each \ata{} arm). The instrumented arm has far fewer failures, and its 
 with no tool call. A follow-up experiment identified the cause (Section~\ref{sec:swap}): it is the wording of the
 tool description, not the protocol or the gate. \texttt{llama3.1:8b} shows a milder, single-scenario version: on
 software-org $4/30$ under \gcp{} versus $14/30$ on base \ata{} ($p=0.010$) and $12/30$ on
-\ata{}+PEP ($p=0.039$), with parity on supply-chain and useful-forbidden. Its failures are all of one
-kind, answering with a tool-call-shaped string instead of a summary, on every arm. These four nominal significances, among $30$ comparisons
+\ata{}+PEP ($p=0.039$), with parity on supply-chain and useful-forbidden. On this task it answers
+almost always with pseudo-code or a tool-call-shaped string instead of a summary, on every arm, and
+succeeds only when that text happens to include the tool's output; why \gcp{} fares worse was not
+diagnosed. These four nominal significances, among $30$ comparisons
 per arm pair, are not corrected for multiplicity; the supply-chain and useful-forbidden gaps for
 \texttt{gemini-2.5-flash-lite} are large enough to survive any standard correction, the others
 should be read as suggestive.
@@ -882,7 +886,14 @@ reads across owners, whereas an \ata{} deployment must assemble them. One differ
 stating. In our \ata{}+PEP arm the requested operation (read or delegate) is declared by the caller in
 message metadata, so the delegation rule is only as strong as the convention that binds that
 declaration to a distinct skill or endpoint; in \gcp{} delegation is a distinct protocol operation
-and cannot be requested as a read. We did not test an adversary that omits the declaration.
+and cannot be requested as a read. A hermetic test shows what that convention costs. A caller holding a legitimate token that simply
+omits the declaration is treated as a reader: its delegation is executed on every attempt, and the
+audit log records an allowed read rather than a denied delegation. The same agent's delegation through
+\gcp{} is denied. The equivalence of \ata{}+PEP and \gcp{} therefore holds for a caller that declares
+its operation, and closing the gap requires a PEP that binds the operation to a distinct skill or
+endpoint on the server side. The delegation scenario cannot distinguish the operations by their effect,
+because its ``execution'' is simulated by returning node content that the role may also read; what
+differs is whether the delegation operation is gated and logged.
 
 \subsection{Relation to prior work}
 Three threads from Section~\ref{sec:related} converge in the results. On \emph{coupling}, the
@@ -927,8 +938,9 @@ a fairness-controlled but resource-bounded complement to that literature.
 the authors, in the same codebase as \gcp{}, and applies the same decision rule. Equal outcomes are
 therefore expected and show that the \emph{policy}, not the protocol, determines containment; they
 do not show that every third-party \ata{} gateway would be as complete, nor that the PEP is free of
-bypasses (Section~\ref{sec:threat-model}). As noted in Section~\ref{sec:threat-model}, the requested
-operation is declared by the caller in message metadata in this arm.
+bypasses: it is bypassed by a caller that omits the operation declaration (Section~\ref{sec:threat-model}
+and the discussion above). The arm was not hardened after this was found, so that the measured arm is
+the one reported.
 
 \paragraph{Adversary scope and credentials.} Only the instructed-model adversary is exercised
 empirically, and credentials are static tokens; stolen credentials, malicious node owners, and
@@ -974,7 +986,8 @@ strawman, and they disappear in the instrumented arm, which is why that arm is t
 \section{Future Work}
 Isolate which feature of the tool description triggers the empty answers, repeat the swap for
 other models, and run the single-tool binding behaviorally; add a second hosted frontier family and replicate with an independently written \ata{} gateway;
-evaluate an adversary that omits or forges the operation declaration, stolen credentials, and
+harden the enforcement point by binding the operation to a distinct skill or endpoint and evaluate
+forged declarations, stolen credentials, and
 indirect prompt injection through retrieved content; replace the pattern-based semantic scorer with
 an entailment judge validated against human labels; and design a privacy testbed that removes the
 authorized-read confound of the supply-chain scenario. Bridging \gcp{} to MCP and \ata{} as
@@ -991,13 +1004,16 @@ single generic tool closes both gaps. On governance, \gcp{} contained every unau
 $443$) while base \ata{} contained none ($0$ of $392$), and models reached for forbidden content on their
 own in the useful-forbidden scenario, leaking it to the transcript under base \ata{} but never under
 the gated arms. The instrumented \ata{} arm, however, matched \gcp{} on containment ($408$ of $408$),
-provenance, and leakage in every model and scenario. The defensible contribution is therefore not
+provenance, and leakage in every model and scenario, for a caller that declares its operation. The
+defensible contribution is therefore not
 that \gcp{} secures what \ata{} cannot, but that it makes role gating, default deny, a delegation
 rule, and a per-read record native to the protocol, so that they need not be assembled per
 deployment. This comes with a measured cost for two small models, which completed authorized tasks less
 often through \gcp{}; for the hosted one a description-swap experiment shows that the wording of
-the tool description, not the protocol, causes the empty final answers. An open question is how much of the remaining
-equivalence survives an independently built gateway and stronger adversaries.
+the tool description, not the protocol, causes the empty final answers. A hermetic test also shows that the
+instrumented arm is bypassed by a caller that omits its operation declaration, which \gcp{}'s distinct
+delegation operation does not allow. An open question is how much of the remaining equivalence
+survives a gateway that binds the operation on the server side and stronger adversaries.
 
 \section*{Code and Data Availability}
 \label{sec:availability}
