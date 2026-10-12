@@ -91,9 +91,11 @@ pnpm tsx packages/eval/scripts/paper-sweep.ts --model gemini-2.5-flash      --ad
 pnpm tsx packages/eval/scripts/paper-sweep.ts --model gemini-2.5-pro        --adapter google --seeds 30
 ```
 
-Costo estimado (extrapolado del log anterior: ~$5 para 4 escenarios × 2 brazos): del orden de **$1 para
-flash-lite, $3–5 para flash, $10–15 para pro** con 30 semillas. Si pro se ve caro, usa `--seeds 15` (igual que
-en el paper actual). No hay timeout de 60 min aquí (no corre dentro de vitest), y el log es incremental.
+Costo estimado (recalculado con tokens por corrida del xlsx y las tarifas del log anterior; la barrida nueva
+no incluye marketplace): ~0.2M tokens / ~$0.05 flash-lite, ~0.3M / ~$0.30 flash, ~0.6M / ~$2.6 pro con 30 semillas
+(~$1.3 con 15). **Total ~$3, con margen hasta ~$5** por reintentos y tokens de razonamiento. Si el gasto real se
+desvía mucho de esto tras las primeras ~30 corridas, para y avisa. No hay timeout de 60 min aquí (no corre dentro
+de vitest) y el log es incremental.
 `--throttle-ms` por defecto es 2000 (multiplicado por el intento); súbelo si ves errores 429.
 
 ### 3.2 Locales (Ollama) — prioridad media
