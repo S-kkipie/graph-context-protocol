@@ -93,6 +93,12 @@ export interface RunOptions {
     readonly llm?: { apiKey?: string; model?: string; baseURL?: string };
     /** Diagnostic: `swapped` gives each arm the other protocol's tool wording. */
     readonly toolDescriptions?: ToolDescriptions;
+    /**
+     * Diagnostic (a2a-pep only): `omit-capability` makes the caller leave the
+     * requested operation undeclared, testing whether the PEP can be bypassed
+     * by not saying "delegate".
+     */
+    readonly pepAdversary?: "omit-capability";
 }
 
 const TOKEN = "tok:agent";
@@ -354,7 +360,15 @@ async function runA2aPep(opts: RunOptions): Promise<RunArtifacts> {
                     "a2a-pep",
                     createA2aPeerContextToolFactory({
                         clientFactory: createBearerClientFactory(TOKEN),
-                        capability: delegateMode ? "delegate" : "read",
+                        // Diagnostic adversary: a caller that never declares the
+                        // operation, so the PEP defaults it to a plain read.
+                        ...(opts.pepAdversary === "omit-capability"
+                            ? {}
+                            : {
+                                  capability: delegateMode
+                                      ? ("delegate" as const)
+                                      : ("read" as const),
+                              }),
                     }),
                 ),
                 transcript,
