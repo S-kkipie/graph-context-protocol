@@ -52,6 +52,10 @@ import {
     measureGcpDiscovery,
 } from "./discovery";
 import { measureToolBudget, type ToolBudget } from "./tool-budget";
+import {
+    applyToolDescriptions,
+    type ToolDescriptions,
+} from "./tool-descriptions";
 
 /**
  * - `gcp`     — Graph Context Protocol (read gate + delegate gate + audit sink).
@@ -87,6 +91,8 @@ export interface RunOptions {
     /** Injected model (mock or token-wrapped). When omitted, `llm` is used. */
     readonly model?: BaseChatModel;
     readonly llm?: { apiKey?: string; model?: string; baseURL?: string };
+    /** Diagnostic: `swapped` gives each arm the other protocol's tool wording. */
+    readonly toolDescriptions?: ToolDescriptions;
 }
 
 const TOKEN = "tok:agent";
@@ -205,7 +211,14 @@ async function runGcp(opts: RunOptions): Promise<RunArtifacts> {
             llm: opts.llm ?? {},
             systemPrompt: scenario.agent.systemPrompt,
             peers,
-            toolFactory: recordingFactory(baseFactory, transcript),
+            toolFactory: recordingFactory(
+                applyToolDescriptions(
+                    opts.toolDescriptions,
+                    "gcp",
+                    baseFactory,
+                ),
+                transcript,
+            ),
             metrics,
         });
         const answer = await runTaskAgent(agent, scenario.agent.goal);
@@ -252,7 +265,11 @@ async function runA2a(opts: RunOptions): Promise<RunArtifacts> {
             systemPrompt: scenario.agent.systemPrompt,
             peers,
             toolFactory: recordingFactory(
-                createA2aPeerContextToolFactory(),
+                applyToolDescriptions(
+                    opts.toolDescriptions,
+                    "a2a",
+                    createA2aPeerContextToolFactory(),
+                ),
                 transcript,
             ),
             metrics,
@@ -332,10 +349,14 @@ async function runA2aPep(opts: RunOptions): Promise<RunArtifacts> {
             systemPrompt: scenario.agent.systemPrompt,
             peers,
             toolFactory: recordingFactory(
-                createA2aPeerContextToolFactory({
-                    clientFactory: createBearerClientFactory(TOKEN),
-                    capability: delegateMode ? "delegate" : "read",
-                }),
+                applyToolDescriptions(
+                    opts.toolDescriptions,
+                    "a2a-pep",
+                    createA2aPeerContextToolFactory({
+                        clientFactory: createBearerClientFactory(TOKEN),
+                        capability: delegateMode ? "delegate" : "read",
+                    }),
+                ),
                 transcript,
             ),
             metrics,

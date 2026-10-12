@@ -18,7 +18,8 @@
  *   --seeds <n>          seeds per arm per scenario    (default: 30)
  *   --arms <list>        default gcp,a2a,a2a-pep
  *   --scenarios <list>   default software-org,supply-chain,delegation,forced-access,useful-forbidden
- *   --out <dir>          default docs/eval/raw
+ *   --out <dir>          default docs/eval/raw (docs/eval/swap/<variant> when --tool-descriptions is given)
+ *   --tool-descriptions <v>  native | swapped  (diagnostic: swapped gives each arm the other protocol's tool wording)
  *   --throttle-ms <n>    pause between runs            (default: 0 local / 2000 hosted)
  *   --retries <n>        per-run retries on error      (default: 3)
  *   --dry-run            print the plan and exit (no model calls)
@@ -36,6 +37,7 @@ import {
 } from "../src/lib/raw-log";
 import { collectResult } from "../src/lib/run-eval";
 import type { Arm } from "../src/lib/runner";
+import type { ToolDescriptions } from "../src/lib/tool-descriptions";
 
 function flag(name: string): string | undefined {
     const i = process.argv.indexOf(`--${name}`);
@@ -65,9 +67,29 @@ const throttleMs = Number(
         (adapter === "ollama" || adapter === "mock" ? "0" : "2000"),
 );
 
+const toolDescriptions = flag("tool-descriptions") as
+    | ToolDescriptions
+    | undefined;
+if (toolDescriptions && !["native", "swapped"].includes(toolDescriptions)) {
+    console.error("--tool-descriptions must be native or swapped");
+    process.exit(2);
+}
+
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(
-    flag("out") ?? join(here, "..", "..", "..", "docs", "eval", "raw"),
+    flag("out") ??
+        (toolDescriptions
+            ? join(
+                  here,
+                  "..",
+                  "..",
+                  "..",
+                  "docs",
+                  "eval",
+                  "swap",
+                  toolDescriptions,
+              )
+            : join(here, "..", "..", "..", "docs", "eval", "raw")),
 );
 const safeModel = model.replace(/[^a-zA-Z0-9_.-]/g, "_");
 const file = join(outDir, `${safeModel}.jsonl`);
@@ -111,7 +133,7 @@ const todo = jobs.filter(
 
 console.log(
     `[sweep] model=${model} adapter=${adapter} seeds=${seeds} arms=${arms.join(",")}\n` +
-        `[sweep] scenarios=${scenarioIds.join(",")}\n` +
+        `[sweep] scenarios=${scenarioIds.join(",")} toolDescriptions=${toolDescriptions ?? "native"}\n` +
         `[sweep] log=${file}\n[sweep] ${todo.length}/${jobs.length} runs to do (${jobs.length - todo.length} already logged)`,
 );
 if (has("dry-run")) process.exit(0);
@@ -131,6 +153,7 @@ for (const [i, job] of todo.entries()) {
                 arm: job.arm,
                 n: scenario.knowledgeNodes.length,
                 seed: job.seed,
+                ...(toolDescriptions ? { toolDescriptions } : {}),
                 ...(adapter === "mock"
                     ? {
                           model: createMockChatModel({
@@ -157,6 +180,7 @@ for (const [i, job] of todo.entries()) {
         seed: job.seed,
         at: new Date().toISOString(),
         durationMs: Date.now() - started,
+        ...(toolDescriptions ? { toolDescriptions } : {}),
         ...(result ? { result } : { error: error ?? "unknown" }),
     });
     if (result) ok++;

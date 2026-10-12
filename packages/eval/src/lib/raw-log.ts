@@ -27,6 +27,8 @@ export interface RawRecord {
     /** ISO time the run finished. */
     readonly at: string;
     readonly durationMs: number;
+    /** Diagnostic tool-wording variant; absent means native. */
+    readonly toolDescriptions?: string;
     /** Set when all retries failed; `result` is then absent. */
     readonly error?: string;
     readonly result?: MetricsResult;

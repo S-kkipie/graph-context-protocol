@@ -21,6 +21,7 @@ import { createEvalModel } from "./model-factory";
 import { provenanceCompleteness } from "./provenance";
 import { type MetricsResult, renderScalingTable, renderTable } from "./results";
 import { type Arm, runScenario } from "./runner";
+import type { ToolDescriptions } from "./tool-descriptions";
 import { structuralMetrics } from "./topology";
 
 export interface CollectOptions {
@@ -30,6 +31,7 @@ export interface CollectOptions {
     readonly seed: number;
     readonly model?: BaseChatModel;
     readonly llm?: { apiKey?: string; model?: string; baseURL?: string };
+    readonly toolDescriptions?: ToolDescriptions;
 }
 
 /**
@@ -68,6 +70,7 @@ export async function collectResult(
         scenario: opts.scenario,
         model: counter?.model ?? opts.model,
         llm: opts.llm,
+        toolDescriptions: opts.toolDescriptions,
     });
     const latencyMs = performance.now() - started;
     const readDecisions = artifacts.coupling.messagesSent;
