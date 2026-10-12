@@ -91,8 +91,8 @@ hermetic test shows that a caller omitting its operation declaration bypasses it
 governance gap thus reflects the presence of an enforcement point and audit sink, which \gcp{}
 provides natively and \ata{} requires each deployment to add. Token cost is comparable between
 \gcp{} and instrumented \ata{}; task success is indistinguishable for four of six models and lower
-under \gcp{} for the smallest hosted model and, in one scenario, for \texttt{llama3.1:8b}. For the
-hosted model the cause is the wording of the tool description.
+under \gcp{} for the smallest hosted model, where the cause is the wording of the tool description.
+A software-org gap for \texttt{llama3.1:8b} did not reproduce on rerun.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -735,12 +735,16 @@ choosing the wrong peer or by being refused. Empty final answers are concentrate
 model-arm pair ($60$ of $150$ \gcp{} runs, including $19$ of $30$ delegation runs, against $3$ of
 $150$ on each \ata{} arm). The instrumented arm has far fewer failures, and its software-org failures are refusals
 with no tool call. A follow-up experiment identified the cause (Section~\ref{sec:swap}): it is the wording of the
-tool description, not the protocol or the gate. \texttt{llama3.1:8b} shows a milder, single-scenario version: on
+tool description, not the protocol or the gate. \texttt{llama3.1:8b} showed a gap in one scenario of the main sweep: on
 software-org $4/30$ under \gcp{} versus $14/30$ on base \ata{} ($p=0.010$) and $12/30$ on
-\ata{}+PEP ($p=0.039$), with parity on supply-chain and useful-forbidden. On this task it answers
-almost always with pseudo-code or a tool-call-shaped string instead of a summary, on every arm, and
-succeeds only when that text happens to include the tool's output; why \gcp{} fares worse was not
-diagnosed. These four nominal significances, among $30$ comparisons
+\ata{}+PEP ($p=0.039$), with parity on supply-chain and useful-forbidden. It did not reproduce. A rerun of
+the identical \gcp{} and \ata{}+PEP configurations gave $15/30$ and $13/30$ ($p=0.80$), and the two
+\gcp{} runs differ from each other ($4/30$ versus $15/30$, $p=0.005$). Swapping the tool descriptions in
+the rerun changed neither arm significantly ($14/30$ for \gcp{}, $7/30$ for \ata{}+PEP, $p=0.10$ between
+them). On this task the model answers almost always with pseudo-code or a tool-call-shaped string
+instead of a summary, on every arm, and succeeds only when that text happens to include the tool's
+output; the main-sweep gap is therefore best read as run-to-run variation of this model, not as a
+stable \gcp{} effect. The nominal significances in this subsection, among $30$ comparisons
 per arm pair, are not corrected for multiplicity; the supply-chain and useful-forbidden gaps for
 \texttt{gemini-2.5-flash-lite} are large enough to survive any standard correction, the others
 should be read as suggestive.
@@ -918,10 +922,11 @@ indicate that an unprotected \ata{} deployment is unsafe against a capable model
 prevented from asking, and that the remedy is an enforcement point and an audit log, wherever they
 come from. \gcp{} supplies these as protocol primitives; \ata{} supplies them if the deployer adds
 them. The cost of adding them was small in our implementation but is real engineering work that
-each deployment repeats. A cost of \gcp{} also appeared: the smallest hosted model and, in one
-scenario, the smallest local model completed the authorized task less often through \gcp{} than
-through equally gated \ata{}, because of an interaction between the model and the wording of the tool description
-(Section~\ref{sec:swap}), so the models in use should be tested with the wording they will actually see.
+each deployment repeats. A cost of \gcp{} also appeared: the smallest hosted model completed the
+authorized task less often through \gcp{} than through equally gated \ata{}, because of an interaction
+between the model and the wording of the tool description (Section~\ref{sec:swap}); a similar gap for the
+smallest local model did not reproduce on rerun. The models in use should be tested with the wording
+they will actually see.
 
 \subsection{Limitations and threats to validity}
 \paragraph{Resource constraints scope the evaluation.} This study received no external funding and
@@ -964,8 +969,10 @@ indirect prompt injection is not exercised.
 \paragraph{The wording effect is shown for one model.} The description-swap experiment
 (Section~\ref{sec:swap}) was run only for \texttt{gemini-2.5-flash-lite}, with $90$ runs per cell
 and $3$ read scenarios, so it shows that wording drives the empty-answer failure in that model, not
-that it does so in others, nor which feature of the wording matters. The \texttt{llama3.1:8b} gap
-(an answer shaped like a tool call) was not diagnosed. Because the wording is part of how each
+that it does so in others, nor which feature of the wording matters. The \texttt{llama3.1:8b} gap of the main
+sweep did not reproduce on rerun (Section~\ref{sec:results-cost}); the same configuration differed by
+$11$ successes out of $30$ between two runs of this model, so single-run gaps for small local models
+should be read with that variation in mind. Because the wording is part of how each
 protocol is presented, the success results of the main sweep cannot be separated from it.
 \texttt{llama3.1:8b} also declined the forced-access task on every arm, which removes that scenario's
 information for that model.
@@ -1007,9 +1014,10 @@ provenance, and leakage in every model and scenario, for a caller that declares 
 defensible contribution is therefore not
 that \gcp{} secures what \ata{} cannot, but that it makes role gating, default deny, a delegation
 rule, and a per-read record native to the protocol, so that they need not be assembled per
-deployment. This comes with a measured cost for two small models, which completed authorized tasks less
-often through \gcp{}; for the hosted one a description-swap experiment shows that the wording of
-the tool description, not the protocol, causes the empty final answers. A hermetic test also shows that the
+deployment. This comes with a measured cost for the smallest hosted model, which completed authorized tasks
+less often through \gcp{}; a description-swap experiment shows that the wording of the tool
+description, not the protocol, causes its empty final answers. A gap for the smallest local model did
+not reproduce on rerun. A hermetic test also shows that the
 instrumented arm is bypassed by a caller that omits its operation declaration, which \gcp{}'s distinct
 delegation operation does not allow. An open question is how much of the remaining equivalence
 survives a gateway that binds the operation on the server side and stronger adversaries.

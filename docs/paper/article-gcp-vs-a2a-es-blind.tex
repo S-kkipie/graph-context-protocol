@@ -105,9 +105,8 @@ fuga en todos los modelos, aunque una prueba hermética muestra que un llamante 
 de operación evade su regla de delegación. La brecha de gobernanza refleja por tanto la presencia de un punto de
 aplicación y un sumidero de auditoría, que \gcp{} provee de forma nativa y que \ata{} exige añadir en
 cada despliegue. El costo en tokens es comparable entre \gcp{} y \ata{} instrumentado; el éxito de
-tarea es indistinguible en cuatro de seis modelos y menor con \gcp{} para el modelo alojado más
-pequeño y, en un escenario, para \texttt{llama3.1:8b}. En el modelo alojado la causa es la redacción de
-la descripción de la herramienta.
+tarea es indistinguible en cuatro de seis modelos y menor con \gcp{} para el modelo alojado más pequeño, donde la causa es la redacción de la descripción
+de la herramienta. Una brecha de \texttt{llama3.1:8b} en software-org no se reprodujo al repetirla.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -811,13 +810,17 @@ par modelo-brazo ($60$ de $150$ corridas de \gcp{}, incluyendo $19$ de $30$ corr
 frente a $3$ de $150$ en cada brazo \ata{}). El brazo instrumentado tiene muchos menos fallos, y sus
 fallos en software-org son rechazos sin llamada a herramienta. Un experimento posterior identificó la
 causa (Sección~\ref{sec:swap}): es la redacción de la descripción de la herramienta, no el protocolo ni
-la compuerta. \texttt{llama3.1:8b} muestra una versión más leve, de un solo escenario: en software-org
+la compuerta. \texttt{llama3.1:8b} mostró una brecha en un escenario del barrido principal: en software-org
 $4/30$ con \gcp{} frente a $14/30$ con \ata{} base ($p=0.010$) y $12/30$ con \ata{}+PEP ($p=0.039$), con
-paridad en supply-chain y useful-forbidden. En esta tarea responde casi
-siempre con pseudocódigo o una cadena con forma de llamada a herramienta en lugar de un resumen, en
-todos los brazos, y solo acierta cuando ese texto incluye por casualidad la salida de la herramienta; no
-se diagnosticó por qué a \gcp{} le va peor. Estas cuatro
-significancias nominales, entre $30$ comparaciones por par de brazos, no se corrigen por
+paridad en supply-chain y useful-forbidden. No se reprodujo. Una repetición de las mismas
+configuraciones de \gcp{} y \ata{}+PEP dio $15/30$ y $13/30$ ($p=0.80$), y las dos corridas de \gcp{}
+difieren entre sí ($4/30$ frente a $15/30$, $p=0.005$). Intercambiar las descripciones de herramienta en
+la repetición no cambió significativamente ningún brazo ($14/30$ para \gcp{}, $7/30$ para \ata{}+PEP,
+$p=0.10$ entre ellos). En esta tarea el modelo responde casi siempre con pseudocódigo o una cadena con
+forma de llamada a herramienta en lugar de un resumen, en todos los brazos, y solo acierta cuando ese
+texto incluye por casualidad la salida de la herramienta; la brecha del barrido principal se lee por
+tanto mejor como variación entre corridas de este modelo, no como un efecto estable de \gcp{}. Las
+significancias nominales de esta subsección, entre $30$ comparaciones por par de brazos, no se corrigen por
 multiplicidad; las brechas de supply-chain y useful-forbidden de \texttt{gemini-2.5-flash-lite} son lo
 bastante grandes para sobrevivir a cualquier corrección estándar, las demás deben leerse como
 sugerentes.
@@ -1004,11 +1007,10 @@ frente a un modelo capaz al que no se le impide preguntar, y que el remedio es u
 un registro de auditoría, vengan de donde vengan. \gcp{} los provee como primitivas del protocolo;
 \ata{} los provee si el desplegador los añade. El costo de añadirlos fue pequeño en nuestra
 implementación pero es trabajo de ingeniería real que cada despliegue repite. También apareció un costo
-de \gcp{}: el modelo alojado más pequeño y, en un escenario, el modelo local más pequeño completaron la
-tarea autorizada con menos frecuencia a través de \gcp{} que a través de \ata{} igualmente protegido,
-por una interacción entre el modelo y la redacción de la descripción de la herramienta
-(Sección~\ref{sec:swap}), de modo que los modelos en uso deben probarse con la redacción que realmente
-verán.
+de \gcp{}: el modelo alojado más pequeño completó la tarea autorizada con menos frecuencia a través de \gcp{}
+que a través de \ata{} igualmente protegido, por una interacción entre el modelo y la redacción de la
+descripción de la herramienta (Sección~\ref{sec:swap}); una brecha similar del modelo local más pequeño
+no se reprodujo al repetirla. Los modelos en uso deben probarse con la redacción que realmente verán.
 
 \subsection{Limitaciones y amenazas a la validez}
 \paragraph{Las restricciones de recursos acotan la evaluación.} Este estudio no recibió financiamiento
@@ -1054,8 +1056,10 @@ empate y no un efecto de compuerta, y la inyección indirecta de prompt no se ej
 \paragraph{El efecto de la redacción se muestra para un solo modelo.} El experimento de intercambio de
 descripciones (Sección~\ref{sec:swap}) se corrió solo para \texttt{gemini-2.5-flash-lite}, con $90$
 corridas por celda y $3$ escenarios de lectura, de modo que muestra que la redacción impulsa el fallo
-de respuesta vacía en ese modelo, no que lo haga en otros, ni qué rasgo de la redacción importa. La
-brecha de \texttt{llama3.1:8b} (una respuesta con forma de llamada a herramienta) no se diagnosticó.
+de respuesta vacía en ese modelo, no que lo haga en otros, ni qué rasgo de la redacción importa. La brecha de \texttt{llama3.1:8b} del barrido principal no se reprodujo al repetirla
+(Sección~\ref{sec:results-cost}); la misma configuración difirió en $11$ éxitos de $30$ entre dos
+corridas de este modelo, de modo que las brechas de una sola corrida en modelos locales pequeños deben
+leerse teniendo en cuenta esa variación.
 Como la redacción es parte de cómo se presenta cada protocolo, los resultados de éxito del barrido
 principal no pueden separarse de ella. \texttt{llama3.1:8b} además declinó la tarea de forced-access en
 todos los brazos, lo que elimina la información de ese escenario para ese modelo.
@@ -1101,9 +1105,10 @@ sin embargo, igualó a \gcp{} en contención ($408$ de $408$), procedencia y fug
 escenarios, para un llamante que declara su operación. La contribución defendible no es por tanto que \gcp{} asegure lo que \ata{} no puede, sino
 que hace nativos del protocolo el control por rol, la denegación por defecto, una regla de delegación y
 un registro por lectura, de modo que no necesiten ensamblarse en cada despliegue. Esto viene con un
-costo medido para dos modelos pequeños, que completaron las tareas autorizadas con menos frecuencia a
-través de \gcp{}; para el alojado, un experimento de intercambio de descripciones muestra que la
-redacción de la descripción de la herramienta, no el protocolo, causa las respuestas finales vacías.
+costo medido para el modelo alojado más pequeño, que completó las tareas autorizadas con menos
+frecuencia a través de \gcp{}; un experimento de intercambio de descripciones muestra que la redacción
+de la descripción de la herramienta, no el protocolo, causa sus respuestas finales vacías. Una brecha
+del modelo local más pequeño no se reprodujo al repetirla.
 Una prueba hermética muestra además que el brazo instrumentado es evadido por un llamante que omite su
 declaración de operación, algo que la operación de delegación distinta de \gcp{} no permite. Queda
 abierta la pregunta de cuánta de la equivalencia restante sobrevive a un gateway que vincule la
