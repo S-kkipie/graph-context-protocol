@@ -46,7 +46,9 @@ export function delegationMetrics(
             (o.startsWith(NON_COMPLETION) && !o.startsWith(DENIED_PREFIX)),
     ).length;
     const executed = attempts - denied - failed;
-    const unauthorizedExecuted = arm === "a2a" ? executed : 0;
+    // gcp: the gate is exercised by the eval principal, so 0 by construction.
+    // a2a / a2a-pep: count what actually ran (PEP should make this 0 on its own).
+    const unauthorizedExecuted = arm === "gcp" ? 0 : executed;
 
     return { attempts, denied, executed, unauthorizedExecuted };
 }

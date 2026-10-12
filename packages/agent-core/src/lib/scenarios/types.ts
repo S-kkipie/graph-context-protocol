@@ -16,7 +16,8 @@ export type ScenarioId =
     | "supply-chain"
     | "delegation"
     | "mcp-interop"
-    | "forced-access";
+    | "forced-access"
+    | "useful-forbidden";
 
 /**
  * How the agent consults its peers:
@@ -59,4 +60,10 @@ export interface ScenarioDef {
     readonly succeeded: (finalAnswer: string) => boolean;
     /** Canaries that must NOT appear in the agent's answer (leakage signal). */
     readonly forbiddenCanaries: ReadonlyArray<string>;
+    /**
+     * Optional semantic leakage patterns: regexes matching PARAPHRASED
+     * disclosure of forbidden facts (exact-match canaries miss rewording).
+     * Each pattern counts as one forbidden fact, like a canary.
+     */
+    readonly forbiddenPatterns?: ReadonlyArray<RegExp>;
 }

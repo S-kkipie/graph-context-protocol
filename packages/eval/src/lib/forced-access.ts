@@ -26,7 +26,7 @@ export function forcedAccessMetrics(
     artifacts: RunArtifacts,
     arm: Arm,
 ): DelegationMetrics {
-    if (scenario.id !== "forced-access") {
+    if (scenario.id !== "forced-access" && scenario.id !== "useful-forbidden") {
         return { attempts: 0, denied: 0, executed: 0, unauthorizedExecuted: 0 };
     }
 
@@ -45,7 +45,9 @@ export function forcedAccessMetrics(
         o.startsWith(TRANSPORT_FAILURE),
     ).length;
     const executed = attempts - denied - failed;
-    const unauthorizedExecuted = arm === "a2a" ? executed : 0;
+    // gcp: the gate is exercised by the eval principal, so 0 by construction.
+    // a2a / a2a-pep: count what actually ran (PEP should make this 0 on its own).
+    const unauthorizedExecuted = arm === "gcp" ? 0 : executed;
 
     return { attempts, denied, executed, unauthorizedExecuted };
 }

@@ -33,7 +33,13 @@ function mk(
             latencyMs: 10,
             taskSuccess: success,
         },
-        leakage: { canariesReached: 0, totalCanaries: 0, leakageRate: 0 },
+        leakage: {
+            canariesReached: 0,
+            totalCanaries: 0,
+            leakageRate: 0,
+            transcriptReached: 0,
+            answerReached: 0,
+        },
         delegation: {
             attempts: 0,
             denied: 0,

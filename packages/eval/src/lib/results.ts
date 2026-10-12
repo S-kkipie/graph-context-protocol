@@ -36,6 +36,23 @@ export interface MetricsResult {
     /** Same shape as `delegation`; the "read" counterpart (forced-access scenario). */
     readonly forcedAccess: DelegationMetrics;
     readonly provenance: number;
+    /**
+     * Raw run trace (final answer, tool transcript, audit decisions), kept in
+     * the JSONL raw log so leakage can be re-scored (e.g. with a semantic
+     * judge) and failures diagnosed without re-running the experiment.
+     */
+    readonly trace?: {
+        readonly answer: string;
+        readonly toolTranscript: ReadonlyArray<{
+            peerId: string;
+            output: string;
+        }>;
+        readonly auditDecisions: ReadonlyArray<{
+            targetNodeId: string;
+            decision: string;
+            reason?: string;
+        }>;
+    };
 }
 
 export interface Aggregate {

@@ -54,7 +54,7 @@ export function measureToolBudget(
     peers: readonly PeerRef[],
 ): ToolBudget {
     const metrics = createCouplingMetrics();
-    if (arm === "a2a") {
+    if (arm === "a2a" || arm === "a2a-pep") {
         const factory = createA2aPeerContextToolFactory();
         const tools = peers.map((p) => factory(p, metrics));
         return {

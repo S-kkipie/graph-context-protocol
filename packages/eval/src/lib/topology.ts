@@ -20,7 +20,7 @@ function pairwise(arm: Arm, n: number): number {
     const size = Math.max(0, n);
     // A2A: directed acquaintance, each of n holds a card for the other n-1.
     // GCP: each registers once with the discovery substrate.
-    return arm === "a2a" ? size * (size - 1) : size;
+    return arm === "gcp" ? size : size * (size - 1);
 }
 
 /** Structural metrics for an n-participant federation under `arm`. */

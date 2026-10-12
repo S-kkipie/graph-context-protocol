@@ -8,3 +8,16 @@ export type {
 } from "./lib/baseline-node";
 export { createBaselineNode } from "./lib/baseline-node";
 export { KnowledgeExecutor } from "./lib/knowledge-executor";
+export type {
+    PepAuditRecord,
+    PepAuditSink,
+    PepPrincipal,
+    PepTokenTable,
+} from "./lib/policy-enforcement";
+export {
+    CAPABILITY_METADATA_KEY,
+    createBearerClientFactory,
+    createBearerUserBuilder,
+    DELEGATE_CAPABILITY,
+    PolicyEnforcingExecutor,
+} from "./lib/policy-enforcement";

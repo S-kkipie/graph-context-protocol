@@ -24,6 +24,10 @@ import {
     type BaselineNodeHandle,
     createA2aPeerContextToolFactory,
     createBaselineNode,
+    createBearerClientFactory,
+    createBearerUserBuilder,
+    type PepAuditRecord,
+    PolicyEnforcingExecutor,
 } from "@graph-context-protocol/baseline";
 import type { ReadProvenance } from "@graph-context-protocol/core";
 import { createRole } from "@graph-context-protocol/core";
@@ -49,7 +53,14 @@ import {
 } from "./discovery";
 import { measureToolBudget, type ToolBudget } from "./tool-budget";
 
-export type Arm = "gcp" | "a2a";
+/**
+ * - `gcp`     — Graph Context Protocol (read gate + delegate gate + audit sink).
+ * - `a2a`     — base A2A as shipped: no authorization, no audit.
+ * - `a2a-pep` — instrumented A2A: the SAME role/capability policy enforced by a
+ *               policy enforcement point on each A2A server, plus an audit log.
+ *               The fair comparator for the governance claims.
+ */
+export type Arm = "gcp" | "a2a" | "a2a-pep";
 
 export interface RunArtifacts {
     readonly answer: string;
@@ -268,7 +279,90 @@ async function runA2a(opts: RunOptions): Promise<RunArtifacts> {
     }
 }
 
+async function runA2aPep(opts: RunOptions): Promise<RunArtifacts> {
+    const { scenario } = opts;
+    const delegateMode = scenario.mode === "delegate";
+    const handles: BaselineNodeHandle[] = [];
+    const audit: ReadProvenance[] = [];
+    try {
+        const principal = {
+            principalId: `principal:${scenario.agent.nodeId}`,
+            role: scenario.agent.role,
+            // Same grant as the GCP arm's eval principal: no delegate capability.
+            capabilities: [] as string[],
+        };
+        const table = new Map([[TOKEN, principal]]);
+        for (const node of scenario.knowledgeNodes) {
+            handles.push(
+                await createBaselineNode(node, {
+                    userBuilder: createBearerUserBuilder(table),
+                    wrapExecutor: (inner) =>
+                        new PolicyEnforcingExecutor(inner, {
+                            nodeId: node.nodeId,
+                            readableByRoles: node.readableByRoles,
+                            audit: {
+                                record: (r: PepAuditRecord) => {
+                                    audit.push({
+                                        principalId: r.principalId,
+                                        targetNodeId: r.targetNodeId,
+                                        queryId: r.queryId,
+                                        timestamp: r.timestamp,
+                                        decision: r.decision,
+                                        ...(r.reason
+                                            ? { reason: r.reason }
+                                            : {}),
+                                    } as ReadProvenance);
+                                },
+                            },
+                        }),
+                }),
+            );
+        }
+        const urlByNodeId = new Map(handles.map((h) => [h.nodeId, h.url]));
+        const peers: PeerRef[] = scenario.agent.peers.map((nodeId) => ({
+            peerId: nodeId,
+            targetNodeId: nodeId,
+            endpoint: urlByNodeId.get(nodeId) ?? "",
+        }));
+        const metrics = createCouplingMetrics();
+        const transcript: { peerId: string; output: string }[] = [];
+        const agent = createTaskAgent({
+            model: opts.model,
+            llm: opts.llm ?? {},
+            systemPrompt: scenario.agent.systemPrompt,
+            peers,
+            toolFactory: recordingFactory(
+                createA2aPeerContextToolFactory({
+                    clientFactory: createBearerClientFactory(TOKEN),
+                    capability: delegateMode ? "delegate" : "read",
+                }),
+                transcript,
+            ),
+            metrics,
+        });
+        const answer = await runTaskAgent(agent, scenario.agent.goal);
+        const discovery = await measureA2aDiscovery(
+            scenario.agent.peers.map(
+                (nodeId) =>
+                    `${urlByNodeId.get(nodeId) ?? ""}/.well-known/agent-card.json`,
+            ),
+        );
+        return {
+            answer,
+            coupling: metrics.snapshot(),
+            toolTranscript: transcript,
+            auditEvents: audit,
+            discovery,
+            toolBudget: measureToolBudget("a2a-pep", peers),
+        };
+    } finally {
+        await Promise.all(handles.map((h) => h.close()));
+    }
+}
+
 /** Runs a scenario under the chosen arm; returns artifacts for the collectors. */
 export function runScenario(opts: RunOptions): Promise<RunArtifacts> {
-    return opts.arm === "gcp" ? runGcp(opts) : runA2a(opts);
+    if (opts.arm === "gcp") return runGcp(opts);
+    if (opts.arm === "a2a-pep") return runA2aPep(opts);
+    return runA2a(opts);
 }

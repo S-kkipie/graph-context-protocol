@@ -8,7 +8,11 @@
 
 import type { AddressInfo } from "node:net";
 import { AGENT_CARD_PATH } from "@a2a-js/sdk";
-import { DefaultRequestHandler, InMemoryTaskStore } from "@a2a-js/sdk/server";
+import {
+    type AgentExecutor,
+    DefaultRequestHandler,
+    InMemoryTaskStore,
+} from "@a2a-js/sdk/server";
 import {
     agentCardHandler,
     jsonRpcHandler,
@@ -39,6 +43,13 @@ export interface CreateBaselineNodeOptions {
     readonly llm?: TaskAgentConfig["llm"];
     /** Maps a peer knowledge nodeId -> its base URL (agent nodes only). */
     readonly peerEndpoints?: Record<string, string>;
+    /**
+     * Optional PEP hooks (the instrumented-A2A arm). `wrapExecutor` decorates
+     * the node's executor; `userBuilder` authenticates each JSON-RPC call.
+     * Both default to the stock behavior (no authentication, no wrapping).
+     */
+    readonly wrapExecutor?: (executor: AgentExecutor) => AgentExecutor;
+    readonly userBuilder?: UserBuilder;
 }
 
 function isKnowledge(
@@ -66,7 +77,7 @@ export function createBaselineNode(
             const url = `http://127.0.0.1:${address.port}`;
             const card = buildAgentCard(node, url);
 
-            const executor = isKnowledge(node)
+            const baseExecutor: AgentExecutor = isKnowledge(node)
                 ? new KnowledgeExecutor(node)
                 : new BrainExecutor(
                       node,
@@ -78,6 +89,9 @@ export function createBaselineNode(
                       opts.metrics ?? createCouplingMetrics(),
                       opts.llm ?? {},
                   );
+            const executor = opts.wrapExecutor
+                ? opts.wrapExecutor(baseExecutor)
+                : baseExecutor;
 
             const requestHandler = new DefaultRequestHandler(
                 card,
@@ -93,7 +107,8 @@ export function createBaselineNode(
                 "/a2a/jsonrpc",
                 jsonRpcHandler({
                     requestHandler,
-                    userBuilder: UserBuilder.noAuthentication,
+                    userBuilder:
+                        opts.userBuilder ?? UserBuilder.noAuthentication,
                 }),
             );
 

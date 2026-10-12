@@ -30,6 +30,12 @@ export interface A2aPeerContextToolOptions {
             sendMessage(params: unknown): Promise<unknown>;
         }>;
     };
+    /**
+     * Capability the call requests, forwarded as message metadata so a
+     * policy-enforcing server (PEP arm) can apply the delegate rule. Omitted
+     * for the stock arm, which sends no metadata.
+     */
+    readonly capability?: "read" | "delegate";
 }
 
 type A2aResult = {
@@ -71,6 +77,9 @@ export function createA2aPeerContextToolFactory(
                             messageId: crypto.randomUUID(),
                             role: "user",
                             parts: [{ kind: "text", text: question }],
+                            ...(opts.capability
+                                ? { metadata: { capability: opts.capability } }
+                                : {}),
                         },
                     });
                     const text = extractText(result);

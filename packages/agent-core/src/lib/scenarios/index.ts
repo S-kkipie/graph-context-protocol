@@ -5,6 +5,7 @@ import { mcpInterop } from "./mcp-interop";
 import { softwareOrg } from "./software-org";
 import { supplyChain } from "./supply-chain";
 import type { ScenarioDef, ScenarioId } from "./types";
+import { usefulForbidden } from "./useful-forbidden";
 
 export const SCENARIOS: Record<ScenarioId, ScenarioDef> = {
     marketplace,
@@ -13,6 +14,7 @@ export const SCENARIOS: Record<ScenarioId, ScenarioDef> = {
     delegation,
     "mcp-interop": mcpInterop,
     "forced-access": forcedAccess,
+    "useful-forbidden": usefulForbidden,
 };
 
 export { forcedAccess } from "./forced-access";
@@ -25,3 +27,4 @@ export {
     type ScenarioId,
     type ScenarioMode,
 } from "./types";
+export { usefulForbidden } from "./useful-forbidden";

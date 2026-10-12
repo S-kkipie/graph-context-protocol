@@ -91,6 +91,15 @@ export async function collectResult(
         delegation: delegationMetrics(opts.scenario, artifacts, opts.arm),
         forcedAccess: forcedAccessMetrics(opts.scenario, artifacts, opts.arm),
         provenance: provenanceCompleteness(artifacts, readDecisions),
+        trace: {
+            answer: artifacts.answer,
+            toolTranscript: artifacts.toolTranscript,
+            auditDecisions: artifacts.auditEvents.map((e) => ({
+                targetNodeId: String(e.targetNodeId),
+                decision: e.decision,
+                ...(e.reason ? { reason: e.reason } : {}),
+            })),
+        },
     };
 }
 

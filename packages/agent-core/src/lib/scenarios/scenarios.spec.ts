@@ -3,7 +3,7 @@ import { PROVIDE_CONTEXT_SKILL, SCENARIOS } from "./index";
 import { marketplaceScenario } from "./marketplace";
 
 describe("SCENARIOS", () => {
-    it("defines all six scenarios keyed by id", () => {
+    it("defines all seven scenarios keyed by id", () => {
         expect(Object.keys(SCENARIOS).sort()).toEqual([
             "delegation",
             "forced-access",
@@ -11,6 +11,7 @@ describe("SCENARIOS", () => {
             "mcp-interop",
             "software-org",
             "supply-chain",
+            "useful-forbidden",
         ]);
         for (const [id, def] of Object.entries(SCENARIOS)) {
             expect(def.id).toBe(id);
