@@ -19,6 +19,7 @@
  *   --arms <list>        default gcp,a2a,a2a-pep
  *   --scenarios <list>   default software-org,supply-chain,delegation,forced-access,useful-forbidden
  *   --out <dir>          default docs/eval/raw (docs/eval/swap/<variant> when --tool-descriptions is given)
+ *   --pep-hardened       a2a-pep refuses requests that do not declare their operation (default out docs/eval/pep-hardened)
  *   --tool-descriptions <v>  native | swapped  (diagnostic: swapped gives each arm the other protocol's tool wording)
  *   --throttle-ms <n>    pause between runs            (default: 0 local / 2000 hosted)
  *   --retries <n>        per-run retries on error      (default: 3)
@@ -67,6 +68,7 @@ const throttleMs = Number(
         (adapter === "ollama" || adapter === "mock" ? "0" : "2000"),
 );
 
+const pepHardened = has("pep-hardened");
 const toolDescriptions = flag("tool-descriptions") as
     | ToolDescriptions
     | undefined;
@@ -78,18 +80,20 @@ if (toolDescriptions && !["native", "swapped"].includes(toolDescriptions)) {
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(
     flag("out") ??
-        (toolDescriptions
-            ? join(
-                  here,
-                  "..",
-                  "..",
-                  "..",
-                  "docs",
-                  "eval",
-                  "swap",
-                  toolDescriptions,
-              )
-            : join(here, "..", "..", "..", "docs", "eval", "raw")),
+        (pepHardened
+            ? join(here, "..", "..", "..", "docs", "eval", "pep-hardened")
+            : toolDescriptions
+              ? join(
+                    here,
+                    "..",
+                    "..",
+                    "..",
+                    "docs",
+                    "eval",
+                    "swap",
+                    toolDescriptions,
+                )
+              : join(here, "..", "..", "..", "docs", "eval", "raw")),
 );
 const safeModel = model.replace(/[^a-zA-Z0-9_.-]/g, "_");
 const file = join(outDir, `${safeModel}.jsonl`);
@@ -133,7 +137,7 @@ const todo = jobs.filter(
 
 console.log(
     `[sweep] model=${model} adapter=${adapter} seeds=${seeds} arms=${arms.join(",")}\n` +
-        `[sweep] scenarios=${scenarioIds.join(",")} toolDescriptions=${toolDescriptions ?? "native"}\n` +
+        `[sweep] scenarios=${scenarioIds.join(",")} toolDescriptions=${toolDescriptions ?? "native"} pepHardened=${pepHardened}\n` +
         `[sweep] log=${file}\n[sweep] ${todo.length}/${jobs.length} runs to do (${jobs.length - todo.length} already logged)`,
 );
 if (has("dry-run")) process.exit(0);
@@ -154,6 +158,7 @@ for (const [i, job] of todo.entries()) {
                 n: scenario.knowledgeNodes.length,
                 seed: job.seed,
                 ...(toolDescriptions ? { toolDescriptions } : {}),
+                ...(pepHardened ? { pepHardened } : {}),
                 ...(adapter === "mock"
                     ? {
                           model: createMockChatModel({
@@ -181,6 +186,7 @@ for (const [i, job] of todo.entries()) {
         at: new Date().toISOString(),
         durationMs: Date.now() - started,
         ...(toolDescriptions ? { toolDescriptions } : {}),
+        ...(pepHardened ? { pepHardened } : {}),
         ...(result ? { result } : { error: error ?? "unknown" }),
     });
     if (result) ok++;

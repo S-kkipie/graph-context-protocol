@@ -29,6 +29,8 @@ export interface RawRecord {
     readonly durationMs: number;
     /** Diagnostic tool-wording variant; absent means native. */
     readonly toolDescriptions?: string;
+    /** Set when the a2a-pep arm ran with the operation-declaration hardening. */
+    readonly pepHardened?: boolean;
     /** Set when all retries failed; `result` is then absent. */
     readonly error?: string;
     readonly result?: MetricsResult;

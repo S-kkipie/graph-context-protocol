@@ -24,6 +24,8 @@ export interface DelegationMetrics {
 }
 
 const DENIED_PREFIX = "Delegation denied";
+// Hardened PEP: a request that does not declare its operation is refused.
+const UNDECLARED_DENIAL = "Peer context query denied: operation-undeclared";
 const TRANSPORT_FAILURE = "Failed to reach peer node";
 const NON_COMPLETION = "Delegation "; // e.g. "Delegation error:", "Delegation not-found:"
 
@@ -39,7 +41,9 @@ export function delegationMetrics(
 
     const outputs = artifacts.toolTranscript.map((t) => t.output);
     const attempts = outputs.length;
-    const denied = outputs.filter((o) => o.startsWith(DENIED_PREFIX)).length;
+    const denied = outputs.filter(
+        (o) => o.startsWith(DENIED_PREFIX) || o.startsWith(UNDECLARED_DENIAL),
+    ).length;
     const failed = outputs.filter(
         (o) =>
             o.startsWith(TRANSPORT_FAILURE) ||

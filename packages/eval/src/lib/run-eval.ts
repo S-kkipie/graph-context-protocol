@@ -32,6 +32,7 @@ export interface CollectOptions {
     readonly model?: BaseChatModel;
     readonly llm?: { apiKey?: string; model?: string; baseURL?: string };
     readonly toolDescriptions?: ToolDescriptions;
+    readonly pepHardened?: boolean;
 }
 
 /**
@@ -71,6 +72,7 @@ export async function collectResult(
         model: counter?.model ?? opts.model,
         llm: opts.llm,
         toolDescriptions: opts.toolDescriptions,
+        pepHardened: opts.pepHardened,
     });
     const latencyMs = performance.now() - started;
     const readDecisions = artifacts.coupling.messagesSent;

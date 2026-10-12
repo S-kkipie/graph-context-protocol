@@ -43,13 +43,17 @@ afterEach(async () => {
     handle = undefined;
 });
 
-async function boot(audit: PepAuditRecord[]): Promise<BaselineNodeHandle> {
+async function boot(
+    audit: PepAuditRecord[],
+    requireDeclaration = false,
+): Promise<BaselineNodeHandle> {
     handle = await createBaselineNode(node, {
         userBuilder: createBearerUserBuilder(table),
         wrapExecutor: (inner) =>
             new PolicyEnforcingExecutor(inner, {
                 nodeId: node.nodeId,
                 readableByRoles: node.readableByRoles,
+                requireDeclaration,
                 audit: { record: (r) => audit.push(r) },
             }),
     });
@@ -118,6 +122,25 @@ describe("PolicyEnforcingExecutor", () => {
             /^Delegation denied/,
         );
         expect(audit.at(-1)).toMatchObject({ reason: "missing-capability" });
+        expect(await ask(h.url, "tok:eng-deleg", "delegate")).toContain(
+            "SECRET-BODY",
+        );
+    });
+
+    it("hardened: an undeclared request is denied, declared ones behave as before", async () => {
+        const audit: PepAuditRecord[] = [];
+        const h = await boot(audit, true);
+        expect(await ask(h.url, "tok:eng")).toMatch(
+            /^Peer context query denied/,
+        );
+        expect(audit.at(-1)).toMatchObject({
+            decision: "deny",
+            reason: "operation-undeclared",
+        });
+        expect(await ask(h.url, "tok:eng", "read")).toContain("SECRET-BODY");
+        expect(await ask(h.url, "tok:eng", "delegate")).toMatch(
+            /^Delegation denied/,
+        );
         expect(await ask(h.url, "tok:eng-deleg", "delegate")).toContain(
             "SECRET-BODY",
         );

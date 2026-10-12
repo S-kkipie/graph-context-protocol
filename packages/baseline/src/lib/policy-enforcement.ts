@@ -92,6 +92,13 @@ export interface PolicyEnforcingExecutorOptions {
     readonly nodeId: string;
     readonly readableByRoles: ReadonlyArray<string>;
     readonly audit: PepAuditSink;
+    /**
+     * Hardening (opt-in, default false = the arm measured in the main sweep).
+     * When true the caller must declare the operation ("read" or "delegate");
+     * an undeclared request is denied instead of being defaulted to a read,
+     * which closes the omit-the-declaration bypass.
+     */
+    readonly requireDeclaration?: boolean;
 }
 
 /** Wraps an executor with authenticate -> authorize -> audit -> (execute|deny). */
@@ -107,14 +114,15 @@ export class PolicyEnforcingExecutor implements AgentExecutor {
     ): Promise<void> {
         const user = requestContext.context?.user;
         const principal = user instanceof PepUser ? user.principal : undefined;
-        const requested =
-            requestContext.userMessage.metadata?.[CAPABILITY_METADATA_KEY] ===
-            "delegate"
-                ? "delegate"
-                : "read";
+        const declared =
+            requestContext.userMessage.metadata?.[CAPABILITY_METADATA_KEY];
+        const requested = declared === "delegate" ? "delegate" : "read";
+        const undeclared = declared !== "read" && declared !== "delegate";
 
         let reason: string | undefined;
         if (!principal) reason = "unauthenticated";
+        else if (this.opts.requireDeclaration && undeclared)
+            reason = "operation-undeclared";
         else if (!this.opts.readableByRoles.includes(principal.role))
             reason = "role-not-readable";
         else if (

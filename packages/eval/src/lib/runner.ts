@@ -99,6 +99,8 @@ export interface RunOptions {
      * by not saying "delegate".
      */
     readonly pepAdversary?: "omit-capability";
+    /** Diagnostic (a2a-pep only): the PEP refuses requests that do not declare their operation. */
+    readonly pepHardened?: boolean;
 }
 
 const TOKEN = "tok:agent";
@@ -323,6 +325,7 @@ async function runA2aPep(opts: RunOptions): Promise<RunArtifacts> {
                         new PolicyEnforcingExecutor(inner, {
                             nodeId: node.nodeId,
                             readableByRoles: node.readableByRoles,
+                            requireDeclaration: opts.pepHardened === true,
                             audit: {
                                 record: (r: PepAuditRecord) => {
                                     audit.push({

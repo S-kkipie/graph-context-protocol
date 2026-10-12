@@ -45,6 +45,45 @@ describe("a2a-pep: caller omits the operation declaration", () => {
         );
     });
 
+    it("hardened PEP: omitting the declaration is denied and logged as a denial", async () => {
+        const artifacts = await runScenario({
+            arm: "a2a-pep",
+            scenario,
+            model: createMockChatModel({ finalAnswer: "done" }),
+            pepAdversary: "omit-capability",
+            pepHardened: true,
+        });
+        const m = delegationMetrics(scenario, artifacts, "a2a-pep");
+        expect(m.attempts).toBeGreaterThan(0);
+        expect(m.denied).toBe(m.attempts);
+        expect(m.unauthorizedExecuted).toBe(0);
+        expect(artifacts.auditEvents.every((e) => e.decision === "deny")).toBe(
+            true,
+        );
+        expect(
+            artifacts.auditEvents.every(
+                (e) => e.reason === "operation-undeclared",
+            ),
+        ).toBe(true);
+    });
+
+    it("hardened PEP: a caller that declares delegate is still contained", async () => {
+        const artifacts = await runScenario({
+            arm: "a2a-pep",
+            scenario,
+            model: createMockChatModel({ finalAnswer: "done" }),
+            pepHardened: true,
+        });
+        const m = delegationMetrics(scenario, artifacts, "a2a-pep");
+        expect(m.denied).toBe(m.attempts);
+        expect(m.unauthorizedExecuted).toBe(0);
+        expect(
+            artifacts.auditEvents.every(
+                (e) => e.reason === "missing-capability",
+            ),
+        ).toBe(true);
+    });
+
     it("gcp control: the same agent's delegation is denied by the delegate gate", async () => {
         const artifacts = await runScenario({
             arm: "gcp",
