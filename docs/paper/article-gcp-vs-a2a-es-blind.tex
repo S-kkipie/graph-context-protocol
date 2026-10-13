@@ -673,6 +673,47 @@ marketplace), \gcp{} plano vs.\ \ata{} medido (Tabla~\ref{tab:disc}).}
 \label{fig:overhead}
 \end{figure}
 
+\subsection{Esfuerzo de integración: un indicador de superficie de configuración (determinista)}
+\label{sec:effort}
+Los conteos de aristas anteriores dicen cuántas conexiones tiene una topología, no cuánto debe escribir o
+cambiar quien despliega. Como indicador, se enumeró la superficie de configuración de cada despliegue a
+partir del cableado que usa el arnés para levantar cada brazo: por nodo, un endpoint y, en los despliegues
+con compuerta, una política de acceso y ganchos de autenticación y auditoría (más una tarjeta de agente y un
+envoltorio del PEP en \ata{}); por agente, un enlace por cada otro agente en una malla o una herramienta
+genérica detrás de un registro; y entradas compartidas de directorio y credenciales. La
+Tabla~\ref{tab:effort} da el costo de incorporar un participante más. En una malla, la incorporación edita a
+todos los agentes existentes ($n$) y añade $2n+2$ declaraciones. Detrás de un registro, o en \gcp{}, el
+costo es constante: \gcp{} añade $7$ declaraciones y edita $2$ artefactos existentes (el directorio y la
+tabla de credenciales), y \ata{} instrumentado detrás de un registro añade $9$ y edita los mismos $2$; la
+diferencia es la tarjeta de agente y el envoltorio del PEP. Cambiar qué roles pueden leer un nodo es una
+declaración en un artefacto, tanto en \gcp{} como en \ata{} instrumentado, y no se puede expresar en \ata{}
+base. La capa de aplicación escrita para el brazo instrumentado tiene $151$ líneas de código fuente; en
+\gcp{} la compuerta equivalente forma parte del servidor que quien despliega importa. Es un conteo de
+declaraciones derivado de nuestro propio arnés, no un estudio con desarrolladores: respalda la lectura
+topológica de los resultados estructurales y no mide mantenibilidad.
+
+\begin{table}[H]
+\centering
+\caption{Incorporación del participante $n{+}1$: declaraciones añadidas y artefactos existentes editados,
+con $n=10$ y $n=50$. Determinista.}
+\label{tab:effort}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{$n=10$} & \multicolumn{2}{c}{$n=50$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+despliegue & añadidas & editados & añadidas & editados \\
+\midrule
+\gcp{} (un servidor, una herramienta de consulta)      & 7 & 2 & 7 & 2 \\
+\ata{} base, malla (una herramienta por par)  & 22 & 10 & 102 & 50 \\
+\ata{} base, registro (una herramienta de envío) & 4 & 1 & 4 & 1 \\
+\ata{}+PEP, malla                       & 27 & 11 & 107 & 51 \\
+\ata{}+PEP, registro                   & 9 & 2 & 9 & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Gobernanza: \gcp{}, \ata{} base y \ata{} instrumentado (observado)}
 \label{sec:governance}
 La Tabla~\ref{tab:gov} reporta, para los tres escenarios en los que se intenta una operación no
@@ -1062,6 +1103,11 @@ leerse teniendo en cuenta esa variación.
 Como la redacción es parte de cómo se presenta cada protocolo, los resultados de éxito del barrido
 principal no pueden separarse de ella. \texttt{llama3.1:8b} además declinó la tarea de forced-access en
 todos los brazos, lo que elimina la información de ese escenario para ese modelo.
+
+\paragraph{El esfuerzo es un indicador.} Las cifras de esfuerzo de integración
+(Sección~\ref{sec:effort}) cuentan declaraciones en el arnés de los propios autores. No miden tiempo de
+desarrollo ni mantenibilidad, lo que exigiría un estudio con desarrolladores, y los conteos dependen de
+cómo se descompone en entradas el cableado de cada brazo.
 
 \paragraph{Marketplace usado solo para estructura.} El éxito de tarea del marketplace fue bajo en
 \emph{ambos} brazos (p.~ej. cayendo a $0.0$--$0.4$ en $n{=}16,32$ con \texttt{llama3.1:8b}); el modelo

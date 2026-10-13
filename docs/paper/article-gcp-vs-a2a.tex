@@ -603,6 +603,46 @@ $1$ (\gcp{}) vs.\ $n$ (\ata{}). Bottom: tool-prompt tokens (marketplace sweep), 
 \label{fig:overhead}
 \end{figure}
 
+\subsection{Integration effort: a configuration-surface proxy (deterministic)}
+\label{sec:effort}
+The edge counts above say how many connections a topology has, not how much a deployer must write or
+change. As a proxy, the configuration surface of each deployment was enumerated from the wiring the
+harness uses to stand up each arm: per node, an endpoint and, for gated deployments, an access policy
+and authentication and audit hooks (plus an agent card and a PEP wrapper for \ata{}); per agent, one
+peer binding for every other agent in a mesh or one generic tool behind a registry; and shared
+directory and credential entries. Table~\ref{tab:effort} gives the cost of onboarding one more
+participant. In a mesh, onboarding edits every existing agent ($n$ of them) and adds $2n+2$
+declarations. Behind a registry, or in \gcp{}, the cost is constant: \gcp{} adds $7$ declarations and
+edits $2$ existing artifacts (the directory and the credential table), and instrumented \ata{} behind
+a registry adds $9$ and edits the same $2$, the difference being the agent card and the PEP wrapper.
+Changing which roles may read a node is one declaration in one artifact in \gcp{} and in instrumented
+\ata{}, and cannot be expressed in base \ata{}. The enforcement layer written for the instrumented arm
+is $151$ source lines; in \gcp{} the equivalent gate is part of the server that a deployer imports.
+This is a count of declarations derived from our own harness, not a study with developers: it
+supports the topology reading of the structural results and does not measure maintainability.
+
+\begin{table}[H]
+\centering
+\caption{Onboarding participant $n{+}1$: declarations added and existing artifacts edited, at $n=10$ and
+$n=50$. Deterministic.}
+\label{tab:effort}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{$n=10$} & \multicolumn{2}{c}{$n=50$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+deployment & added & edited & added & edited \\
+\midrule
+\gcp{} (one server, one query tool)      & 7 & 2 & 7 & 2 \\
+\ata{} base, mesh (one tool per peer)  & 22 & 10 & 102 & 50 \\
+\ata{} base, registry (one send-task tool) & 4 & 1 & 4 & 1 \\
+\ata{}+PEP, mesh                       & 27 & 11 & 107 & 51 \\
+\ata{}+PEP, registry                   & 9 & 2 & 9 & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Governance: \gcp{}, base \ata{}, and instrumented \ata{} (observed)}
 \label{sec:governance}
 Table~\ref{tab:gov} reports, for the three scenarios in which an unauthorized operation is
@@ -982,6 +1022,11 @@ should be read with that variation in mind. Because the wording is part of how e
 protocol is presented, the success results of the main sweep cannot be separated from it.
 \texttt{llama3.1:8b} also declined the forced-access task on every arm, which removes that scenario's
 information for that model.
+
+\paragraph{Effort is a proxy.} The integration-effort figures (Section~\ref{sec:effort}) count
+declarations in the authors' own harness. They do not measure developer time or maintainability, which
+would need a study with developers, and the counts depend on how the wiring of each arm is
+decomposed into entries.
 
 \paragraph{Marketplace used for structure only.} Marketplace task success was low on \emph{both} arms
 (e.g.\ falling to $0.0$--$0.4$ at $n{=}16,32$ on \texttt{llama3.1:8b}); the model often failed to pick
