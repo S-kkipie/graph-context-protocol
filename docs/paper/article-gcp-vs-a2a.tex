@@ -943,8 +943,7 @@ the authors, in the same codebase as \gcp{}, and applies the same decision rule.
 therefore expected and show that the \emph{policy}, not the protocol, determines containment; they
 do not show that every third-party \ata{} gateway would be as complete, nor that the PEP is free of
 bypasses: it is bypassed by a caller that omits the operation declaration (Section~\ref{sec:threat-model}
-and the discussion above). The arm was not hardened after this was found, so that the measured arm is
-the one reported.
+and the discussion above). The reported arm was not changed after this was found. An opt-in variant that denies undeclared requests (reason 	exttt{operation-undeclared}) was rerun on the delegation scenario for all six models (177 raw records, 165 distinct runs): containment $1.00$, no executed delegation, provenance $1.00$, and task success $0$ in every model, identical to the unhardened arm, and no run was denied for an undeclared operation because the models always declare it. This closes the omission but not a false declaration of ``read'', which the server cannot distinguish from a read in this scenario.
 
 \paragraph{Adversary scope and credentials.} Only the instructed-model adversary is exercised
 empirically, and credentials are static tokens; stolen credentials, malicious node owners, and
