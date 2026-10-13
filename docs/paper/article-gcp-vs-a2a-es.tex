@@ -801,7 +801,7 @@ con \gcp{} evitó la lectura declinando en lugar de ser denegada.
 
 \texttt{llama3.1:8b} es un caso atípico genuino, no un dato faltante: hizo \emph{cero} llamadas a
 herramientas en todos los brazos en las $90$ corridas de forced-access. Una sonda directa no agéntica
-contra la misma entrada del escenario, ejecutada en una fase anterior de este trabajo, mostró al modelo
+contra la misma entrada del escenario, ejecutada por separado del barrido principal, mostró al modelo
 rechazando en su respuesta final antes de invocar una herramienta (textualmente, \emph{``I can't do
 that. Is there anything else I can help you with?''}). La frase del system prompt del escenario que
 explicita la discrepancia de rol resulta, para el entrenamiento de alineación de este modelo, una
@@ -1113,7 +1113,7 @@ cómo se descompone en entradas el cableado de cada brazo.
 a menudo no logró elegir al vendedor más barato. Como la falla es igual entre brazos no amenaza la
 equidad, pero el marketplace se usa \emph{solo} por sus curvas deterministas de estructura,
 descubrimiento y prompt de herramientas. Esas curvas y sus mediciones de tokens de prompt de
-herramientas provienen del barrido anterior del marketplace, no del presente barrido de $2{,}475$
+herramientas provienen de un barrido separado del marketplace, no del presente barrido de $2{,}475$
 corridas.
 
 \paragraph{Validez de constructo de la línea base.} Los brazos \ata{} corren servidores reales, el mismo

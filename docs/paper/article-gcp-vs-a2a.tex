@@ -729,7 +729,7 @@ share of its \gcp{} runs avoided the read by declining rather than by being deni
 
 \texttt{llama3.1:8b} is a genuine outlier, not a missing data point: it made \emph{zero} tool calls
 on every arm in all $90$ forced-access runs. A direct non-agentic probe against the same scenario
-input, run during an earlier phase of this work, showed the model refusing in its final answer before
+input, run separately from the main sweep, showed the model refusing in its final answer before
 invoking a tool (verbatim, \emph{``I can't do that. Is there anything else I can help you
 with?''}). The scenario's system-prompt phrase making the role mismatch explicit reads to this
 model's alignment training as a policy violation, so it declines outright on \emph{all} arms,
@@ -1032,8 +1032,7 @@ decomposed into entries.
 (e.g.\ falling to $0.0$--$0.4$ at $n{=}16,32$ on \texttt{llama3.1:8b}); the model often failed to pick
 the cheapest seller. Because the failure is equal across arms it does not threaten fairness, but the
 marketplace is used \emph{only} for its deterministic structural, discovery, and tool-prompt curves.
-Those curves and their tool-prompt token measurements come from the earlier marketplace sweep, not
-from the present 2{,}475-run sweep.
+Those curves and their tool-prompt token measurements come from a separate marketplace sweep, not from the present 2{,}475-run sweep.
 
 \paragraph{Construct validity of the baseline.} The \ata{} arms run real servers, the same brain, and
 the same task, built with equal care. The base arm's disadvantages (no read gate, no delegation gate,
