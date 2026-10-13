@@ -208,7 +208,7 @@ Deterministic privilege control at the tool boundary~\citep{shi2025progent}, aut
 delegation of authority~\citep{south2025delegation}, and audit trails~\citep{ojewale2025audit} argue
 for tamper-evident records of system actions.
 
-\paragraph{Delta / defensible novelty.} Prior work supplies the pieces---read-first access (MCP),
+\paragraph{Novelty.} Prior work supplies the pieces---read-first access (MCP),
 role/attribute gating (RBAC/ABAC, access-controlled RAG), audited delegation, and audit logs---but
 not their conjunction, and not a fairness-controlled, multi-model head-to-head against a real
 message-passing baseline. The novelty claimed here is precisely the \emph{integration}: federated
@@ -454,12 +454,10 @@ $n=2,\dots,50$ and discovery/tool-prompt curves over $n\in\{2,4,8,16,32\}$. No c
 multiple comparisons is applied; with $30$ success comparisons per arm pair, one or two nominal
 $p<0.05$ results are expected by chance, so only the larger gaps are interpreted.
 
-Fig.~\ref{fig:pipeline} summarizes this procedure end-to-end: one scenario definition and one
-injected chat model instantiate both arms under identical agent logic, and the oracle and metrics
-collector are shared, so only the interoperability layer differs between the runs of a given
-(model, scenario, seed) triple. Fig.~\ref{fig:pipeline} shows that only the per-peer tool factory and
-node hosting differ between the \gcp{} and \ata{} arms, while agent logic, model, task, and seed are
-held fixed.
+Fig.~\ref{fig:pipeline} summarizes this procedure end to end. One scenario definition and one injected
+chat model instantiate all arms under identical agent logic, and the oracle and metrics collector are
+shared, so only the per-peer tool factory and node hosting differ between the runs of a given
+(model, scenario, seed) triple.
 
 \begin{figure}[H]
 \centering
@@ -541,7 +539,7 @@ $C_{\text{hub}}(n)=n$ (\gcp{}, and \ata{} through a hub) and $C_{\text{mesh}}(n)
 \subsection{Per-request overhead: single-tool versus per-peer binding (deterministic)}
 The coupling tax is paid on \emph{every request} via discovery messages and the tool-prompt budget
 (Table~\ref{tab:disc}, Fig.~\ref{fig:overhead}). \gcp{} holds both flat ($1$ message, $72$ tokens);
-the stock \ata{} factory, which binds one tool per peer card, reaches $32$ messages and $1782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap. These numbers follow from how the tools are bound, not from the wire protocol: a single generic ``send task to agent X'' \ata{} tool is also flat (51 tokens, against 72 for the \gcp{} query tool under the same estimator), and discovery through a registry is one lookup. The gap in Table~\ref{tab:disc} is therefore the cost of the per-peer binding pattern of the stock factory. Identical regardless of model, since these are set by prompt construction, not model behavior. These figures describe the binding each protocol prescribes and are measured from the tool definitions; the behavioral sweep of Section~\ref{sec:results-cost} bound one tool per peer in all three arms, so it does not exercise the single-tool saving, and its token counts should not be read as measuring it.
+the stock \ata{} factory, which binds one tool per peer card, reaches $32$ messages and $1782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap. These numbers follow from how the tools are bound, not from the wire protocol: a single generic ``send task to agent X'' \ata{} tool is also flat (51 tokens, against 72 for the \gcp{} query tool under the same estimator), and discovery through a registry is one lookup. The gap in Table~\ref{tab:disc} is therefore the cost of the per-peer binding pattern of the stock factory. They are identical across models, since they are set by prompt construction, not model behavior. These figures describe the binding each protocol prescribes and are measured from the tool definitions; the behavioral sweep of Section~\ref{sec:results-cost} bound one tool per peer in all three arms, so it does not exercise the single-tool saving, and its token counts should not be read as measuring it.
 
 \begin{table}[H]
 \centering
@@ -614,8 +612,8 @@ attempted, how many attempts each arm refused (\gcp{} and \ata{}+PEP, denied$/$a
 \emph{First, the gated arms contain everything they are asked to contain.} \gcp{} denied all $443$
 unauthorized attempts ($193$ delegation, $115$ forced-access, $135$ useful-forbidden), with no
 unauthorized execution in any model, and the instrumented \ata{} arm denied all $408$ of its own
-($154$, $124$, $130$). Containment is $1.00$ for both arms wherever an attempt occurred, and the
-gcp-versus-\ata{}+PEP difference is nil in every one of the $17$ comparisons with a defined containment (Fisher $p=1.000$).
+($154$, $124$, $130$). Containment is $1.00$ for both arms wherever an attempt occurred, and the difference between \gcp{} and \ata{}+PEP is nil in every one of the $17$ comparisons with a defined
+containment (Fisher $p=1.000$).
 This holds for the weakest and the strongest model alike, so it does not depend on the model
 behaving.
 
@@ -784,6 +782,7 @@ useful-forbidden & \texttt{llama3.1:8b} & 7/30 & 9/30 & 10/30 & 0.771 & 0.567 \\
 \bottomrule
 \end{tabular}
 \end{table*}
+
 Wire tokens on the read scenarios are close between \gcp{} and \ata{}+PEP: the ratio of mean tokens
 lies between $0.97$ and $1.05$ for five of the six models, and between $1.10$ and $1.11$
 for \texttt{qwen3:4b} (Cohen's $d$ about $0.5$--$0.6$, a moderate effect). The base arm's wire count
@@ -865,7 +864,9 @@ does return it (liveness, so the test is not vacuous); P2 (authorize soundness) 
 gate's decision equals an independently written reference predicate over the same pair; P3
 (role-inheritance soundness) checks effective-capability computation against the role chain directly.
 All pass at 1000 runs (raisable via an environment variable; runs are seed-reproducible for
-debugging). The canary metric \emph{measures} leakage in scenarios; the property suite gives evidence that the gate agrees with an independently written reference predicate over a bounded input space. It is a property-based check against the authors' own reference, not a formal proof, and it does not address credential theft or channels outside the gate (Section~\ref{sec:threat-model}). Together: the property suggests the gate is correct; the canary confirms it is on the hot path.
+debugging). The canary metric \emph{measures} leakage in scenarios; the property suite gives evidence that the gate agrees with an independently written reference predicate over a bounded input space. It is a property-based check against the authors' own reference, not a formal proof, and it does not
+address credential theft or channels outside the gate (Section~\ref{sec:threat-model}). Together, the
+property suite suggests that the gate is correct and the canary confirms that it is on the hot path.
 
 \section{Discussion, Limitations, and Threats to Validity}
 \label{sec:threats}
@@ -943,7 +944,13 @@ the authors, in the same codebase as \gcp{}, and applies the same decision rule.
 therefore expected and show that the \emph{policy}, not the protocol, determines containment; they
 do not show that every third-party \ata{} gateway would be as complete, nor that the PEP is free of
 bypasses: it is bypassed by a caller that omits the operation declaration (Section~\ref{sec:threat-model}
-and the discussion above). The reported arm was not changed after this was found. An opt-in variant that denies undeclared requests (reason 	exttt{operation-undeclared}) was rerun on the delegation scenario for all six models (177 raw records, 165 distinct runs): containment $1.00$, no executed delegation, provenance $1.00$, and task success $0$ in every model, identical to the unhardened arm, and no run was denied for an undeclared operation because the models always declare it. This closes the omission but not a false declaration of ``read'', which the server cannot distinguish from a read in this scenario.
+and the discussion above). The reported arm was not changed after this was found.
+An opt-in variant that denies undeclared requests (reason \texttt{operation-undeclared}) was rerun on
+the delegation scenario for all six models ($177$ raw records, $165$ distinct runs). Containment and
+provenance were $1.00$, no delegation was executed, and task success was $0$ in every model, all
+identical to the unhardened arm; no run was denied for an undeclared operation, because the models
+always declare it. The variant closes the omission but not a false declaration of ``read'', which the
+server cannot distinguish from a read in this scenario.
 
 \paragraph{Adversary scope and credentials.} Only the instructed-model adversary is exercised
 empirically, and credentials are static tokens; stolen credentials, malicious node owners, and
@@ -989,14 +996,14 @@ no native audit sink, pairwise topology) are those of the protocol as shipped, n
 strawman, and they disappear in the instrumented arm, which is why that arm is the fair comparator.
 
 \section{Future Work}
-Isolate which feature of the tool description triggers the empty answers, repeat the swap for
-other models, and run the single-tool binding behaviorally; add a second hosted frontier family and replicate with an independently written \ata{} gateway;
-harden the enforcement point by binding the operation to a distinct skill or endpoint and evaluate
-forged declarations, stolen credentials, and
-indirect prompt injection through retrieved content; replace the pattern-based semantic scorer with
-an entailment judge validated against human labels; and design a privacy testbed that removes the
-authorized-read confound of the supply-chain scenario. Bridging \gcp{} to MCP and \ata{} as
-first-class interop is the natural deployment path.
+Four directions follow. First, isolate which feature of the tool description triggers the empty
+answers, repeat the swap for other models, and run the single-tool binding behaviorally. Second, add a
+second hosted model family and replicate with an independently written \ata{} gateway that binds the
+operation to a distinct skill or endpoint on the server side, then evaluate forged declarations,
+stolen credentials, and indirect prompt injection through retrieved content. Third, replace the
+pattern-based semantic scorer with an entailment judge validated against human labels. Fourth, design
+a privacy testbed that removes the authorized-read confound of the supply-chain scenario. Bridging
+\gcp{} to MCP and \ata{} as first-class interop is the natural deployment path.
 
 \section{Conclusion}
 This work presented \gcp{}---read-first, role-gated, audited context federation with a
@@ -1009,9 +1016,8 @@ single generic tool closes both gaps. On governance, \gcp{} contained every unau
 $443$) while base \ata{} contained none ($0$ of $392$), and models reached for forbidden content on their
 own in the useful-forbidden scenario, leaking it to the transcript under base \ata{} but never under
 the gated arms. The instrumented \ata{} arm, however, matched \gcp{} on containment ($408$ of $408$),
-provenance, and leakage in every model and scenario, for a caller that declares its operation. The
-defensible contribution is therefore not
-that \gcp{} secures what \ata{} cannot, but that it makes role gating, default deny, a delegation
+provenance, and leakage in every model and scenario, for a caller that declares its operation. The defensible
+contribution is therefore not that \gcp{} secures what \ata{} cannot, but that it makes role gating, default deny, a delegation
 rule, and a per-read record native to the protocol, so that they need not be assembled per
 deployment. This comes with a measured cost for the smallest hosted model, which completed authorized tasks
 less often through \gcp{}; a description-swap experiment shows that the wording of the tool
