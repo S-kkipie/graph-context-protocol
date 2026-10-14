@@ -337,7 +337,7 @@ La Tabla~\ref{tab:props} contrasta los tres. A2A es agente a agente y basado en 
 permiso/denegaci\'on burda declarada en la tarjeta y sin rastro nativo por lectura; MCP es de lectura
 primero pero agente a herramienta y de propietario \'unico, sin control por rol entre propietarios;
 \gcp{} combina acceso de lectura primero entre propietarios, control por rol, denegaci\'on por
-defecto y procedencia nativa por lectura. Un ``no'' en la Tabla~\ref{tab:props} no significa que el
+defecto y procedencia nativa por lectura. Un ``no nat.'' en la Tabla~\ref{tab:props} no significa que el
 protocolo haga imposible la propiedad; toda celda es alcanzable en principio extendiendo el protocolo
 base. ``no nat.'' $=$ no es una primitiva nativa del protocolo base (requerir\'ia l\'ogica adicional
 encima); ``ext.'' $=$ alcanzable solo con instrumentaci\'on externa adicional; ``n/a'' $=$ el concepto
@@ -404,7 +404,7 @@ A6 & agentes que coluden, canales fuera de banda & solo media las lecturas y del
 \section{Definici\'on de M\'etricas}
 \label{sec:metrics}
 
-Las m\'etricas se reportan en cuatro familias. Lo determinista se separa de lo dependiente del modelo
+Las m\'etricas se reportan en cinco familias. Lo determinista se separa de lo dependiente del modelo
 en todo momento.
 
 \paragraph{Acoplamiento estructural (determinista).} Para $n$ pares, las \emph{conexiones por pares}
@@ -601,7 +601,7 @@ $C_{\gcp{}}(n)=n$ y $C_{\ata{}}(n)=n(n{-}1)$; los marcadores son los valores de 
 El impuesto de acoplamiento se paga en \emph{cada solicitud} mediante mensajes de descubrimiento y el
 presupuesto de prompt de herramientas (Tabla~\ref{tab:disc}, Figura~\ref{fig:overhead}). \gcp{} mantiene
 ambos planos ($1$ mensaje, $72$ tokens); la fábrica \ata{} estándar, que enlaza una herramienta por
-tarjeta de par, llega a $32$ mensajes y $1782$ tokens de prompt de herramientas en $n{=}32$, una brecha
+tarjeta de par, llega a $32$ mensajes y $1{,}782$ tokens de prompt de herramientas en $n{=}32$, una brecha
 de $25\times$ en el prompt. Estos valores se derivan de cómo se enlazan las herramientas, no del
 protocolo de transporte: una herramienta \ata{} genérica ``enviar tarea al agente X'' también es plana
 (51 tokens, frente a 72 de la herramienta de consulta de \gcp{} con el mismo estimador), y el
@@ -853,7 +853,9 @@ par modelo-brazo ($60$ de $150$ corridas de \gcp{}, incluyendo $19$ de $30$ corr
 frente a $3$ de $150$ en cada brazo \ata{}). El brazo instrumentado tiene muchos menos fallos, y sus
 fallos en software-org son rechazos sin llamada a herramienta. Un experimento posterior identificó la
 causa (Sección~\ref{sec:swap}): es la redacción de la descripción de la herramienta, no el protocolo ni
-la compuerta. \texttt{llama3.1:8b} mostró una brecha en un escenario del barrido principal: en software-org
+la compuerta.
+
+\texttt{llama3.1:8b} mostró una brecha en un escenario del barrido principal: en software-org
 $4/30$ con \gcp{} frente a $14/30$ con \ata{} base ($p=0.010$) y $12/30$ con \ata{}+PEP ($p=0.039$), con
 paridad en supply-chain y useful-forbidden. No se reprodujo. Una repetición de las mismas
 configuraciones de \gcp{} y \ata{}+PEP dio $15/30$ y $13/30$ ($p=0.80$), y las dos corridas de \gcp{}
@@ -904,8 +906,9 @@ useful-forbidden & \texttt{llama3.1:8b} & 7/30 & 9/30 & 10/30 & 0.771 & 0.567 \\
 \end{tabular}
 \end{table*}
 Los tokens en el cable en los escenarios de lectura son cercanos entre \gcp{} y \ata{}+PEP: la razón de
-tokens medios se sitúa entre $0.97$ y $1.05$ para cinco de los seis modelos, y entre $1.10$ y $1.11$
-para \texttt{qwen3:4b} ($d$ de Cohen de aproximadamente $0.5$--$0.6$, un efecto moderado). El conteo en
+tokens medios por escenario se sitúa entre $0.97$ y $1.05$ para cinco de los seis modelos, y entre $1.02$ y $1.11$
+para \texttt{qwen3:4b} ($d$ de Cohen de $0.50$--$0.62$ en software-org y supply-chain, $0.05$ en
+useful-forbidden); la Tabla~\ref{tab:tokens} da las medias. El conteo en
 el cable del brazo base suele ser marginalmente menor porque omite el sobre de consulta de \gcp{}. El
 costo de \ata{} que sí crece es el presupuesto de prompt de herramientas por solicitud cuando se enlaza
 una herramienta por par (Tabla~\ref{tab:disc}), no la carga útil. En los escenarios con compuerta los
@@ -916,6 +919,28 @@ a $11{,}456$ frente a $5{,}455$ tokens. Las comparaciones de tokens de \texttt{q
 valores extremos de la $d$ de Cohen porque sus desviaciones estándar son casi cero (un modelo local
 determinista con semilla fija), y no deben leerse como efectos. No se afirma que \gcp{} envíe menos
 tokens, solo que no cuesta significativamente más que un \ata{} igualmente protegido.
+
+\begin{table*}[t]
+\centering
+\caption{Tokens medios en el cable por corrida en los tres escenarios de lectura (software-org,
+supply-chain, useful-forbidden), promediados sobre los escenarios, y la raz\'on \gcp{} a \ata{}+PEP. Las
+celdas tienen el mismo n\'umero de corridas en todos los brazos.}
+\label{tab:tokens}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrr}
+\toprule
+modelo & \gcp{} & \ata{} base & \ata{}+PEP & \gcp{}$/$PEP \\
+\midrule
+\texttt{llama3.1:8b} & 554 & 554 & 554 & 1.00 \\
+\texttt{qwen3:4b} & 3160 & 2871 & 2950 & 1.07 \\
+\texttt{qwen2.5:32b} & 749 & 756 & 742 & 1.01 \\
+\texttt{gemini-2.5-flash-lite} & 714 & 699 & 703 & 1.02 \\
+\texttt{gemini-2.5-flash} & 882 & 874 & 864 & 1.02 \\
+\texttt{gemini-2.5-pro} & 1559 & 1555 & 1566 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Diagnóstico: redacción de la descripción de la herramienta y respuestas vacías}
 \label{sec:swap}
@@ -967,10 +992,35 @@ modelos; $0.97$--$1.00$ para \texttt{gemini-2.5-pro}; $0.72$--$0.78$ para \textt
 llegan a la respuesta rara vez, salvo en \texttt{qwen3:4b} ($0.47$--$0.60$ en todos los brazos). Es un
 empate genuino, porque la fuga no es una decisión de compuerta. Las diferencias de fuga que existen son
 las reportadas en las subsecciones de gobernanza, acceso forzado y useful-forbidden anteriores, y
-separan a \ata{} base de los dos brazos con compuerta, no a \gcp{} de \ata{}+PEP.
+separan a \ata{} base de los dos brazos con compuerta, no a \gcp{} de \ata{}+PEP (Tabla~\ref{tab:leak}).
+
+\begin{table*}[t]
+\centering
+\caption{Fuga, transcripci\'on$/$respuesta (fracci\'on de \'items protegidos), por modelo. Las tres primeras
+columnas son \ata{} base; con los dos brazos con compuerta estos escenarios son $0.00/0.00$ en todos los
+modelos, y software-org es $0.00/0.00$ en todos los brazos. Las tres \'ultimas columnas son supply-chain,
+donde todos los brazos pueden leer ambos nodos: \gcp{}, \ata{} base, \ata{}+PEP.}
+\label{tab:leak}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{3}{c}{\ata{} base, brazos con compuerta $0.00/0.00$} & \multicolumn{3}{c}{supply-chain (todos autorizados)} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+modelo & acceso forzado & delegaci\'on & useful-forbidden & \gcp{} & \ata{} base & \ata{}+PEP \\
+\midrule
+\texttt{llama3.1:8b} & 0.00/0.00 & 1.00/0.87 & 0.06/0.04 & 0.72/0.02 & 0.78/0.00 & 0.73/0.02 \\
+\texttt{qwen3:4b} & 1.00/1.00 & 1.00/1.00 & 0.51/0.49 & 1.00/0.47 & 1.00/0.60 & 1.00/0.53 \\
+\texttt{qwen2.5:32b} & 1.00/1.00 & 0.33/0.33 & 0.57/0.14 & 1.00/0.00 & 1.00/0.00 & 1.00/0.00 \\
+\texttt{gemini-2.5-flash-lite} & 0.63/0.63 & 0.73/0.73 & 0.46/0.11 & 1.00/0.00 & 1.00/0.00 & 1.00/0.00 \\
+\texttt{gemini-2.5-flash} & 1.00/1.00 & 0.97/0.97 & 0.51/0.14 & 1.00/0.00 & 1.00/0.00 & 0.98/0.00 \\
+\texttt{gemini-2.5-pro} & 0.90/0.90 & 0.77/0.77 & 0.57/0.14 & 0.97/0.00 & 1.00/0.00 & 0.97/0.00 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Garant\'ia arquitect\'onica: propiedad ejecutable de no-fuga}
-La distinci\'on anterior descansa en una prueba, no solo en una medici\'on. Sobre la ruta de
+La garant\'ia arquitect\'onica descansa en una prueba, no solo en una medici\'on. Sobre la ruta de
 lectura/autorizaci\'on tal como se distribuye se corren pruebas basadas en propiedades
 (\texttt{fast-check}) contra conjuntos fijos y finitos: cinco capacidades y cuatro roles, uno de los
 cuales (\texttt{role:child}) hereda de otro (\texttt{role:a}) de modo que el c\'alculo de capacidad
@@ -1015,7 +1065,7 @@ se aplican a lecturas de contexto entre propietarios, mientras que un despliegue
 Una diferencia merece señalarse. En nuestro brazo \ata{}+PEP la operación solicitada (leer o delegar)
 la declara el llamante en los metadatos del mensaje, de modo que la regla de delegación es tan fuerte
 como la convención que vincula esa declaración a una habilidad o endpoint distinto; en \gcp{} la
-delegación es una operación distinta del protocolo y no puede solicitarse como lectura. Una prueba hermética muestra
+delegación es una operación distinta del protocolo y no puede solicitarse como lectura. Una prueba hermética del código publicado muestra
 lo que cuesta esa convención. Un llamante con un token legítimo que simplemente omite la declaración se
 trata como lector: su delegación se ejecuta en cada intento, y el registro de auditoría anota una
 lectura permitida en lugar de una delegación denegada. La delegación del mismo agente a través de \gcp{}

@@ -305,7 +305,7 @@ recorded, yielding a who-tried-what ledger, not only a who-read-what one.
 Table~\ref{tab:props} contrasts the three. A2A is agent-to-agent and push-based, with coarse
 card-declared allow/deny and no native per-read trail; MCP is read-first but agent-to-tool and
 single-owner, without role gating across owners; \gcp{} combines cross-owner read-first access,
-role gating, deny-by-default, and native per-read provenance. A ``no'' in Table~\ref{tab:props} does
+role gating, deny-by-default, and native per-read provenance. A ``not nat.'' in Table~\ref{tab:props} does
 not mean the protocol makes the property impossible; every cell is achievable in principle by
 extending the base protocol. ``not nat.'' $=$ not a native primitive of the base protocol (would
 require added logic on top of it); ``ext.'' $=$ achievable only with additional external
@@ -339,7 +339,7 @@ flat capabilities); the gate uses only that server-resolved principal, never a r
 request. The \texttt{requester.principalId} field of a query is used solely to label audit records
 of failed authentications. The evaluation uses a static token table (one token mapped to one
 principal per run), which stands for out-of-band credential issuance; token lifetime, rotation, and
-sender-constraining are not modelled.
+sender-constraining are not modeled.
 
 \paragraph{Adversaries.} Six adversaries are distinguished (Table~\ref{tab:threat}), with their
 treatment in this study. The property supported by the evidence is limited to A1--A3 with an
@@ -371,7 +371,7 @@ A6 & colluding agents, out-of-band channels & mediates only reads and delegation
 \section{Metric Definitions}
 \label{sec:metrics}
 
-Metrics are reported in four families. Deterministic results are separated from model-dependent
+Metrics are reported in five families. Deterministic results are separated from model-dependent
 ones throughout.
 
 \paragraph{Structural coupling (deterministic).} For $n$ peers, \emph{pairwise connections} are the
@@ -379,7 +379,8 @@ integration edges the topology requires: $C_{\ata{}}(n)=n(n{-}1)$ vs.\ $C_{\gcp{
 \emph{Integration effort} is the marginal cost $C(n{+}1)-C(n)$: constant $1$ for \gcp{}, $2n$ for
 \ata{}. Computed exactly. Integration edges are counted as \emph{directed}; each bidirectional
 peer relationship therefore contributes two directed edges. Under an undirected channel definition the
-corresponding count is $n(n{-}1)/2$; the asymptotic conclusion remains $\bigoh(n^2)$.
+corresponding count is $n(n{-}1)/2$; the asymptotic conclusion remains $\bigoh(n^2)$. A proxy for integration effort, derived from the
+harness wiring, is defined in Section~\ref{sec:effort}.
 
 \paragraph{Discovery and tool-prompt overhead (per request).} \emph{Discovery messages}: round-trips
 to learn what can be queried---$1$ for \gcp{}, $n$ for base \ata{} (one card per peer).
@@ -544,7 +545,7 @@ $C_{\text{hub}}(n)=n$ (\gcp{}, and \ata{} through a hub) and $C_{\text{mesh}}(n)
 \subsection{Per-request overhead: single-tool versus per-peer binding (deterministic)}
 The coupling tax is paid on \emph{every request} via discovery messages and the tool-prompt budget
 (Table~\ref{tab:disc}, Fig.~\ref{fig:overhead}). \gcp{} holds both flat ($1$ message, $72$ tokens);
-the stock \ata{} factory, which binds one tool per peer card, reaches $32$ messages and $1782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap. These numbers follow from how the tools are bound, not from the wire protocol: a single generic ``send task to agent X'' \ata{} tool is also flat (51 tokens, against 72 for the \gcp{} query tool under the same estimator), and discovery through a registry is one lookup. The gap in Table~\ref{tab:disc} is therefore the cost of the per-peer binding pattern of the stock factory. They are identical across models, since they are set by prompt construction, not model behavior. These figures describe the binding each protocol prescribes and are measured from the tool definitions; the behavioral sweep of Section~\ref{sec:results-cost} bound one tool per peer in all three arms, so it does not exercise the single-tool saving, and its token counts should not be read as measuring it.
+the stock \ata{} factory, which binds one tool per peer card, reaches $32$ messages and $1{,}782$ tool-prompt tokens at $n{=}32$, a $25\times$ prompt gap. These numbers follow from how the tools are bound, not from the wire protocol: a single generic ``send task to agent X'' \ata{} tool is also flat (51 tokens, against 72 for the \gcp{} query tool under the same estimator), and discovery through a registry is one lookup. The gap in Table~\ref{tab:disc} is therefore the cost of the per-peer binding pattern of the stock factory. These figures are identical across models, since they are set by prompt construction, not model behavior. These figures describe the binding each protocol prescribes and are measured from the tool definitions; the behavioral sweep of Section~\ref{sec:results-cost} bound one tool per peer in all three arms, so it does not exercise the single-tool saving, and its token counts should not be read as measuring it.
 
 \begin{table}[H]
 \centering
@@ -778,7 +779,9 @@ choosing the wrong peer or by being refused. Empty final answers are concentrate
 model-arm pair ($60$ of $150$ \gcp{} runs, including $19$ of $30$ delegation runs, against $3$ of
 $150$ on each \ata{} arm). The instrumented arm has far fewer failures, and its software-org failures are refusals
 with no tool call. A follow-up experiment identified the cause (Section~\ref{sec:swap}): it is the wording of the
-tool description, not the protocol or the gate. \texttt{llama3.1:8b} showed a gap in one scenario of the main sweep: on
+tool description, not the protocol or the gate.
+
+\texttt{llama3.1:8b} showed a gap in one scenario of the main sweep: on
 software-org $4/30$ under \gcp{} versus $14/30$ on base \ata{} ($p=0.010$) and $12/30$ on
 \ata{}+PEP ($p=0.039$), with parity on supply-chain and useful-forbidden. It did not reproduce. A rerun of
 the identical \gcp{} and \ata{}+PEP configurations gave $15/30$ and $13/30$ ($p=0.80$), and the two
@@ -829,8 +832,9 @@ useful-forbidden & \texttt{llama3.1:8b} & 7/30 & 9/30 & 10/30 & 0.771 & 0.567 \\
 \end{table*}
 
 Wire tokens on the read scenarios are close between \gcp{} and \ata{}+PEP: the ratio of mean tokens
-lies between $0.97$ and $1.05$ for five of the six models, and between $1.10$ and $1.11$
-for \texttt{qwen3:4b} (Cohen's $d$ about $0.5$--$0.6$, a moderate effect). The base arm's wire count
+per scenario lies between $0.97$ and $1.05$ for five of the six models, and between $1.02$ and $1.11$
+for \texttt{qwen3:4b} (Cohen's $d$ $0.50$--$0.62$ on software-org and supply-chain, $0.05$ on
+useful-forbidden); Table~\ref{tab:tokens} gives the means. The base arm's wire count
 is often marginally lower because it omits \gcp{}'s query envelope. The \ata{} cost that does grow
 is the per-request tool-prompt budget when one tool is bound per peer (Table~\ref{tab:disc}), not the
 payload. On the gated scenarios token counts differ mostly because behavior differs after a decision:
@@ -840,6 +844,28 @@ $11{,}456$ versus $5{,}455$ tokens. The \texttt{qwen2.5:32b} token comparisons s
 $d$ values because its standard deviations are near zero (a deterministic local model with a fixed
 seed), and should not be read as effects. No claim is made that \gcp{} sends fewer tokens, only that
 it does not cost meaningfully more than an equally gated \ata{}.
+
+\begin{table*}[t]
+\centering
+\caption{Mean wire tokens per run on the three read scenarios (software-org, supply-chain,
+useful-forbidden), averaged over the scenarios, and the \gcp{} to \ata{}+PEP ratio. Cells have equal
+numbers of runs across arms.}
+\label{tab:tokens}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrr}
+\toprule
+model & \gcp{} & base \ata{} & \ata{}+PEP & \gcp{}$/$PEP \\
+\midrule
+\texttt{llama3.1:8b} & 554 & 554 & 554 & 1.00 \\
+\texttt{qwen3:4b} & 3160 & 2871 & 2950 & 1.07 \\
+\texttt{qwen2.5:32b} & 749 & 756 & 742 & 1.01 \\
+\texttt{gemini-2.5-flash-lite} & 714 & 699 & 703 & 1.02 \\
+\texttt{gemini-2.5-flash} & 882 & 874 & 864 & 1.02 \\
+\texttt{gemini-2.5-pro} & 1559 & 1555 & 1566 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Diagnosis: tool-description wording and empty answers}
 \label{sec:swap}
@@ -889,10 +915,35 @@ transcript equally on all three arms ($1.00$ for most models; $0.97$--$1.00$ for
 for \texttt{qwen3:4b} ($0.47$--$0.60$ on every arm). That is a genuine tie, because the leak is not a
 gating decision. The leakage differences that exist are the ones reported in the governance, forced-access, and
 useful-forbidden subsections above, and they separate base \ata{} from the two gated arms, not
-\gcp{} from \ata{}+PEP.
+\gcp{} from \ata{}+PEP (Table~\ref{tab:leak}).
+
+\begin{table*}[t]
+\centering
+\caption{Leakage, transcript$/$answer (fraction of protected items), per model. The first three columns
+are base \ata{}; under both gated arms these scenarios are $0.00/0.00$ in every model, and
+software-org is $0.00/0.00$ on every arm. The last three columns are supply-chain, where every arm is
+authorized to read both nodes: \gcp{}, base \ata{}, \ata{}+PEP.}
+\label{tab:leak}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{3}{c}{base \ata{}, gated arms $0.00/0.00$} & \multicolumn{3}{c}{supply-chain (all arms authorized)} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+model & forced-access & delegation & useful-forbidden & \gcp{} & base \ata{} & \ata{}+PEP \\
+\midrule
+\texttt{llama3.1:8b} & 0.00/0.00 & 1.00/0.87 & 0.06/0.04 & 0.72/0.02 & 0.78/0.00 & 0.73/0.02 \\
+\texttt{qwen3:4b} & 1.00/1.00 & 1.00/1.00 & 0.51/0.49 & 1.00/0.47 & 1.00/0.60 & 1.00/0.53 \\
+\texttt{qwen2.5:32b} & 1.00/1.00 & 0.33/0.33 & 0.57/0.14 & 1.00/0.00 & 1.00/0.00 & 1.00/0.00 \\
+\texttt{gemini-2.5-flash-lite} & 0.63/0.63 & 0.73/0.73 & 0.46/0.11 & 1.00/0.00 & 1.00/0.00 & 1.00/0.00 \\
+\texttt{gemini-2.5-flash} & 1.00/1.00 & 0.97/0.97 & 0.51/0.14 & 1.00/0.00 & 1.00/0.00 & 0.98/0.00 \\
+\texttt{gemini-2.5-pro} & 0.90/0.90 & 0.77/0.77 & 0.57/0.14 & 0.97/0.00 & 1.00/0.00 & 0.97/0.00 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Architectural guarantee: executable no-leak property}
-The distinction above rests on executable evidence, not only measurement. Over the shipped read/authorize path,
+The architectural guarantee rests on executable evidence, not only measurement. Over the shipped read/authorize path,
 property-based tests (\texttt{fast-check}) are run against fixed, finite pools: five capabilities and four
 roles, one of which (\texttt{role:child}) inherits from another (\texttt{role:a}) so effective-capability
 computation is exercised, not only direct grants. Each random \emph{policy} independently samples a
@@ -935,7 +986,7 @@ reads across owners, whereas an \ata{} deployment must assemble them. One differ
 stating. In our \ata{}+PEP arm the requested operation (read or delegate) is declared by the caller in
 message metadata, so the delegation rule is only as strong as the convention that binds that
 declaration to a distinct skill or endpoint; in \gcp{} delegation is a distinct protocol operation
-and cannot be requested as a read. A hermetic test shows what that convention costs. A caller holding a legitimate token that simply
+and cannot be requested as a read. A hermetic test in the released code shows what that convention costs. A caller holding a legitimate token that simply
 omits the declaration is treated as a reader: its delegation is executed on every attempt, and the
 audit log records an allowed read rather than a denied delegation. The same agent's delegation through
 \gcp{} is denied. The equivalence of \ata{}+PEP and \gcp{} therefore holds for a caller that declares
