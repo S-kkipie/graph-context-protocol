@@ -152,7 +152,13 @@ base arm is reported because it is what the protocol provides out of the box.
   model-dependent results (Section~\ref{sec:results}).
   \item Metric definitions for structural coupling, discovery/tool-prompt overhead, a
   four-way leakage/agency taxonomy, provenance completeness, and delegation/forced-access containment
-  (Section~\ref{sec:metrics}).
+    (Section~\ref{sec:metrics}).
+  \item An instrumented \ata{} baseline and a threat model. A third arm (\ata{}+PEP) applies the same
+  role and delegation policy and writes an audit log, so that the comparison separates the protocol from
+  the presence of an enforcement point; credential binding and six adversaries are specified, with the
+  evidence available for each (Sections~\ref{sec:threat-model} and~\ref{sec:governance}).
+  \item A deterministic integration-effort proxy that counts the declarations and edits needed to onboard
+  one more participant under each topology (Section~\ref{sec:effort}).
 \end{enumerate}
 
 \section{Background}
@@ -427,7 +433,7 @@ that the shared metrics classify both identically. Only the tool factory and nod
 change between arms. All three arms bind one tool per peer in the behavioral runs; the single-tool
 binding of Section~\ref{sec:results} is measured from tool definitions and not run.
 
-\paragraph{Scenarios.} \emph{software-org} (leakage): a contractor-role agent summarizes public
+\paragraph{Scenarios.} Table~\ref{tab:scenarios} summarizes them. \emph{software-org} (leakage): a contractor-role agent summarizes public
 project info; a confidential engineering node (canary) is readable only by the engineering role.
 \emph{supply-chain} (cross-owner): a logistics agent states the shareable shipping relationship
 between two independently owned nodes, each holding an owner-scoped canary. \emph{delegation}
@@ -444,7 +450,27 @@ seller nodes with descending prices. The marketplace contributes \emph{only} its
 structural, discovery, and tool-prompt curves; its behavioral rows are excluded because task success
 was low on every arm (Section~\ref{sec:threats}).
 
-\paragraph{Models, seeds, harness.} Three open-weight models served locally through Ollama
+\begin{table*}[t]
+\centering
+\caption{The six scenarios: what each one tests, what is protected, and what counts as success.}
+\label{tab:scenarios}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llp{5.6cm}p{3.2cm}p{3.6cm}@{}}
+\toprule
+scenario & family & what the agent does & protected item & task success means \\
+\midrule
+software-org & leakage & a contractor-role agent summarizes public project information & confidential engineering node (canary) & the authorized summary is produced \\
+supply-chain & cross-owner & a logistics agent states the shareable shipping relationship between two independently owned nodes & owner-scoped canary in each node & the authorized statement is produced \\
+delegation & agency, write-side & the agent attempts an action it is not authorized to command & the delegate capability & completing the unauthorized action (an effective gate scores $0$) \\
+forced-access & agency, read-side & the task instructs the agent to read a confidential node although its role lacks the capability & confidential node & completing the unauthorized read (an effective gate scores $0$) \\
+useful-forbidden & read-side, semantic & a public node holds part of the answer; a confidential finance node holds a figure that would enrich it; the prompt does not instruct the read & the finance figure & the authorized public part is produced without the forbidden content \\
+marketplace & coupling & $n$ seller nodes with descending prices & none & structural curves only; behavioral rows excluded \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Models, seeds, harness.} Table~\ref{tab:models} lists the models. Three open-weight models served locally through Ollama
 (\texttt{llama3.1:8b}, \texttt{qwen3:4b}: 30 seeds per arm; \texttt{qwen2.5:32b}: 15 seeds per arm)
 and three hosted models through the native Gemini API (\texttt{gemini-2.5-flash-lite},
 \texttt{gemini-2.5-flash}, \texttt{gemini-2.5-pro}: 30 seeds per arm), with a parallel-tool-call
@@ -459,6 +485,28 @@ population s.d.\ is reported for tokens and latency. Structural curves are compu
 $n=2,\dots,50$ and discovery/tool-prompt curves over $n\in\{2,4,8,16,32\}$. No correction for
 multiple comparisons is applied; with $30$ success comparisons per arm pair, one or two nominal
 $p<0.05$ results are expected by chance, so only the larger gaps are interpreted.
+
+\begin{table}[H]
+\centering
+\caption{Models, serving, seeds, and runs. Runs are $5$ scenarios $\times$ $3$ arms $\times$ seeds.}
+\label{tab:models}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcc}
+\toprule
+model & served as & seeds & runs \\
+\midrule
+\texttt{llama3.1:8b} & open-weight, Ollama & 30 & 450 \\
+\texttt{qwen3:4b} & open-weight, Ollama & 30 & 450 \\
+\texttt{qwen2.5:32b} & open-weight, Ollama & 15 & 225 \\
+\texttt{gemini-2.5-flash-lite} & hosted, Gemini API & 30 & 450 \\
+\texttt{gemini-2.5-flash} & hosted, Gemini API & 30 & 450 \\
+\texttt{gemini-2.5-pro} & hosted, Gemini API & 30 & 450 \\
+\midrule
+total & & & 2475 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Fig.~\ref{fig:pipeline} summarizes this procedure end to end. One scenario definition and one injected
 chat model instantiate all arms under identical agent logic, and the oracle and metrics collector are

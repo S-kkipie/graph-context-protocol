@@ -173,6 +173,13 @@ porque es lo que el protocolo ofrece de fábrica.
   \item Definiciones de m\'etricas para acoplamiento estructural, sobrecosto de
   descubrimiento/prompt de herramientas, una taxonom\'ia de fuga/agencia de cuatro v\'ias, completitud
   de procedencia y contenci\'on de delegaci\'on/acceso forzado (Secci\'on~\ref{sec:metrics}).
+  \item Una l\'inea base \ata{} instrumentada y un modelo de amenazas. Un tercer brazo (\ata{}+PEP) aplica
+  la misma pol\'itica de roles y delegaci\'on y escribe un registro de auditor\'ia, de modo que la
+  comparaci\'on separa el protocolo de la presencia de un punto de aplicaci\'on; se especifican la
+  vinculaci\'on de credenciales y seis adversarios, con la evidencia disponible para cada uno
+  (Secciones~\ref{sec:threat-model} y~\ref{sec:governance}).
+  \item Una proxy determinista del esfuerzo de integraci\'on que cuenta las declaraciones y ediciones
+  necesarias para incorporar un participante m\'as bajo cada topolog\'ia (Secci\'on~\ref{sec:effort}).
 \end{enumerate}
 
 \section{Antecedentes}
@@ -467,7 +474,7 @@ fábrica de herramientas y el alojamiento de nodos. Los tres brazos enlazan una 
 las corridas conductuales; el enlace de herramienta única de la Sección~\ref{sec:results} se mide a
 partir de las definiciones de herramientas y no se ejecuta.
 
-\paragraph{Escenarios.} \emph{software-org} (fuga): un agente con rol de contratista resume
+\paragraph{Escenarios.} La Tabla~\ref{tab:scenarios} los resume. \emph{software-org} (fuga): un agente con rol de contratista resume
 información pública de un proyecto; un nodo confidencial de ingeniería (canario) solo es legible por el
 rol de ingeniería. \emph{supply-chain} (entre propietarios): un agente de logística declara la relación
 de envío compartible entre dos nodos de propiedad independiente, cada uno con un canario propio de su
@@ -485,7 +492,27 @@ nodos vendedores con precios descendentes. El marketplace aporta \emph{solo} sus
 estructura, descubrimiento y prompt de herramientas; sus filas conductuales se excluyen porque el éxito
 de tarea fue bajo en todos los brazos (Sección~\ref{sec:threats}).
 
-\paragraph{Modelos, semillas, arnés.} Tres modelos de peso abierto servidos localmente mediante Ollama
+\begin{table*}[t]
+\centering
+\caption{Los seis escenarios: qu\'e prueba cada uno, qu\'e se protege y qu\'e cuenta como \'exito.}
+\label{tab:scenarios}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llp{5.6cm}p{3.2cm}p{3.6cm}@{}}
+\toprule
+escenario & familia & qu\'e hace el agente & elemento protegido & \'exito de la tarea significa \\
+\midrule
+software-org & fuga & un agente con rol de contratista resume informaci\'on p\'ublica del proyecto & nodo confidencial de ingenier\'ia (canario) & se produce el resumen autorizado \\
+supply-chain & entre propietarios & un agente log\'istico enuncia la relaci\'on de env\'io compartible entre dos nodos de distintos propietarios & canario propio de cada nodo & se produce el enunciado autorizado \\
+delegation & agencia, escritura & el agente intenta una acci\'on que no est\'a autorizado a ordenar & la capacidad de delegar & completar la acci\'on no autorizada (una compuerta efectiva da $0$) \\
+forced-access & agencia, lectura & la tarea indica al agente leer un nodo confidencial aunque su rol carece de la capacidad & nodo confidencial & completar la lectura no autorizada (una compuerta efectiva da $0$) \\
+useful-forbidden & lectura, sem\'antico & un nodo p\'ublico contiene parte de la respuesta; un nodo financiero confidencial contiene una cifra que la enriquecer\'ia; el prompt no indica la lectura & la cifra financiera & se produce la parte p\'ublica autorizada sin el contenido prohibido \\
+marketplace & acoplamiento & $n$ nodos vendedores con precios descendentes & ninguno & solo curvas estructurales; filas conductuales excluidas \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Modelos, semillas, arnés.} La Tabla~\ref{tab:models} lista los modelos. Tres modelos de peso abierto servidos localmente mediante Ollama
 (\texttt{llama3.1:8b}, \texttt{qwen3:4b}: 30 semillas por brazo; \texttt{qwen2.5:32b}: 15 semillas por
 brazo) y tres modelos alojados mediante la API nativa de Gemini (\texttt{gemini-2.5-flash-lite},
 \texttt{gemini-2.5-flash}, \texttt{gemini-2.5-pro}: 30 semillas por brazo), con un saneador de llamadas
@@ -502,6 +529,28 @@ Las curvas estructurales se calculan para $n=2,\dots,50$ y las de descubrimiento
 sobre $n\in\{2,4,8,16,32\}$. No se aplica corrección por comparaciones múltiples; con $30$ comparaciones
 de éxito por par de brazos se esperan por azar uno o dos resultados nominales con $p<0.05$, de modo que
 solo se interpretan las brechas mayores.
+
+\begin{table}[H]
+\centering
+\caption{Modelos, servicio, semillas y corridas. Las corridas son $5$ escenarios $\times$ $3$ brazos $\times$ semillas.}
+\label{tab:models}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcc}
+\toprule
+modelo & servido como & semillas & corridas \\
+\midrule
+\texttt{llama3.1:8b} & peso abierto, Ollama & 30 & 450 \\
+\texttt{qwen3:4b} & peso abierto, Ollama & 30 & 450 \\
+\texttt{qwen2.5:32b} & peso abierto, Ollama & 15 & 225 \\
+\texttt{gemini-2.5-flash-lite} & alojado, API de Gemini & 30 & 450 \\
+\texttt{gemini-2.5-flash} & alojado, API de Gemini & 30 & 450 \\
+\texttt{gemini-2.5-pro} & alojado, API de Gemini & 30 & 450 \\
+\midrule
+total & & & 2475 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 La Fig.~\ref{fig:pipeline} resume este procedimiento de extremo a extremo: una definici\'on de
 escenario y un modelo de chat inyectado instancian todos los brazos bajo la misma l\'ogica de agente, y el
