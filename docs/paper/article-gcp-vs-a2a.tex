@@ -435,7 +435,9 @@ binding of Section~\ref{sec:results} is measured from tool definitions and not r
 \paragraph{Scenarios.} Table~\ref{tab:scenarios} summarizes them. \emph{software-org} (leakage): a contractor-role agent summarizes public
 project info; a confidential engineering node (canary) is readable only by the engineering role.
 \emph{supply-chain} (cross-owner): a logistics agent states the shareable shipping relationship
-between two independently owned nodes, each holding an owner-scoped canary. \emph{delegation}
+between two independently owned nodes, each holding an owner-scoped canary.
+
+\emph{delegation}
 (agency, write-side): an agent attempts an action it is not authorized to command; the oracle checks
 containment. \emph{forced-access} (agency, read-side): the task explicitly instructs the agent to
 read a confidential node directly, despite its role lacking the required capability, so the
@@ -443,7 +445,9 @@ unauthorized-read path is exercised on every run that engages the task. \emph{us
 (read-side, semantic): a public node holds part of the answer and a confidential finance node holds
 a figure that would make the answer richer but that the agent's role may not read; leakage is scored
 with an exact canary plus semantic patterns, and task success means producing the authorized public
-part without the forbidden content. Unlike forced-access, the prompt does not instruct the read, so
+part without the forbidden content.
+
+Unlike forced-access, the prompt does not instruct the read, so
 attempts measure what the model does on its own initiative. \emph{marketplace} (coupling): $n$
 seller nodes with descending prices. The marketplace contributes \emph{only} its deterministic
 structural, discovery, and tool-prompt curves; its behavioral rows are excluded because task success
@@ -473,12 +477,16 @@ marketplace & coupling & $n$ seller nodes with descending prices & none & struct
 (\texttt{llama3.1:8b}, \texttt{qwen3:4b}: 30 seeds per arm; \texttt{qwen2.5:32b}: 15 seeds per arm)
 and three hosted models through the native Gemini API (\texttt{gemini-2.5-flash-lite},
 \texttt{gemini-2.5-flash}, \texttt{gemini-2.5-pro}: 30 seeds per arm), with a parallel-tool-call
-sanitizer and non-streaming calls. Each (model, scenario, seed) is run on all three arms, interleaved
+sanitizer and non-streaming calls.
+
+Each (model, scenario, seed) is run on all three arms, interleaved
 by seed so that provider drift affects every arm equally: $5$ scenarios $\times$ $3$ arms $\times$
 seeds, i.e.\ $2{,}475$ runs, of which none failed. The sweep was executed on a single machine with a
 resumable harness that appends one JSON line per run, including the final answer, the tool transcript,
 and the audit decisions; the commit, runtime versions, and local model digests are recorded with the
-logs. Task success is reported as $k/n$ with Wilson 95\% intervals; arms are compared with Fisher's
+logs.
+
+Task success is reported as $k/n$ with Wilson 95\% intervals; arms are compared with Fisher's
 exact test (two-sided) on success and on containment, and with Cohen's $d$ on tokens. Mean $\pm$
 population s.d.\ is reported for tokens and latency. Structural curves are computed for
 $n=2,\dots,50$ and discovery/tool-prompt curves over $n\in\{2,4,8,16,32\}$. No correction for
@@ -490,7 +498,7 @@ $p<0.05$ results are expected by chance, so only the larger gaps are interpreted
 \caption{Models, serving, seeds, and runs. Runs are $5$ scenarios $\times$ $3$ arms $\times$ seeds.}
 \label{tab:models}
 \footnotesize
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{llcc}
 \toprule
 model & served as & seeds & runs \\
@@ -551,6 +559,7 @@ Table~\ref{tab:struct} and Fig.~\ref{fig:coupling} show the structural curve. A 
 \centering
 \caption{Structural coupling (directed integration edges) by size $n$. Deterministic, model-independent. The \ata{} hub column is \ata{} routed through an orchestrator or registry.}
 \label{tab:struct}
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{rrrrr}
 \toprule
 $n$ & \gcp{} hub $(n)$ & \ata{} mesh $(n(n{-}1))$ & \ata{} hub $(n)$ & mesh/hub \\
@@ -599,7 +608,7 @@ the stock \ata{} factory, which binds one tool per peer card, reaches $32$ messa
 \caption{Per-request discovery messages and tool-prompt tokens (marketplace sweep).
 Model-independent.}
 \label{tab:disc}
-\setlength{\tabcolsep}{5pt}
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{rrrrr}
 \toprule
  & \multicolumn{2}{c}{discovery msgs} & \multicolumn{2}{c}{tool-prompt tok} \\
@@ -660,10 +669,12 @@ $1$ (\gcp{}) vs.\ $n$ (\ata{}). Bottom: tool-prompt tokens (marketplace sweep), 
 \label{sec:effort}
 The edge counts above say how many connections a topology has, not how much a deployer must write or
 change. As a proxy, the configuration surface of each deployment was enumerated from the wiring the
-harness uses to stand up each arm: per node, an endpoint and, for gated deployments, an access policy
-and authentication and audit hooks (plus an agent card and a PEP wrapper for \ata{}); per agent, one
-peer binding for every other agent in a mesh or one generic tool behind a registry; and shared
-directory and credential entries. Table~\ref{tab:effort} gives the cost of onboarding one more
+harness uses to stand up each arm. Per node, this is an endpoint and, for gated deployments, an access
+policy and authentication and audit hooks (plus an agent card and a PEP wrapper for \ata{}). Per
+agent, it is one peer binding for every other agent in a mesh, or one generic tool behind a registry.
+Shared directory and credential entries are added on top.
+
+Table~\ref{tab:effort} gives the cost of onboarding one more
 participant. In a mesh, onboarding edits every existing agent ($n$ of them) and adds $2n+2$
 declarations. Behind a registry, or in \gcp{}, the cost is constant: \gcp{} adds $7$ declarations and
 edits $2$ existing artifacts (the directory and the credential table), and instrumented \ata{} behind
@@ -671,6 +682,7 @@ a registry adds $9$ and edits the same $2$, the difference being the agent card 
 Changing which roles may read a node is one declaration in one artifact in \gcp{} and in instrumented
 \ata{}, and cannot be expressed in base \ata{}. The enforcement layer written for the instrumented arm
 is $151$ source lines; in \gcp{} the equivalent gate is part of the server that a deployer imports.
+
 This is a count of declarations derived from our own harness, not a study with developers: it
 supports the topology reading of the structural results and does not measure maintainability.
 
@@ -819,10 +831,14 @@ which has the same gate and audit but \ata{}'s per-peer tools, the gap persists 
 ($20/30$ versus $28/30$, $p=0.021$) and useful-forbidden ($9/30$ versus $29/30$, $p<0.001$) and is
 not significant on software-org ($p=0.104$). Since \ata{}+PEP is gated exactly as \gcp{}, the gate
 cannot explain the gap. Nor does the tool shape: in the behavioral sweep every arm bound one tool
-per peer (Section~\ref{sec:method}). The stored traces show what happened instead. In all $40$ failed
+per peer (Section~\ref{sec:method}).
+
+The stored traces show what happened instead. In all $40$ failed
 \gcp{} runs on the three read scenarios ($9$, $10$, and $21$) the model called exactly the same peers
 as in its successful runs and then returned an \emph{empty final answer}; none of them failed by
-choosing the wrong peer or by being refused. Empty final answers are concentrated in this one
+choosing the wrong peer or by being refused.
+
+Empty final answers are concentrated in this one
 model-arm pair ($60$ of $150$ \gcp{} runs, including $19$ of $30$ delegation runs, against $3$ of
 $150$ on each \ata{} arm). The instrumented arm has far fewer failures, and its software-org failures are refusals
 with no tool call. A follow-up experiment identified the cause (Section~\ref{sec:swap}): it is the wording of the
@@ -899,7 +915,7 @@ useful-forbidden), averaged over the scenarios, and the \gcp{} to \ata{}+PEP rat
 numbers of runs across arms.}
 \label{tab:tokens}
 \footnotesize
-\setlength{\tabcolsep}{5pt}
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lrrrr}
 \toprule
 model & \gcp{} & base \ata{} & \ata{}+PEP & \gcp{}$/$PEP \\
@@ -999,7 +1015,9 @@ subset of the role pool for \texttt{readableByRoles}, a subset of the capability
 Each random \emph{principal} independently samples one role from the pool or none, plus a random
 subset of capabilities held directly. Because both are drawn from small pools by subset sampling
 rather than from an unbounded space, authorized and unauthorized draws both occur frequently, so the
-1000-run default is not dominated by one outcome. Every generated $(policy,principal)$ pair is then
+1000-run default is not dominated by one outcome.
+
+Every generated $(policy,principal)$ pair is then
 driven through the real context-query handler (not a mock) against a stub adapter that
 \emph{always} returns a sentinel canary string, so P1 (end-to-end no-content-leak) asserts that an
 unauthorized query never returns the canary and is marked \texttt{denied}, while an authorized one
@@ -1007,7 +1025,9 @@ does return it (liveness, so the test is not vacuous); P2 (authorize soundness) 
 gate's decision equals an independently written reference predicate over the same pair; P3
 (role-inheritance soundness) checks effective-capability computation against the role chain directly.
 All pass at 1000 runs (raisable via an environment variable; runs are seed-reproducible for
-debugging). The canary metric \emph{measures} leakage in scenarios; the property suite gives evidence that the gate agrees with an independently written reference predicate over a bounded input space. It is a property-based check against the authors' own reference, not a formal proof, and it does not
+debugging).
+
+The canary metric \emph{measures} leakage in scenarios; the property suite gives evidence that the gate agrees with an independently written reference predicate over a bounded input space. It is a property-based check against the authors' own reference, not a formal proof, and it does not
 address credential theft or channels outside the gate (Section~\ref{sec:threat-model}). Together, the
 property suite suggests that the gate is correct and the canary confirms that it is on the hot path.
 
@@ -1029,11 +1049,15 @@ access~\citep{bagdasarian2024airgap}, and for Progent's privilege control at the
 boundary~\citep{shi2025progent}. The contribution of \gcp{} is therefore not a stronger guarantee but
 a different packaging: the enforcement point, the default-deny rule, the delegation capability, and
 the per-decision record are native parts of the protocol and its server, and are applied to context
-reads across owners, whereas an \ata{} deployment must assemble them. One difference is worth
+reads across owners, whereas an \ata{} deployment must assemble them.
+
+One difference is worth
 stating. In our \ata{}+PEP arm the requested operation (read or delegate) is declared by the caller in
 message metadata, so the delegation rule is only as strong as the convention that binds that
 declaration to a distinct skill or endpoint; in \gcp{} delegation is a distinct protocol operation
-and cannot be requested as a read. A hermetic test in the released code shows what that convention costs. A caller holding a legitimate token that simply
+and cannot be requested as a read.
+
+A hermetic test in the released code shows what that convention costs. A caller holding a legitimate token that simply
 omits the declaration is treated as a reader: its delegation is executed on every attempt, and the
 audit log records an allowed read rather than a denied delegation. The same agent's delegation through
 \gcp{} is denied. The equivalence of \ata{}+PEP and \gcp{} therefore holds for a caller that declares
@@ -1103,7 +1127,7 @@ and provenance are $1.00$, no delegation was executed, and task success was $0$;
 for an undeclared operation. The hardened rerun has $165$ distinct runs ($177$ raw records).}
 \label{tab:hardened}
 \footnotesize
-\setlength{\tabcolsep}{5pt}
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lcccc}
 \toprule
 model & runs & main sweep & hardened & undeclared \\
@@ -1185,11 +1209,15 @@ tool-prompt overhead from $\bigoh(n)$ to $\bigoh(1)$ relative to per-peer tools;
 single generic tool closes both gaps. On governance, \gcp{} contained every unauthorized action ($443$ of
 $443$) while base \ata{} contained none ($0$ of $392$), and models reached for forbidden content on their
 own in the useful-forbidden scenario, leaking it to the transcript under base \ata{} but never under
-the gated arms. The instrumented \ata{} arm, however, matched \gcp{} on containment ($408$ of $408$),
+the gated arms.
+
+The instrumented \ata{} arm, however, matched \gcp{} on containment ($408$ of $408$),
 provenance, and leakage in every model and scenario, for a caller that declares its operation. The defensible
 contribution is therefore not that \gcp{} secures what \ata{} cannot, but that it makes role gating, default deny, a delegation
 rule, and a per-read record native to the protocol, so that they need not be assembled per
-deployment. This comes with a measured cost for the smallest hosted model, which completed authorized tasks
+deployment.
+
+This comes with a measured cost for the smallest hosted model, which completed authorized tasks
 less often through \gcp{}; a description-swap experiment shows that the wording of the tool
 description, not the protocol, causes its empty final answers. A gap for the smallest local model did
 not reproduce on rerun. A hermetic test also shows that the
