@@ -1287,13 +1287,11 @@ operación en el servidor y a adversarios más fuertes.
 
 \section*{Disponibilidad de Código y Datos}
 \label{sec:availability}
-La implementación de \gcp{}, el arnés de evaluación, las definiciones de escenarios y los scripts que
-regeneran cada tabla a partir de los logs crudos por corrida se publican bajo licencia MIT en
+La implementación de \gcp{}, el arnés de evaluación, las definiciones de escenarios y los scripts que calculan cada cifra reportada a partir de los logs crudos por corrida se publican bajo licencia MIT en
 an anonymized repository (URL withheld for double-blind review). Los logs de ejecución, incluidos los del experimento de intercambio de
 descripciones, se almacenan como una línea JSON por modelo, escenario, brazo y semilla, incluyendo las
 corridas fallidas, de modo que los denominadores nunca se ocultan, y cada línea lleva la respuesta
-final, la transcripción de herramientas y las decisiones de auditoría para poder reevaluar la fuga. Los
-logs, los scripts de agregación y un runbook que reproduce el barrido están en \texttt{docs/eval/}.
+final, la transcripción de herramientas y las decisiones de auditoría para poder reevaluar la fuga. Los logs y un runbook que reproduce el barrido están en \texttt{docs/eval/}, y los scripts de agregación en \texttt{packages/eval/scripts/}.
 
 \section*{Declaraci\'on de Conflicto de Intereses}
 Los autores declaran que no existen conflictos de intereses potenciales relacionados con la

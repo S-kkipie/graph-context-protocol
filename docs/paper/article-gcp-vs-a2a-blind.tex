@@ -1228,12 +1228,10 @@ survives a gateway that binds the operation on the server side and stronger adve
 
 \section*{Code and Data Availability}
 \label{sec:availability}
-The \gcp{} implementation, the evaluation harness, the scenario definitions, and the scripts that
-regenerate every table from the raw per-run logs are released under the MIT license at
+The \gcp{} implementation, the evaluation harness, the scenario definitions, and the scripts that compute every reported figure from the raw per-run logs are released under the MIT license at
 an anonymized repository (URL withheld for double-blind review). Run logs, including those of the description-swap experiment, are stored as one JSON line per model, scenario, arm, and seed, including
 failed runs, so denominators are never hidden, and each line carries the final answer, tool
-transcript, and audit decisions so leakage can be re-scored. The logs, the aggregation scripts, and
-a runbook that reproduces the sweep are under \texttt{docs/eval/}.
+transcript, and audit decisions so leakage can be re-scored. The logs and a runbook that reproduces the sweep are under \texttt{docs/eval/}, and the aggregation scripts are under \texttt{packages/eval/scripts/}.
 
 \section*{Conflict of Interest Statement}
 The authors declare that there are no potential conflicts of interest related to the research,
