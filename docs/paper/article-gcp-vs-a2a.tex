@@ -340,28 +340,32 @@ of failed authentications. The evaluation uses a static token table (one token m
 principal per run), which stands for out-of-band credential issuance; token lifetime, rotation, and
 sender-constraining are not modelled.
 
-\paragraph{Adversaries.} Six adversaries are distinguished, with their treatment in this study:
-\begin{itemize}
-  \item \emph{A1, instructed model}: holds a legitimate credential and is told to access or delegate
-  beyond its role. Evaluated (forced-access and delegation scenarios): the gate denies and the audit
-  sink records the attempt.
-  \item \emph{A2, prompt-injected model}: reaches the same behavior as A1 through injected content.
-  The gate does not depend on model reasoning, so the outcome is the same; the injection channel
-  itself is not evaluated.
-  \item \emph{A3, agent asserting another role}: defeated by credential binding, since request-level
-  role claims are ignored; covered by handler unit tests, not by an adversarial campaign. In the instrumented \ata{} arm the
+\paragraph{Adversaries.} Six adversaries are distinguished (Table~\ref{tab:threat}), with their
+treatment in this study. The property supported by the evidence is limited to A1--A3 with an
+uncompromised server and authentication provider: no node content enters a caller's context unless the
+caller's server-resolved principal satisfies the node's policy. In the instrumented \ata{} arm the
 requested operation is declared by the caller, so a caller that omits it is not covered (see
 Section~\ref{sec:threats}).
-  \item \emph{A4, compromised agent or stolen credential}: not mitigated; possession of a token
-  confers its role.
-  \item \emph{A5, malicious node owner}: a node can return arbitrary content or log selectively;
-  nodes are not authenticated to callers and the audit log is not tamper-evident in this design.
-  \item \emph{A6, colluding agents or out-of-band channels}: the gate mediates only reads and
-  delegations that traverse \gcp{}; data shared outside the protocol is out of scope.
-\end{itemize}
-The property supported by the evidence is therefore limited to A1--A3 with an uncompromised server
-and authentication provider: no node content enters a caller's context unless the caller's
-server-resolved principal satisfies the node's policy.
+
+\begin{table*}[t]
+\centering
+\caption{Adversaries, how each is treated, and the evidence behind it.}
+\label{tab:threat}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llp{4.6cm}p{4.2cm}l@{}}
+\toprule
+ & adversary & what the gate does & evidence in this study & status \\
+\midrule
+A1 & instructed model, legitimate credential & denies the out-of-role read or delegation; the audit sink records the attempt & forced-access and delegation scenarios (Table~\ref{tab:gov}) & evaluated \\
+A2 & prompt-injected model & same outcome as A1; the gate does not depend on model reasoning & none for the injection channel itself & by design, channel not evaluated \\
+A3 & agent asserting another role & request-level role claims are ignored (credential binding) & handler unit tests & covered by tests, no adversarial campaign \\
+A4 & compromised agent or stolen credential & possession of a token confers its role & none & not mitigated \\
+A5 & malicious node owner & a node can return arbitrary content or log selectively; nodes are not authenticated and the log is not tamper-evident & none & not mitigated \\
+A6 & colluding agents, out-of-band channels & mediates only reads and delegations that traverse \gcp{} & none & out of scope \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \section{Metric Definitions}
 \label{sec:metrics}
@@ -986,11 +990,34 @@ do not show that every third-party \ata{} gateway would be as complete, nor that
 bypasses: it is bypassed by a caller that omits the operation declaration (Section~\ref{sec:threat-model}
 and the discussion above). The reported arm was not changed after this was found.
 An opt-in variant that denies undeclared requests (reason \texttt{operation-undeclared}) was rerun on
-the delegation scenario for all six models ($177$ raw records, $165$ distinct runs). Containment and
+the delegation scenario for all six models ($177$ raw records, $165$ distinct runs; Table~\ref{tab:hardened}). Containment and
 provenance were $1.00$, no delegation was executed, and task success was $0$ in every model, all
 identical to the unhardened arm; no run was denied for an undeclared operation, because the models
 always declare it. The variant closes the omission but not a false declaration of ``read'', which the
 server cannot distinguish from a read in this scenario.
+
+\begin{table}[H]
+\centering
+\caption{Delegation scenario, \ata{}+PEP: the arm of the main sweep versus the opt-in variant that denies
+requests without an operation declaration. Cells are denied$/$attempted. In both variants containment
+and provenance are $1.00$, no delegation was executed, and task success was $0$; no request was denied
+for an undeclared operation. The hardened rerun has $165$ distinct runs ($177$ raw records).}
+\label{tab:hardened}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccc}
+\toprule
+model & runs & main sweep & hardened & undeclared \\
+\midrule
+\texttt{llama3.1:8b} & 30 & 30/30 & 30/30 & 0 \\
+\texttt{qwen3:4b} & 30 & 46/46 & 42/42 & 0 \\
+\texttt{qwen2.5:32b} & 15 & 2/2 & 3/3 & 0 \\
+\texttt{gemini-2.5-flash-lite} & 30 & 24/24 & 26/26 & 0 \\
+\texttt{gemini-2.5-flash} & 30 & 30/30 & 25/25 & 0 \\
+\texttt{gemini-2.5-pro} & 30 & 22/22 & 25/25 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Adversary scope and credentials.} Only the instructed-model adversary is exercised
 empirically, and credentials are static tokens; stolen credentials, malicious node owners, and

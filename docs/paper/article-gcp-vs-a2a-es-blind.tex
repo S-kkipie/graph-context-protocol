@@ -375,29 +375,32 @@ tabla estática de tokens (un token asignado a un principal por corrida), que re
 credenciales fuera de banda; la vigencia, la rotación y la restricción al emisor del token no se
 modelan.
 
-\paragraph{Adversarios.} Se distinguen seis adversarios, con su tratamiento en este estudio:
-\begin{itemize}
-  \item \emph{A1, modelo instruido}: posee una credencial legítima y se le indica acceder o delegar más
-  allá de su rol. Evaluado (escenarios de acceso forzado y delegación): la compuerta deniega y el
-  sumidero de auditoría registra el intento.
-  \item \emph{A2, modelo con inyección de prompt}: llega al mismo comportamiento que A1 mediante
-  contenido inyectado. La compuerta no depende del razonamiento del modelo, por lo que el resultado es
-  el mismo; el canal de inyección en sí no se evalúa.
-  \item \emph{A3, agente que afirma otro rol}: derrotado por la vinculación de credenciales, ya que se
-  ignoran las afirmaciones de rol en la solicitud; cubierto por pruebas unitarias del manejador, no por
-  una campaña adversarial. En el brazo \ata{} instrumentado la operación solicitada la declara el
-  llamante, de modo que un llamante que la omite no queda cubierto (véase la
-  Sección~\ref{sec:threats}).
-  \item \emph{A4, agente comprometido o credencial robada}: no mitigado; poseer un token confiere su rol.
-  \item \emph{A5, dueño de nodo malicioso}: un nodo puede devolver contenido arbitrario o registrar de
-  forma selectiva; los nodos no se autentican ante los llamantes y el registro de auditoría no es
-  evidente ante manipulación en este diseño.
-  \item \emph{A6, agentes que coluden o canales fuera de banda}: la compuerta solo media las lecturas y
-  delegaciones que atraviesan \gcp{}; los datos compartidos fuera del protocolo quedan fuera de alcance.
-\end{itemize}
-La propiedad respaldada por la evidencia se limita por tanto a A1--A3 con un servidor y un proveedor de
-autenticación no comprometidos: ningún contenido de nodo entra en el contexto de un llamante a menos
-que el principal del llamante, resuelto por el servidor, satisfaga la política del nodo.
+\paragraph{Adversarios.} Se distinguen seis adversarios (Tabla~\ref{tab:threat}), con su tratamiento
+en este estudio. La propiedad respaldada por la evidencia se limita a A1--A3 con un servidor y un
+proveedor de autenticaci\'on no comprometidos: ning\'un contenido de nodo entra en el contexto de un
+llamante a menos que el principal del llamante, resuelto por el servidor, satisfaga la pol\'itica del
+nodo. En el brazo \ata{} instrumentado la operaci\'on solicitada la declara el llamante, de modo que un
+llamante que la omite no queda cubierto (v\'ease la Secci\'on~\ref{sec:threats}).
+
+\begin{table*}[t]
+\centering
+\caption{Adversarios, tratamiento de cada uno y evidencia que lo respalda.}
+\label{tab:threat}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llp{4.6cm}p{4.2cm}l@{}}
+\toprule
+ & adversario & qu\'e hace la compuerta & evidencia en este estudio & estado \\
+\midrule
+A1 & modelo instruido, credencial leg\'itima & deniega la lectura o delegaci\'on fuera de rol; el sumidero de auditor\'ia registra el intento & escenarios de acceso forzado y delegaci\'on (Tabla~\ref{tab:gov}) & evaluado \\
+A2 & modelo con inyecci\'on de prompt & mismo resultado que A1; la compuerta no depende del razonamiento del modelo & ninguna para el canal de inyecci\'on & por dise\~no, canal no evaluado \\
+A3 & agente que afirma otro rol & se ignoran las afirmaciones de rol de la solicitud (vinculaci\'on de credenciales) & pruebas unitarias del manejador & cubierto por pruebas, sin campa\~na adversarial \\
+A4 & agente comprometido o credencial robada & poseer un token confiere su rol & ninguna & no mitigado \\
+A5 & due\~no de nodo malicioso & un nodo puede devolver contenido arbitrario o registrar de forma selectiva; los nodos no se autentican y el registro no es evidente ante manipulaci\'on & ninguna & no mitigado \\
+A6 & agentes que coluden, canales fuera de banda & solo media las lecturas y delegaciones que atraviesan \gcp{} & ninguna & fuera de alcance \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \section{Definici\'on de M\'etricas}
 \label{sec:metrics}
@@ -1069,7 +1072,31 @@ por los autores, en el mismo código base que \gcp{}, y aplica la misma regla de
 resultados iguales son esperables y muestran que la \emph{política}, no el protocolo, determina la
 contención; no muestran que todo gateway \ata{} de terceros sea igual de completo, ni que el PEP esté
 libre de evasiones: lo evade un llamante que omite la declaración de operación
-(Sección~\ref{sec:threat-model} y la discusión anterior). El brazo reportado no se modificó tras descubrirlo. Una variante opcional que deniega las peticiones sin declaración (razón \texttt{operation-undeclared}) se repitió en el escenario de delegación con los seis modelos (177 registros, 165 corridas distintas): contención $1.00$, ninguna delegación ejecutada, procedencia $1.00$ y éxito de tarea $0$ en todos los modelos, igual que el brazo sin reforzar, y ninguna corrida fue denegada por operación no declarada porque los modelos siempre la declaran. Esto cierra la omisión pero no una declaración falsa de ``read'', que el servidor no distingue de una lectura en este escenario.
+(Sección~\ref{sec:threat-model} y la discusión anterior). El brazo reportado no se modificó tras descubrirlo. Una variante opcional que deniega las peticiones sin declaración (razón \texttt{operation-undeclared}) se repitió en el escenario de delegación con los seis modelos (177 registros, 165 corridas distintas; Tabla~\ref{tab:hardened}): contención $1.00$, ninguna delegación ejecutada, procedencia $1.00$ y éxito de tarea $0$ en todos los modelos, igual que el brazo sin reforzar, y ninguna corrida fue denegada por operación no declarada porque los modelos siempre la declaran. Esto cierra la omisión pero no una declaración falsa de ``read'', que el servidor no distingue de una lectura en este escenario.
+
+\begin{table}[H]
+\centering
+\caption{Escenario de delegaci\'on, \ata{}+PEP: el brazo del barrido principal frente a la variante
+opcional que deniega las peticiones sin declaraci\'on de operaci\'on. Las celdas son denegadas$/$intentadas.
+En ambas variantes la contenci\'on y la procedencia son $1.00$, ninguna delegaci\'on se ejecut\'o y el
+\'exito de tarea fue $0$; ninguna petici\'on fue denegada por operaci\'on no declarada. La repetici\'on
+reforzada tiene $165$ corridas distintas ($177$ registros).}
+\label{tab:hardened}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccc}
+\toprule
+modelo & corridas & barrido principal & reforzado & no declaradas \\
+\midrule
+\texttt{llama3.1:8b} & 30 & 30/30 & 30/30 & 0 \\
+\texttt{qwen3:4b} & 30 & 46/46 & 42/42 & 0 \\
+\texttt{qwen2.5:32b} & 15 & 2/2 & 3/3 & 0 \\
+\texttt{gemini-2.5-flash-lite} & 30 & 24/24 & 26/26 & 0 \\
+\texttt{gemini-2.5-flash} & 30 & 30/30 & 25/25 & 0 \\
+\texttt{gemini-2.5-pro} & 30 & 22/22 & 25/25 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Alcance de adversarios y credenciales.} Solo el adversario de modelo instruido se ejerce
 empíricamente, y las credenciales son tokens estáticos; las credenciales robadas, los dueños de nodo
@@ -1178,8 +1205,7 @@ Esta investigaci\'on no recibi\'o financiamiento externo. El estudio fue desarro
 iniciativa independiente de los investigadores.
 
 \section*{Agradecimientos}
-Los autores expresan su agradecimiento a la Universidad Nacional de San Agust\'in de Arequipa por ser
-la casa de estudios en la que se realiz\'o este trabajo de investigaci\'on.
+Agradecimientos omitidos para la revisi\'on doble ciego.
 
 \section*{Declaraci\'on sobre IA Generativa}
 Durante la preparaci\'on de este trabajo, los autores usaron Claude y Claude Code (Anthropic) para
